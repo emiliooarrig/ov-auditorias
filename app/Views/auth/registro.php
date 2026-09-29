@@ -11,15 +11,15 @@ $campos = [
     'apellidos' => ['Apellidos', 'family-name', 120, 'usuario'],
 ];
 ?>
-<section class="acceso">
-    <div class="acceso__marca">
-        <?= icono('mis-talleres', 'acceso__icono') ?>
-        <p class="acceso__titulo">Tus talleres, dónde y cuándo.</p>
+<section class="auth">
+    <div class="auth__intro">
+        <span class="icon-bubble"><?= icono('mis-talleres') ?></span>
+        <p class="auth__tagline">Tus talleres, dónde y cuándo.</p>
         <p>Consulta los talleres que te asignaron y registra si alguno no se realizó.</p>
     </div>
-    <div class="acceso__formulario">
+    <div class="auth__form">
         <h1><?= icono('usuario-mas') ?> Crea tu cuenta</h1>
-        <p class="texto-secundario">
+        <p class="muted">
             Es la primera vez que ingresas con <strong><?= e($correo) ?></strong>.
             Completa tus datos para crear tu cuenta de auditor.
             <a href="<?= e(url('/login')) ?>">Usar otro correo</a>
@@ -29,7 +29,7 @@ $campos = [
             <?= csrf_field() ?>
             <?php foreach ($campos as $campo => [$etiqueta, $autocompletar, $maximo, $iconoCampo]) : ?>
                 <?php $error = error_de($campo); ?>
-                <div class="campo<?= $error !== null ? ' campo--error' : '' ?>">
+                <div class="field<?= $error !== null ? ' field--error' : '' ?>">
                     <label for="<?= e($campo) ?>"><?= icono($iconoCampo) ?> <?= e($etiqueta) ?></label>
                     <input type="text" id="<?= e($campo) ?>" name="<?= e($campo) ?>" value="<?= e(old($campo)) ?>"
                            autocomplete="<?= e($autocompletar) ?>" maxlength="<?= e($maximo) ?>" required
@@ -41,7 +41,7 @@ $campos = [
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
-            <button type="submit" class="btn btn-primario btn-bloque"><?= icono('check') ?> Crear mi cuenta</button>
+            <button type="submit" class="btn btn--primary btn--block"><?= icono('check') ?> Crear mi cuenta</button>
         </form>
     </div>
 </section>

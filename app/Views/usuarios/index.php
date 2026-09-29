@@ -23,19 +23,21 @@ $camposRegreso = static function () use ($query): string {
     return $html;
 };
 ?>
-<div class="cabecera-pagina">
-    <h1>Usuarios</h1>
-    <p>Los auditores se registran solos al ingresar con su correo. Aquí cambias su rol o su acceso.</p>
+<div class="page-header">
+    <div>
+        <h1>Usuarios</h1>
+        <p>Los auditores se registran solos al ingresar con su correo. Aquí cambias su rol o su acceso.</p>
+    </div>
 </div>
 
 <?php if ($usuarios !== []) : ?>
-    <form class="filtros" role="search" aria-label="Buscar usuarios" data-filtro-local="#tabla-usuarios" hidden>
-        <div class="campo">
+    <form class="card filters" role="search" aria-label="Buscar usuarios" data-filtro-local="#tabla-usuarios" hidden>
+        <div class="field">
             <label for="u-texto"><?= icono('buscar') ?> Nombre o correo</label>
             <input type="search" id="u-texto" name="texto" value="<?= e($query['texto']) ?>" maxlength="150"
                    autocomplete="off">
         </div>
-        <div class="campo">
+        <div class="field">
             <label for="u-rol"><?= icono('escudo') ?> Rol</label>
             <select id="u-rol" name="rol">
                 <option value="">Todos</option>
@@ -45,7 +47,7 @@ $camposRegreso = static function () use ($query): string {
                 </option>
             </select>
         </div>
-        <div class="campo">
+        <div class="field">
             <label for="u-estado"><?= icono('encender') ?> Estado</label>
             <select id="u-estado" name="estado">
                 <option value="">Todos</option>
@@ -55,31 +57,32 @@ $camposRegreso = static function () use ($query): string {
                 </option>
             </select>
         </div>
-        <div class="filtros__acciones">
-            <button type="button" class="btn btn-secundario" data-limpiar hidden>
+        <div class="filters__actions">
+            <button type="button" class="btn btn--secondary" data-limpiar hidden>
                 <?= icono('cerrar') ?> Limpiar
             </button>
         </div>
     </form>
 <?php endif; ?>
 
-<p class="resumen" role="status">
+<p class="summary" role="status">
     <span><strong data-conteo-usuarios><?= e($total) ?> <?= $total === 1 ? 'usuario' : 'usuarios' ?></strong></span>
 </p>
 
-<section class="vacio" data-sin-coincidencias hidden>
-    <?= icono('sin-resultados', 'vacio__icono') ?>
+<section class="empty" data-sin-coincidencias hidden>
+    <span class="icon-bubble"><?= icono('sin-resultados') ?></span>
     <p><strong>Ningún usuario coincide con la búsqueda.</strong></p>
-    <button type="button" class="btn btn-secundario" data-limpiar><?= icono('cerrar') ?> Quitar filtros</button>
+    <button type="button" class="btn btn--secondary" data-limpiar><?= icono('cerrar') ?> Quitar filtros</button>
 </section>
 
 <?php if ($usuarios === []) : ?>
-    <section class="vacio">
-        <?= icono('usuarios', 'vacio__icono') ?>
+    <section class="empty">
+        <span class="icon-bubble"><?= icono('usuarios') ?></span>
         <p><strong>Todavía no hay usuarios registrados.</strong></p>
     </section>
 <?php else : ?>
-    <table class="tabla tabla--responsiva" id="tabla-usuarios">
+    <div class="card table-wrap">
+    <table class="table table--stack" id="tabla-usuarios">
         <thead>
             <tr>
                 <th scope="col">Usuario</th>
@@ -99,59 +102,59 @@ $camposRegreso = static function () use ($query): string {
                 ?>
                 <tr data-buscar="<?= e($u['nombre'] . ' ' . $u['apellidos'] . ' ' . $u['correo']) ?>"
                     data-rol="<?= e($u['rol']) ?>" data-estado="<?= $activo ? 'activos' : 'desactivados' ?>">
-                    <td>
-                        <strong class="con-icono">
+                    <td class="cell-title">
+                        <strong class="with-icon">
                             <?= icono($esAdmin ? 'escudo' : 'usuario') ?>
                             <?= e($u['nombre'] . ' ' . $u['apellidos']) ?>
                         </strong>
                         <?php if ($esYo) : ?>
-                            <span class="texto-secundario">(tú)</span>
+                            <span class="muted">(tú)</span>
                         <?php endif; ?>
-                        <div class="texto-secundario con-icono"><?= icono('correo') ?> <?= e($u['correo']) ?></div>
+                        <div class="table__sub"><?= icono('correo') ?> <?= e($u['correo']) ?></div>
                     </td>
-                    <td data-etiqueta="Rol" class="celda-en-linea">
-                        <span class="insignia <?= $esAdmin ? 'insignia--admin' : 'insignia--rol' ?>">
+                    <td data-label="Rol">
+                        <span class="badge <?= $esAdmin ? 'badge--admin' : 'badge--role' ?>">
                             <?= icono($esAdmin ? 'escudo' : 'usuario') ?>
                             <?= $esAdmin ? 'Administrador' : 'Auditor' ?>
                         </span>
                     </td>
-                    <td data-etiqueta="Estado" class="celda-en-linea">
+                    <td data-label="Estado">
                         <?php if ($activo) : ?>
-                            <span class="insignia insignia--realizado"><?= icono('check-circulo') ?> Activo</span>
+                            <span class="badge badge--active"><?= icono('check-circulo') ?> Activo</span>
                         <?php else : ?>
-                            <span class="insignia insignia--programado">
+                            <span class="badge badge--inactive">
                                 <?= icono('prohibido') ?> Desactivado
                             </span>
                         <?php endif; ?>
                     </td>
-                    <td data-etiqueta="Talleres" class="celda-en-linea numeros">
-                        <span class="con-icono"><?= icono('calendario') ?> <?= e($u['talleres']) ?></span>
+                    <td data-label="Talleres" class="nums">
+                        <span class="with-icon"><?= icono('calendario') ?> <?= e($u['talleres']) ?></span>
                     </td>
-                    <td data-etiqueta="Último acceso">
+                    <td data-label="Último acceso">
                         <?php if ($u['ultimo_acceso'] !== null) : ?>
-                            <span class="con-icono">
+                            <span class="with-icon">
                                 <?= icono('reloj') ?> <?= e(fecha_hora($u['ultimo_acceso'])) ?>
                             </span>
                         <?php else : ?>
-                            <span class="texto-secundario">Nunca</span>
+                            <span class="muted">Nunca</span>
                         <?php endif; ?>
                     </td>
-                    <td data-etiqueta="Acciones" class="acciones-usuario">
+                    <td data-label="Acciones">
                         <?php if ($esYo) : ?>
-                            <span class="texto-secundario">Es tu cuenta</span>
+                            <span class="muted">Es tu cuenta</span>
                         <?php else : ?>
-                            <div class="acciones-usuario__fila">
+                            <div class="row-actions">
                             <form method="post" action="<?= e(url('/usuarios/' . $u['id'] . '/estado')) ?>">
                                 <?= $camposRegreso() ?>
                                 <input type="hidden" name="activo" value="<?= $activo ? '0' : '1' ?>">
-                                <?php $claseBoton = 'btn btn-enlace' . ($activo ? ' btn-enlace--peligro' : ''); ?>
+                                <?php $claseBoton = 'btn btn--link' . ($activo ? ' btn--link-danger' : ''); ?>
                                 <button type="submit" class="<?= $claseBoton ?>">
                                     <?= icono($activo ? 'prohibido' : 'encender') ?>
                                     <?= $activo ? 'Desactivar' : 'Activar' ?>
                                 </button>
                             </form>
 
-                            <details class="desplegable">
+                            <details class="disclosure">
                                 <summary>
                                     <?= icono($esAdmin ? 'usuario' : 'escudo') ?>
                                     <?= $esAdmin ? 'Cambiar a auditor' : 'Hacer administrador' ?>
@@ -160,20 +163,20 @@ $camposRegreso = static function () use ($query): string {
                                     <?= $camposRegreso() ?>
                                     <?php if ($esAdmin) : ?>
                                         <input type="hidden" name="rol" value="auditor">
-                                        <p class="texto-secundario">
+                                        <p class="muted">
                                             Perderá el acceso a la administración y su contraseña se borrará.
                                             Ingresará solo con su correo.
                                         </p>
-                                        <button type="submit" class="btn btn-secundario">
+                                        <button type="submit" class="btn btn--secondary btn--small">
                                             <?= icono('usuario') ?> Cambiar a auditor
                                         </button>
                                     <?php else : ?>
                                         <input type="hidden" name="rol" value="administrador">
-                                        <p class="texto-secundario">
+                                        <p class="muted">
                                             Asígnale una contraseña de al menos <?= e($passwordMin) ?> caracteres
                                             y compártela por un medio seguro.
                                         </p>
-                                        <div class="campo">
+                                        <div class="field">
                                             <label for="pw-<?= e($u['id']) ?>">
                                                 <?= icono('candado') ?> Contraseña
                                             </label>
@@ -181,7 +184,7 @@ $camposRegreso = static function () use ($query): string {
                                                    minlength="<?= e($passwordMin) ?>"
                                                    autocomplete="new-password" required>
                                         </div>
-                                        <div class="campo">
+                                        <div class="field">
                                             <label for="pw2-<?= e($u['id']) ?>">
                                                 <?= icono('candado') ?> Repite la contraseña
                                             </label>
@@ -190,7 +193,7 @@ $camposRegreso = static function () use ($query): string {
                                                    minlength="<?= e($passwordMin) ?>"
                                                    autocomplete="new-password" required>
                                         </div>
-                                        <button type="submit" class="btn btn-primario">
+                                        <button type="submit" class="btn btn--primary btn--small">
                                             <?= icono('escudo') ?> Hacer administrador
                                         </button>
                                     <?php endif; ?>
@@ -203,4 +206,5 @@ $camposRegreso = static function () use ($query): string {
             <?php endforeach; ?>
         </tbody>
     </table>
+    </div>
 <?php endif; ?>

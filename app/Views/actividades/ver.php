@@ -104,7 +104,8 @@ $ultimo = $historial[0] ?? null;
                 </ul>
                 <?php if ($esAdministrador && !$programado) : ?>
                     <p class="muted field__hint">
-                        <?= icono('info') ?> Las asignaciones quedan fijas como registro porque el taller ya no está programado.
+                        <?= icono('info') ?>
+                        Las asignaciones quedan fijas como registro porque el taller ya no está programado.
                     </p>
                 <?php endif; ?>
             <?php endif; ?>

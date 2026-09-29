@@ -127,7 +127,9 @@ $ruta = '/asignaciones';
                                             <?php if ($yaAsignado) : ?>
                                                 <?= e($fila['nombre']) ?>
                                             <?php else : ?>
-                                                <label for="taller-<?= e($fila['id']) ?>"><?= e($fila['nombre']) ?></label>
+                                                <label for="taller-<?= e($fila['id']) ?>">
+                                                    <?= e($fila['nombre']) ?>
+                                                </label>
                                             <?php endif; ?>
                                         </span>
                                         <span class="table__sub">
@@ -170,7 +172,9 @@ $ruta = '/asignaciones';
         </section>
 
         <aside class="card" aria-labelledby="t-actuales">
-            <h2 class="card__title" id="t-actuales"><?= icono('mis-talleres') ?> Talleres de <?= e($nombreAuditor) ?></h2>
+            <h2 class="card__title" id="t-actuales">
+                <?= icono('mis-talleres') ?> Talleres de <?= e($nombreAuditor) ?>
+            </h2>
             <?php if ($asignados === []) : ?>
                 <p class="muted">Todavía no tiene talleres asignados.</p>
             <?php else : ?>

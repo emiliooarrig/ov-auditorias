@@ -22,14 +22,14 @@ sort($visibles);
 $enlace = static fn (int $p): string => url($ruta, $query + ['pagina' => $p > 1 ? $p : null]);
 ?>
 <nav aria-label="Paginación">
-    <ul class="paginacion">
+    <ul class="pagination">
         <?php if ($pagina > 1) : ?>
             <li><a href="<?= e($enlace($pagina - 1)) ?>" rel="prev"><?= icono('izquierda') ?> Anterior</a></li>
         <?php endif; ?>
         <?php $anterior = 0; ?>
         <?php foreach ($visibles as $p) : ?>
             <?php if ($p - $anterior > 1) : ?>
-                <li><span aria-hidden="true">…</span></li>
+                <li><span class="pagination__gap" aria-hidden="true">…</span></li>
             <?php endif; ?>
             <li>
                 <?php if ($p === $pagina) : ?>

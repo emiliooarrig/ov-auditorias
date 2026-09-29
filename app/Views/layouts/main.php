@@ -30,45 +30,47 @@ $iconoAviso = ['exito' => 'check-circulo', 'error' => 'x-circulo', 'aviso' => 'a
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e(isset($titulo) ? $titulo . ' · ' . $nombreApp : $nombreApp) ?></title>
-    <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">
+    <link rel="stylesheet" href="<?= e(asset('css/clay.css')) ?>">
     <script src="<?= e(asset('js/app.js')) ?>" defer></script>
 </head>
 <body>
     <?= app()->view()->partial('partials/iconos') ?>
-    <a class="saltar" href="#contenido">Saltar al contenido</a>
-    <header class="encabezado">
-        <div class="encabezado__interior">
-            <a class="marca" href="<?= e(url('/')) ?>">
-                <span class="marca__universidad">Universidad Anáhuac</span>
-                <span class="marca__app"><?= e($nombreApp) ?></span>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <header class="site-header">
+        <div class="site-header__slab">
+            <a class="brand" href="<?= e(url('/')) ?>">
+                <span class="brand__org">Universidad Anáhuac</span>
+                <span class="brand__app"><?= e($nombreApp) ?></span>
             </a>
             <?php if ($usuario !== null) : ?>
-                <div class="navegacion">
+                <div class="site-header__nav">
                     <nav aria-label="Principal">
-                        <ul class="menu">
+                        <ul class="nav__list">
                             <?php foreach ($enlaces as $ruta => [$etiqueta, $iconoEnlace]) : ?>
                                 <li>
                                     <?php $actual = $rutaActual === $ruta ? ' aria-current="page"' : ''; ?>
-                                    <a href="<?= e(url($ruta)) ?>"<?= $actual ?>>
+                                    <a class="nav__link" href="<?= e(url($ruta)) ?>"<?= $actual ?>>
                                         <?= icono($iconoEnlace) ?> <?= e($etiqueta) ?>
                                     </a>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
                     </nav>
-                    <div class="sesion">
-                        <span class="sesion__usuario" title="<?= e($usuario['correo']) ?>">
-                            <span class="sesion__nombre">
+                    <div class="session">
+                        <span class="session__user" title="<?= e($usuario['correo']) ?>">
+                            <span class="session__name">
                                 <?= icono(app()->auth()->esAdministrador() ? 'escudo' : 'usuario') ?>
                                 <?= e($usuario['nombre']) ?>
                             </span>
-                            <span class="sesion__rol">
+                            <span class="session__role">
                                 <?= app()->auth()->esAdministrador() ? 'Administrador' : 'Auditor' ?>
                             </span>
                         </span>
                         <form method="post" action="<?= e(url('/logout')) ?>">
                             <?= csrf_field() ?>
-                            <button type="submit"><?= icono('salir') ?> Cerrar sesión</button>
+                            <button type="submit" class="btn btn--ghost btn--small">
+                                <?= icono('salir') ?> Cerrar sesión
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -76,9 +78,9 @@ $iconoAviso = ['exito' => 'check-circulo', 'error' => 'x-circulo', 'aviso' => 'a
         </div>
     </header>
 
-    <main id="contenido" class="contenedor">
+    <main id="contenido" class="container">
         <?php foreach ($mensajes as $m) : ?>
-            <div class="aviso aviso--<?= e($m['tipo']) ?>" role="status">
+            <div class="alert alert--<?= e($m['tipo']) ?>" role="status">
                 <?= icono($iconoAviso[$m['tipo']] ?? 'info') ?>
                 <span><?= e($m['mensaje']) ?></span>
             </div>
@@ -87,8 +89,8 @@ $iconoAviso = ['exito' => 'check-circulo', 'error' => 'x-circulo', 'aviso' => 'a
         <?= $contenido /* ya renderizado y escapado por la vista */ ?>
     </main>
 
-    <footer class="pie">
-        <div class="contenedor">Registro de auditores de talleres de la Universidad Anáhuac</div>
+    <footer class="site-footer">
+        <div class="container">Registro de auditores de talleres de la Universidad Anáhuac</div>
     </footer>
 </body>
 </html>

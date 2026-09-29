@@ -37,7 +37,7 @@ const iniciarFiltroVivo = (formulario) => {
   let espera = 0;
   let peticion = null;
 
-  formulario.classList.add('filtros--vivo');
+  formulario.classList.add('filters--live');
 
   const urlDeFiltros = () => {
     const url = new URL(formulario.action, window.location.href);
@@ -50,7 +50,7 @@ const iniciarFiltroVivo = (formulario) => {
   };
 
   const marcarActivos = () => {
-    campos.forEach((c) => c.classList.toggle('filtro-activo', c.value !== ''));
+    campos.forEach((c) => c.classList.toggle('is-active', c.value !== ''));
     if (limpiar) {
       limpiar.hidden = campos.every((c) => c.value === '');
     }
@@ -74,7 +74,7 @@ const iniciarFiltroVivo = (formulario) => {
       window.history.replaceState(null, '', url);
       iniciarConteoSeleccion(resultados);
       if (anuncio) {
-        const resumen = resultados.querySelector('[data-resumen]') ?? resultados.querySelector('.vacio strong');
+        const resumen = resultados.querySelector('[data-resumen]') ?? resultados.querySelector('.empty strong');
         anuncio.textContent = resumen ? resumen.textContent.replace(/\s+/g, ' ').trim() : '';
       }
     } catch (error) {
@@ -125,7 +125,7 @@ const iniciarFiltroVivo = (formulario) => {
     if (enlace.hasAttribute('data-limpiar')) {
       evento.preventDefault();
       quitarFiltros();
-    } else if (enlace.closest('.paginacion')) {
+    } else if (enlace.closest('.pagination')) {
       evento.preventDefault();
       cargar(new URL(enlace.href));
       resultados.scrollIntoView({ block: 'start' });
@@ -169,7 +169,7 @@ const iniciarFiltroLocal = (formulario) => {
     });
 
     const hayFiltros = Object.values(campos).some((c) => c.value !== '');
-    Object.values(campos).forEach((c) => c.classList.toggle('filtro-activo', c.value !== ''));
+    Object.values(campos).forEach((c) => c.classList.toggle('is-active', c.value !== ''));
     if (conteo) {
       const unidad = visibles === 1 ? 'usuario' : 'usuarios';
       conteo.textContent = hayFiltros
@@ -220,7 +220,7 @@ const iniciarFiltroLocal = (formulario) => {
  */
 const iniciarVerClave = (boton) => {
   const campo = document.getElementById(boton.dataset.verClave);
-  const etiqueta = boton.querySelector('.solo-lector');
+  const etiqueta = boton.querySelector('.sr-only');
   if (!campo) {
     return;
   }

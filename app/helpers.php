@@ -74,7 +74,7 @@ function csrf_field(): string
  */
 function icono(string $nombre, string $clase = ''): string
 {
-    return '<svg class="icono' . ($clase !== '' ? ' ' . e($clase) : '') . '" aria-hidden="true" focusable="false">'
+    return '<svg class="icon' . ($clase !== '' ? ' ' . e($clase) : '') . '" aria-hidden="true" focusable="false">'
         . '<use href="#i-' . e($nombre) . '"></use></svg>';
 }
 
@@ -83,13 +83,13 @@ function icono(string $nombre, string $clase = ''): string
  */
 function estado_insignia(string $estado): string
 {
-    [$icono, $texto, $clase] = match ($estado) {
-        'realizado' => ['check-circulo', 'Realizado', 'realizado'],
-        'no_realizado' => ['x-circulo', 'No realizado', 'no-realizado'],
-        default => ['reloj', 'Programado', 'programado'],
+    [$icono, $texto] = match ($estado) {
+        'realizado' => ['check-circulo', 'Realizado'],
+        'no_realizado' => ['x-circulo', 'No realizado'],
+        default => ['reloj', 'Programado'],
     };
 
-    return '<span class="insignia insignia--' . $clase . '">' . icono($icono) . ' ' . e($texto) . '</span>';
+    return '<span class="badge badge--' . estado_clase($estado) . '">' . icono($icono) . ' ' . e($texto) . '</span>';
 }
 
 /**
@@ -97,7 +97,7 @@ function estado_insignia(string $estado): string
  */
 function error_campo(string $id, string $mensaje): string
 {
-    return '<span class="error-campo" id="' . e($id) . '">' . icono('alerta') . ' ' . e($mensaje) . '</span>';
+    return '<span class="field__error" id="' . e($id) . '">' . icono('alerta') . ' ' . e($mensaje) . '</span>';
 }
 
 /**

@@ -14,20 +14,20 @@
 
 $ocultos ??= [];
 ?>
-<form class="filtros" method="get" action="<?= e(url($ruta)) ?>" role="search" aria-label="Filtrar talleres"
+<form class="card filters" method="get" action="<?= e(url($ruta)) ?>" role="search" aria-label="Filtrar talleres"
       data-filtro-vivo>
     <?php foreach ($ocultos as $nombreOculto => $valorOculto) : ?>
         <input type="hidden" name="<?= e($nombreOculto) ?>" value="<?= e($valorOculto) ?>">
     <?php endforeach; ?>
-    <div class="campo">
+    <div class="field">
         <label for="f-nombre"><?= icono('buscar') ?> Nombre del taller</label>
         <input type="search" id="f-nombre" name="nombre" value="<?= e($filtros['nombre']) ?>" maxlength="150"
-               class="<?= $filtros['nombre'] !== '' ? 'filtro-activo' : '' ?>" placeholder="Ej. Liderazgo"
+               class="<?= $filtros['nombre'] !== '' ? 'is-active' : '' ?>" placeholder="Ej. Liderazgo"
                autocomplete="off">
     </div>
-    <div class="campo">
+    <div class="field">
         <label for="f-carrera"><?= icono('carrera') ?> Carrera</label>
-        <select id="f-carrera" name="carrera" class="<?= $filtros['carrera'] !== null ? 'filtro-activo' : '' ?>">
+        <select id="f-carrera" name="carrera" class="<?= $filtros['carrera'] !== null ? 'is-active' : '' ?>">
             <option value="">Todas</option>
             <?php foreach ($carreras as $c) : ?>
                 <option value="<?= e($c['id']) ?>"<?= $filtros['carrera'] === (int) $c['id'] ? ' selected' : '' ?>>
@@ -36,9 +36,9 @@ $ocultos ??= [];
             <?php endforeach; ?>
         </select>
     </div>
-    <div class="campo">
+    <div class="field">
         <label for="f-edificio"><?= icono('edificio') ?> Edificio</label>
-        <select id="f-edificio" name="edificio" class="<?= $filtros['edificio'] !== null ? 'filtro-activo' : '' ?>">
+        <select id="f-edificio" name="edificio" class="<?= $filtros['edificio'] !== null ? 'is-active' : '' ?>">
             <option value="">Todos</option>
             <?php foreach ($edificios as $ed) : ?>
                 <option value="<?= e($ed['id']) ?>"<?= $filtros['edificio'] === (int) $ed['id'] ? ' selected' : '' ?>>
@@ -47,10 +47,10 @@ $ocultos ??= [];
             <?php endforeach; ?>
         </select>
     </div>
-    <div class="filtros__acciones">
-        <button type="submit" class="btn btn-primario filtros__enviar"><?= icono('buscar') ?> Filtrar</button>
-        <a class="btn btn-secundario" href="<?= e(url($ruta, $ocultos)) ?>" data-limpiar
+    <div class="filters__actions">
+        <button type="submit" class="btn btn--primary filters__submit"><?= icono('buscar') ?> Filtrar</button>
+        <a class="btn btn--secondary" href="<?= e(url($ruta, $ocultos)) ?>" data-limpiar
            <?= $hayFiltros ? '' : 'hidden' ?>><?= icono('cerrar') ?> Limpiar</a>
     </div>
-    <p class="solo-lector" aria-live="polite" data-anuncio></p>
+    <p class="sr-only" aria-live="polite" data-anuncio></p>
 </form>

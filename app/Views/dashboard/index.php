@@ -13,15 +13,18 @@
 
 $vista = app()->view();
 ?>
-<div class="titulo-acciones">
-    <h1>Panel central</h1>
-    <a class="btn btn-primario" href="<?= e(url('/actividades/nueva')) ?>"><?= icono('mas') ?> Nuevo taller</a>
+<div class="page-header">
+    <div>
+        <h1>Panel central</h1>
+        <p>Todos los talleres activos. Filtra por nombre, carrera o edificio y abre uno para ver su detalle.</p>
+    </div>
+    <a class="btn btn--primary" href="<?= e(url('/actividades/nueva')) ?>"><?= icono('mas') ?> Nuevo taller</a>
 </div>
 
 <?= $vista->partial('actividades/_filtros', compact('ruta', 'filtros', 'carreras', 'edificios', 'hayFiltros')) ?>
 
 <div data-resultados>
-<p class="resumen" data-resumen>
+<p class="summary" data-resumen>
     <span>
         <strong><?= e($resultado['total']) ?> <?= $resultado['total'] === 1 ? 'taller' : 'talleres' ?></strong>
         <?= $hayFiltros ? 'coinciden con los filtros' : 'activos' ?>
@@ -32,20 +35,20 @@ $vista = app()->view();
 </p>
 
 <?php if ($resultado['filas'] === []) : ?>
-    <section class="vacio">
+    <section class="empty">
         <?php if ($hayFiltros) : ?>
-            <?= icono('sin-resultados', 'vacio__icono') ?>
+            <span class="icon-bubble"><?= icono('sin-resultados') ?></span>
             <p>
                 <strong>Ningún taller coincide con los filtros.</strong>
                 Prueba con otro nombre o quita alguno de los filtros.
             </p>
-            <a class="btn btn-secundario" href="<?= e(url($ruta)) ?>" data-limpiar>
+            <a class="btn btn--secondary" href="<?= e(url($ruta)) ?>" data-limpiar>
                 <?= icono('cerrar') ?> Quitar filtros
             </a>
         <?php else : ?>
-            <?= icono('calendario', 'vacio__icono') ?>
+            <span class="icon-bubble"><?= icono('calendario') ?></span>
             <p><strong>Todavía no hay talleres.</strong>Crea el primero para poder asignarle auditores.</p>
-            <a class="btn btn-primario" href="<?= e(url('/actividades/nueva')) ?>"><?= icono('mas') ?> Crear taller</a>
+            <a class="btn btn--primary" href="<?= e(url('/actividades/nueva')) ?>"><?= icono('mas') ?> Crear taller</a>
         <?php endif; ?>
     </section>
 <?php else : ?>

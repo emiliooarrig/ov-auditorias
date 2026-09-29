@@ -13,14 +13,16 @@
 
 $vista = app()->view();
 ?>
-<div class="cabecera-pagina">
-    <h1>Mis talleres</h1>
-    <p>Los talleres que te asignaron. Abre uno para ver sus datos o registrar que no se realizó.</p>
+<div class="page-header">
+    <div>
+        <h1>Mis talleres</h1>
+        <p>Los talleres que te asignaron. Abre uno para ver sus datos o registrar que no se realizó.</p>
+    </div>
 </div>
 
 <?php if ($resultado['total'] === 0 && !$hayFiltros) : ?>
-    <section class="vacio">
-        <?= icono('bandeja', 'vacio__icono') ?>
+    <section class="empty">
+        <span class="icon-bubble"><?= icono('bandeja') ?></span>
         <p>
             <strong>Todavía no tienes talleres asignados.</strong>
             Cuando el administrador te asigne alguno, aparecerá aquí con su fecha, horario y edificio.
@@ -30,7 +32,7 @@ $vista = app()->view();
     <?= $vista->partial('actividades/_filtros', compact('ruta', 'filtros', 'carreras', 'edificios', 'hayFiltros')) ?>
 
     <div data-resultados>
-    <p class="resumen" data-resumen>
+    <p class="summary" data-resumen>
         <span>
             <?php $unidad = $resultado['total'] === 1 ? 'taller asignado' : 'talleres asignados'; ?>
             <strong><?= e($resultado['total']) ?> <?= $unidad ?></strong>
@@ -42,10 +44,10 @@ $vista = app()->view();
     </p>
 
     <?php if ($resultado['filas'] === []) : ?>
-        <section class="vacio">
-            <?= icono('sin-resultados', 'vacio__icono') ?>
+        <section class="empty">
+            <span class="icon-bubble"><?= icono('sin-resultados') ?></span>
             <p><strong>Ninguno de tus talleres coincide con los filtros.</strong></p>
-            <a class="btn btn-secundario" href="<?= e(url($ruta)) ?>" data-limpiar>
+            <a class="btn btn--secondary" href="<?= e(url($ruta)) ?>" data-limpiar>
                 <?= icono('cerrar') ?> Quitar filtros
             </a>
         </section>

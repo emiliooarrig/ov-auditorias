@@ -70,6 +70,53 @@ function csrf_field(): string
 }
 
 /**
+ * Insignia de estado de un taller: ícono + texto + color, para no depender solo del color.
+ */
+function estado_insignia(string $estado): string
+{
+    [$icono, $texto, $clase] = match ($estado) {
+        'realizado' => ['✓', 'Realizado', 'realizado'],
+        'no_realizado' => ['✕', 'No realizado', 'no-realizado'],
+        default => ['◷', 'Programado', 'programado'],
+    };
+
+    return '<span class="insignia insignia--' . $clase . '"><span aria-hidden="true">' . $icono . '</span> '
+        . e($texto) . '</span>';
+}
+
+/**
+ * Fecha AAAA-MM-DD como "lun 5 oct 2026".
+ */
+function fecha_corta(string $fecha): string
+{
+    $dt = DateTimeImmutable::createFromFormat('!Y-m-d', substr($fecha, 0, 10));
+    if ($dt === false) {
+        return $fecha;
+    }
+    $dias = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+    $meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+    return $dias[(int) $dt->format('w')] . ' ' . $dt->format('j') . ' ' . $meses[(int) $dt->format('n') - 1]
+        . ' ' . $dt->format('Y');
+}
+
+/**
+ * Fecha y hora AAAA-MM-DD HH:MM:SS como "lun 5 oct 2026, 10:30".
+ */
+function fecha_hora(string $valor): string
+{
+    return fecha_corta($valor) . ', ' . substr($valor, 11, 5);
+}
+
+/**
+ * Horario "10:00–12:00" a partir de dos columnas TIME.
+ */
+function horario(string $inicio, string $fin): string
+{
+    return substr($inicio, 0, 5) . '–' . substr($fin, 0, 5);
+}
+
+/**
  * Error de validación de un campo del formulario anterior, o null.
  */
 function error_de(string $campo): ?string

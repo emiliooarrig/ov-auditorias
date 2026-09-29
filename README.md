@@ -63,7 +63,7 @@ tests/         PHPUnit
 
 - [x] Fase 1 — Base del proyecto
 - [x] Fase 2 — Base de datos y autenticación
-- [ ] Fase 3 — Talleres y panel
+- [x] Fase 3 — Talleres y panel
 - [ ] Fase 4 — Asignaciones y estados
 - [ ] Fase 5 — Usuarios y endurecimiento
 - [ ] Fase 6 — Pruebas y despliegue

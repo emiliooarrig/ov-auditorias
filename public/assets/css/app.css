@@ -146,6 +146,31 @@ input:focus, select:focus, textarea:focus { border-color: var(--anahuac-cafe); }
 }
 .paginacion [aria-current="page"] { background: var(--anahuac-cafe); color: var(--blanco); border-color: var(--anahuac-cafe); }
 
+/* Encabezado de página con acción principal */
+.titulo-acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem; }
+.titulo-acciones h1 { margin: 0; }
+
+.vacio { text-align: center; color: var(--gris-texto); }
+.vacio p { margin: 0; }
+.motivo { font-size: 0.875rem; color: var(--gris-texto); margin-top: 0.25rem; }
+
+/* Formulario de taller */
+.formulario { max-width: 760px; }
+.formulario__fila { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0 1rem; }
+.formulario__acciones { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+.casilla { display: flex; gap: 0.5rem; align-items: flex-start; margin-bottom: 0.75rem; }
+.casilla input { margin-top: 0.3rem; }
+
+/* Detalle de taller */
+.datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin: 0; }
+.datos dt { font-size: 0.8rem; font-weight: 700; color: var(--gris-texto); text-transform: uppercase; letter-spacing: 0.03em; }
+.datos dd { margin: 0.2rem 0 0; }
+.historial { list-style: none; margin: 0; padding: 0; }
+.historial li { padding: 0.75rem 0; border-bottom: 1px solid var(--gris-borde); }
+.historial li:last-child { border-bottom: 0; }
+.zona-peligro { border-color: var(--estado-no-realizado); }
+.zona-peligro h2 { color: var(--estado-no-realizado); }
+
 /* Páginas de error */
 .error { text-align: center; padding: 3rem 0; }
 .error__detalle { text-align: left; white-space: pre-wrap; background: var(--blanco); border: 1px solid var(--gris-borde); padding: 1rem; overflow-x: auto; }

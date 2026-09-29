@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Controllers\ActividadController;
 use App\Controllers\AuthController;
 use App\Controllers\DashboardController;
 use App\Core\Router;
@@ -36,6 +37,15 @@ return static function (Router $router): void {
     // Auditor (RF-11)
     $router->get('/mis-talleres', [DashboardController::class, 'misTalleres'], $soloAuditor);
 
-    // Administrador: talleres, asignaciones y usuarios se agregan en las fases 3 a 5 con este grupo.
-    // $router->group([AuthMiddleware::class, [RoleMiddleware::class, Usuario::ADMINISTRADOR]], ...);
+    // Administrador
+    $soloAdministrador = [AuthMiddleware::class, [RoleMiddleware::class, Usuario::ADMINISTRADOR]];
+    $router->group($soloAdministrador, static function (Router $r): void {
+        // Talleres (RF-06, RF-09). En la fase 4 el detalle se abre también al auditor asignado.
+        $r->get('/actividades/nueva', [ActividadController::class, 'crear']);
+        $r->post('/actividades', [ActividadController::class, 'guardar']);
+        $r->get('/actividades/{id:\d+}', [ActividadController::class, 'ver']);
+        $r->get('/actividades/{id:\d+}/editar', [ActividadController::class, 'editar']);
+        $r->post('/actividades/{id:\d+}', [ActividadController::class, 'actualizar']);
+        $r->post('/actividades/{id:\d+}/desactivar', [ActividadController::class, 'desactivar']);
+    });
 };

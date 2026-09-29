@@ -70,6 +70,14 @@ function csrf_field(): string
 }
 
 /**
+ * Error de validación de un campo del formulario anterior, o null.
+ */
+function error_de(string $campo): ?string
+{
+    return app()->session()->error($campo);
+}
+
+/**
  * Valor enviado en el formulario anterior (tras un error de validación).
  */
 function old(string $key, string $default = ''): string

@@ -70,6 +70,12 @@ main.contenedor { flex: 1; padding-top: 1.5rem; padding-bottom: 2rem; }
 }
 .menu a:hover, .menu button:hover { background: var(--anahuac-cafe-oscuro); }
 .menu a[aria-current="page"] { border-bottom-color: var(--anahuac-naranja); }
+.menu form { margin: 0; }
+.menu__usuario { padding: 0.4rem 0.7rem; opacity: 0.9; border-left: 1px solid rgba(255, 255, 255, 0.35); }
+
+/* Ingreso y registro */
+.acceso { max-width: 440px; margin: 2rem auto; }
+.btn-bloque { display: block; width: 100%; }
 
 /* Pie */
 .pie { color: var(--gris-texto); font-size: 0.85rem; padding: 1rem 0; border-top: 1px solid var(--gris-borde); }

@@ -20,6 +20,8 @@ final class App
     private Csrf $csrf;
     private View $view;
     private Logger $logger;
+    private Auth $auth;
+    private ?Request $request = null;
     private string $urlPath;
 
     /**
@@ -37,6 +39,7 @@ final class App
         $this->csrf = new Csrf($this->session);
         $this->view = new View($basePath . '/app/Views');
         $this->logger = new Logger($basePath . '/storage/logs');
+        $this->auth = new Auth($this);
 
         self::$instance = $this;
     }
@@ -63,6 +66,10 @@ final class App
 
     public function handle(Request $request): Response
     {
+        $this->request = $request;
+        // El usuario en sesión se vuelve a cargar en cada petición.
+        $this->auth = new Auth($this);
+
         try {
             $this->session->start();
 
@@ -168,5 +175,18 @@ final class App
     public function logger(): Logger
     {
         return $this->logger;
+    }
+
+    public function auth(): Auth
+    {
+        return $this->auth;
+    }
+
+    /**
+     * Petición en curso (null fuera de handle(), p. ej. en scripts de consola).
+     */
+    public function request(): ?Request
+    {
+        return $this->request;
     }
 }

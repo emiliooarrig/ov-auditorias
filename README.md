@@ -10,8 +10,18 @@ PHP 8.2+ · MVC propio · Composer (PSR-4) · MySQL 8.0.16+ / MariaDB 10.6+.
 ```bash
 composer install
 cp .env.example .env        # en local: APP_DEBUG=true, SESSION_SECURE=false, credenciales de BD
+php bin/instalar-bd.php     # crea la base, el esquema y los catálogos de carreras y edificios
+php bin/crear-admin.php     # primer administrador (pide la contraseña; solo guarda el hash)
 composer serve              # http://localhost:8000
 ```
+
+- **Ingreso:** el auditor entra solo con su correo `@anahuac.mx`; un correo nuevo del dominio se
+  registra como auditor. El administrador escribe su correo y luego su contraseña.
+- `php bin/instalar-bd.php --reiniciar` borra y recrea la base (pide escribir su nombre para confirmar).
+- `php bin/crear-admin.php` también convierte en administrador a un usuario existente o cambia
+  la contraseña de un administrador.
+- Las pruebas de integración usan la base `auditores_talleres_test`, que se borra y recrea en cada
+  corrida con las credenciales del `.env`; si MySQL no está disponible, esas pruebas se omiten.
 
 En producción, la raíz web del servidor debe apuntar a `public/`; nada fuera de esa carpeta
 debe ser accesible por HTTP.
@@ -52,7 +62,7 @@ tests/         PHPUnit
 ## Avance
 
 - [x] Fase 1 — Base del proyecto
-- [ ] Fase 2 — Base de datos y autenticación
+- [x] Fase 2 — Base de datos y autenticación
 - [ ] Fase 3 — Talleres y panel
 - [ ] Fase 4 — Asignaciones y estados
 - [ ] Fase 5 — Usuarios y endurecimiento

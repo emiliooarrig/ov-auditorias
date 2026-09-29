@@ -6,27 +6,27 @@ namespace App\Controllers;
 
 use App\Core\Request;
 use App\Core\Response;
-use Throwable;
 
 final class DashboardController extends Controller
 {
     /**
-     * Fase 1: página de verificación de la base técnica. En la fase 3 se convierte
-     * en el panel central con filtros (RF-03, RF-08).
+     * Panel central del administrador (RF-03). El auditor no accede: va a "Mis talleres".
+     * El listado con filtros (RF-08) se construye en la fase 3.
      */
     public function index(Request $request): Response
     {
-        try {
-            $version = (string) $this->db()->fetchValue('SELECT VERSION()');
-            $bd = ['ok' => true, 'detalle' => $version];
-        } catch (Throwable $e) {
-            $bd = ['ok' => false, 'detalle' => $this->app->debug() ? $e->getMessage() : 'Sin conexión'];
+        if (!$this->app->auth()->esAdministrador()) {
+            return $this->redirect('/mis-talleres');
         }
 
-        return $this->view('dashboard/index', [
-            'titulo' => 'Panel central',
-            'bd' => $bd,
-            'php' => PHP_VERSION,
-        ]);
+        return $this->view('dashboard/index', ['titulo' => 'Panel central']);
+    }
+
+    /**
+     * "Mis talleres" del auditor en sesión (RF-11). El listado se construye en la fase 4.
+     */
+    public function misTalleres(Request $request): Response
+    {
+        return $this->view('dashboard/mis-talleres', ['titulo' => 'Mis talleres']);
     }
 }

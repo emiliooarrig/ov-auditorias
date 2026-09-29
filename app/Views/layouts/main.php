@@ -1,12 +1,23 @@
 <?php
+
 /**
  * Layout principal.
  *
  * @var string      $contenido
  * @var string|null $titulo
  */
+
 $nombreApp = (string) app()->config('name');
 $mensajes = app()->session()->pullFlash();
+$usuario = app()->auth()->user();
+$rutaActual = app()->request()?->path ?? '';
+
+$enlaces = [];
+if ($usuario !== null) {
+    $enlaces = app()->auth()->esAdministrador()
+        ? ['/' => 'Panel central']
+        : ['/mis-talleres' => 'Mis talleres'];
+}
 ?>
 <!doctype html>
 <html lang="es">
@@ -24,6 +35,29 @@ $mensajes = app()->session()->pullFlash();
                 <span class="marca__universidad">Universidad Anáhuac</span>
                 <span class="marca__app"><?= e($nombreApp) ?></span>
             </a>
+            <?php if ($usuario !== null) : ?>
+                <nav aria-label="Principal">
+                    <ul class="menu">
+                        <?php foreach ($enlaces as $ruta => $etiqueta) : ?>
+                            <li>
+                                <?php $actual = $rutaActual === $ruta ? ' aria-current="page"' : ''; ?>
+                                <a href="<?= e(url($ruta)) ?>"<?= $actual ?>>
+                                    <?= e($etiqueta) ?>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                        <li class="menu__usuario" title="<?= e($usuario['correo']) ?>">
+                            <?= e($usuario['nombre']) ?>
+                        </li>
+                        <li>
+                            <form method="post" action="<?= e(url('/logout')) ?>">
+                                <?= csrf_field() ?>
+                                <button type="submit">Cerrar sesión</button>
+                            </form>
+                        </li>
+                    </ul>
+                </nav>
+            <?php endif; ?>
         </div>
     </header>
 

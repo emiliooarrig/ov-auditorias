@@ -13,9 +13,13 @@ final class Session
     private const ULTIMA_ACTIVIDAD = '_ultima_actividad';
     private const FLASH = '_flash';
     private const OLD = '_old';
+    private const ERRORS = '_errores';
 
     /** @var array<string, mixed> */
     private array $oldInput = [];
+
+    /** @var array<string, mixed> */
+    private array $errors = [];
 
     /**
      * @param array{name: string, secure: bool, idle_minutes: int, path: string} $config
@@ -32,29 +36,29 @@ final class Session
         // En consola (pruebas, scripts de bin/) no hay cookies: la sesión es un arreglo en memoria.
         if (PHP_SAPI === 'cli') {
             $_SESSION ??= [];
-
-            return;
+        } else {
+            ini_set('session.use_strict_mode', '1');
+            ini_set('session.use_only_cookies', '1');
+            ini_set('session.use_trans_sid', '0');
+            session_name($this->config['name']);
+            session_set_cookie_params([
+                'lifetime' => 0,
+                'path' => $this->config['path'],
+                'secure' => $this->config['secure'],
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]);
+            session_start();
         }
-
-        ini_set('session.use_strict_mode', '1');
-        ini_set('session.use_only_cookies', '1');
-        ini_set('session.use_trans_sid', '0');
-        session_name($this->config['name']);
-        session_set_cookie_params([
-            'lifetime' => 0,
-            'path' => $this->config['path'],
-            'secure' => $this->config['secure'],
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
-        session_start();
 
         $this->expireIfIdle();
 
-        // Los datos del formulario anterior viven solo durante esta petición.
+        // Los datos y errores del formulario anterior viven solo durante esta petición.
         $old = $_SESSION[self::OLD] ?? [];
         $this->oldInput = is_array($old) ? $old : [];
-        unset($_SESSION[self::OLD]);
+        $errors = $_SESSION[self::ERRORS] ?? [];
+        $this->errors = is_array($errors) ? $errors : [];
+        unset($_SESSION[self::OLD], $_SESSION[self::ERRORS]);
     }
 
     private function expireIfIdle(): void
@@ -149,5 +153,22 @@ final class Session
     public function old(string $key): mixed
     {
         return $this->oldInput[$key] ?? null;
+    }
+
+    /**
+     * Guarda errores de validación por campo para mostrarlos en la siguiente petición.
+     *
+     * @param array<string, string> $errors
+     */
+    public function flashErrors(array $errors): void
+    {
+        $_SESSION[self::ERRORS] = $errors;
+    }
+
+    public function error(string $field): ?string
+    {
+        $error = $this->errors[$field] ?? null;
+
+        return is_string($error) ? $error : null;
     }
 }

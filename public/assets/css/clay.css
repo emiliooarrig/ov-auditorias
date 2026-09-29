@@ -364,7 +364,7 @@ input:disabled, select:disabled, textarea:disabled {
   display: inline-flex; align-items: center; gap: var(--esp-2); padding: 0; margin-bottom: var(--esp-4);
   font-size: var(--t-18); font-weight: 700; color: var(--color-titulo);
 }
-.fieldset + .fieldset { padding-top: var(--esp-5); border-top: 2px dashed var(--color-divisor); }
+.fieldset:has(+ .fieldset) { padding-bottom: var(--esp-5); border-bottom: 2px dashed var(--color-divisor); }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0 var(--esp-4); }
 .form-actions { display: flex; flex-wrap: wrap; gap: var(--esp-3); margin-top: var(--esp-2); }
 .form-narrow { max-width: 780px; }
@@ -449,7 +449,7 @@ input[type="checkbox"]:disabled, input[type="radio"]:disabled { cursor: not-allo
 .summary strong { color: var(--color-texto); }
 
 /* ---------- Tabla del panel ---------- */
-.table-wrap { padding: var(--esp-3); }
+.table-wrap { padding: var(--esp-3); overflow-x: auto; }
 .table { width: 100%; border-collapse: separate; border-spacing: 0; }
 .table th {
   padding: var(--esp-3) var(--esp-4); text-align: left; vertical-align: bottom;
@@ -467,7 +467,7 @@ input[type="checkbox"]:disabled, input[type="radio"]:disabled { cursor: not-allo
 .table tr:has(input[type="checkbox"]:checked) td { background: var(--superficie-calida); }
 .table__title { display: block; font-weight: 700; }
 .table__title a { font-weight: 700; }
-.table__sub { display: flex; align-items: center; gap: var(--esp-1); margin-top: var(--esp-1); color: var(--color-texto-secundario); font-size: var(--t-14); }
+.table__sub { display: flex; align-items: flex-start; gap: var(--esp-1); margin-top: var(--esp-1); color: var(--color-texto-secundario); font-size: var(--t-14); }
 .table .col-check { width: 3.5rem; }
 .table .col-date { width: 11.5rem; }
 
@@ -566,14 +566,14 @@ main > .alert { animation: alert-in 320ms ease-out both; }
 }
 .people form { margin: 0; }
 .person { display: flex; flex-direction: column; gap: var(--esp-1); min-width: 0; }
-.person__meta { display: inline-flex; align-items: center; gap: var(--esp-1); color: var(--color-texto-secundario); font-size: var(--t-14); overflow-wrap: anywhere; }
+.person__meta { display: inline-flex; align-items: flex-start; gap: var(--esp-1); color: var(--color-texto-secundario); font-size: var(--t-14); overflow-wrap: anywhere; }
 
 /* Historial de estados */
 .timeline { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--esp-3); }
 .timeline__item { padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-control); background: var(--superficie-hundida); box-shadow: var(--clay-sunken); }
 .timeline__change { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2); }
 .timeline__change > .icon { color: var(--color-texto-secundario); }
-.timeline__meta { display: flex; align-items: center; gap: var(--esp-1); margin-top: var(--esp-2); font-size: var(--t-14); color: var(--color-texto-secundario); }
+.timeline__meta { display: flex; align-items: flex-start; gap: var(--esp-1); margin-top: var(--esp-2); font-size: var(--t-14); color: var(--color-texto-secundario); }
 
 /* ---------- Pasos (asignaciones) ---------- */
 .step-title { font-size: var(--t-21); margin-bottom: var(--esp-4); }
@@ -651,7 +651,9 @@ main > .alert { animation: alert-in 320ms ease-out both; }
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 .muted { color: var(--color-texto-secundario); }
-.with-icon { display: inline-flex; align-items: center; gap: var(--esp-1); }
+.with-icon { display: inline-flex; align-items: flex-start; gap: var(--esp-1); }
+/* En textos que pueden partirse en varias líneas, el ícono se alinea con la primera. */
+.with-icon > .icon, .table__sub > .icon, .person__meta > .icon, .timeline__meta > .icon { margin-top: 0.18em; }
 .nums { font-variant-numeric: tabular-nums; }
 .back-link {
   display: inline-flex; align-items: center; gap: var(--esp-1); min-height: var(--toque);
@@ -668,32 +670,18 @@ main > .alert { animation: alert-in 320ms ease-out both; }
   .layout-detail, .layout-assign { grid-template-columns: 1fr; }
   .filters { grid-template-columns: 1fr 1fr; }
   .filters .field:first-child, .filters__actions { grid-column: 1 / -1; }
-}
 
-/* Teléfono (≤ 767 px): menú en fila propia, tabla convertida en tarjetas apiladas. */
-@media (max-width: 767px) {
-  :root { --gutter: 16px; }
-  h1 { font-size: var(--t-24); }
-  .site-header { padding-top: var(--esp-3); }
-  .site-header__slab { padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-tarjeta); }
+  /* Encabezado: el menú y la sesión pasan a su propia fila. */
   .site-header__nav { flex-basis: 100%; }
-  .nav__list { width: 100%; }
-  .nav__link { padding: 0 var(--esp-3); }
-  .session { width: 100%; justify-content: space-between; }
-  .session__user { align-items: flex-start; }
-  main.container { padding-top: var(--esp-5); }
+  .session { margin-left: auto; }
 
-  .card { padding: var(--esp-4); border-radius: var(--radio-tarjeta); }
-  .filters { grid-template-columns: 1fr; }
-  .filters__actions .btn { flex: 1; }
-
-  /* Una tarjeta de arcilla por taller: la envoltura deja de ser tarjeta. */
-  .table-wrap { padding: 0; background: none; box-shadow: none; }
+  /* Tablas: una tarjeta de arcilla por fila, en dos columnas si caben; la envoltura deja de ser tarjeta. */
+  .table-wrap { padding: 0; background: none; box-shadow: none; overflow: visible; }
   .table--stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
-  .table--stack, .table--stack tbody { display: block; }
-  .table--stack tbody { display: grid; gap: var(--esp-4); }
+  .table--stack { display: block; }
+  .table--stack tbody { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--esp-4); }
   .table--stack tr {
-    display: grid; grid-template-columns: 1fr; gap: var(--esp-2); padding: var(--esp-4);
+    display: flex; flex-direction: column; gap: var(--esp-2); padding: var(--esp-4);
     background: var(--superficie); border-radius: var(--radio-tarjeta); box-shadow: var(--clay-raised);
   }
   .table--stack td { display: block; padding: 0; border: 0; }
@@ -706,6 +694,22 @@ main > .alert { animation: alert-in 320ms ease-out both; }
   }
   .table--stack .cell-title { order: -2; font-size: var(--t-18); }
   .table--stack td.cell-check { order: -3; }
+}
+
+/* Teléfono (≤ 767 px): menú en fila propia, tabla convertida en tarjetas apiladas. */
+@media (max-width: 767px) {
+  :root { --gutter: 16px; }
+  h1 { font-size: var(--t-24); }
+  .site-header { padding-top: var(--esp-3); }
+  .site-header__slab { padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-tarjeta); }
+  .nav__link { padding: 0 var(--esp-3); }
+  .table--stack tbody { grid-template-columns: 1fr; }
+  main.container { padding-top: var(--esp-5); }
+
+  .card { padding: var(--esp-4); border-radius: var(--radio-tarjeta); }
+  .filters { grid-template-columns: 1fr; }
+  .filters__actions .btn { flex: 1; }
+
 
   .hero { grid-template-columns: 1fr; }
   .action-bar { border-radius: var(--radio-tarjeta); padding: var(--esp-3); }

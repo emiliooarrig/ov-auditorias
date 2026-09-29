@@ -18,21 +18,23 @@
 $vista = app()->view();
 $ruta = '/asignaciones';
 ?>
-<div class="cabecera-pagina">
-    <h1>Asignaciones</h1>
-    <p>Elige un auditor y marca los talleres que le tocan. Puedes asignar varios a la vez.</p>
+<div class="page-header">
+    <div>
+        <h1>Asignaciones</h1>
+        <p>Elige un auditor y marca los talleres que le tocan. Puedes asignar varios a la vez.</p>
+    </div>
 </div>
 
-<form class="tarjeta" method="get" action="<?= e(url($ruta)) ?>">
-    <h2 class="paso__titulo"><span class="paso__numero" aria-hidden="true">1</span>Elige al auditor</h2>
+<form class="card" method="get" action="<?= e(url($ruta)) ?>">
+    <h2 class="step-title"><span class="step-number" aria-hidden="true">1</span>Elige al auditor</h2>
     <?php if ($auditores === []) : ?>
-        <p class="texto-secundario con-icono">
+        <p class="muted with-icon">
             <?= icono('info') ?>
             Todavía no hay auditores registrados. Aparecerán aquí cuando ingresen por primera vez con su correo.
         </p>
     <?php else : ?>
-        <div class="selector-auditor">
-            <div class="campo">
+        <div class="picker">
+            <div class="field">
                 <label for="usuario"><?= icono('usuario') ?> Auditor</label>
                 <select id="usuario" name="usuario" required>
                     <option value="">Elige un auditor</option>
@@ -44,7 +46,7 @@ $ruta = '/asignaciones';
                     <?php endforeach; ?>
                 </select>
             </div>
-            <button type="submit" class="btn btn-primario"><?= icono('flecha-derecha') ?> Ver sus talleres</button>
+            <button type="submit" class="btn btn--primary"><?= icono('flecha-derecha') ?> Ver sus talleres</button>
         </div>
     <?php endif; ?>
 </form>
@@ -58,10 +60,10 @@ $ruta = '/asignaciones';
         static fn (mixed $v): bool => $v !== null && $v !== ''
     );
     ?>
-    <div class="asignar">
+    <div class="layout-assign">
         <section aria-labelledby="t-asignar">
-            <h2 class="paso__titulo" id="t-asignar">
-                <span class="paso__numero" aria-hidden="true">2</span>Marca los talleres para <?= e($nombreAuditor) ?>
+            <h2 class="step-title" id="t-asignar">
+                <span class="step-number" aria-hidden="true">2</span>Marca los talleres para <?= e($nombreAuditor) ?>
             </h2>
             <?= $vista->partial(
                 'actividades/_filtros',
@@ -71,15 +73,15 @@ $ruta = '/asignaciones';
 
             <div data-resultados>
             <?php if ($resultado['filas'] === []) : ?>
-                <section class="vacio">
+                <section class="empty">
                     <?php if ($hayFiltros) : ?>
-                        <?= icono('sin-resultados', 'vacio__icono') ?>
+                        <span class="icon-bubble"><?= icono('sin-resultados') ?></span>
                         <p>
                             <strong>Ningún taller coincide con los filtros.</strong>
                             Prueba con otro nombre o quita alguno de los filtros.
                         </p>
                     <?php else : ?>
-                        <?= icono('calendario', 'vacio__icono') ?>
+                        <span class="icon-bubble"><?= icono('calendario') ?></span>
                         <p><strong>No hay talleres activos.</strong>Crea talleres desde el panel central.</p>
                     <?php endif; ?>
                 </section>
@@ -91,64 +93,68 @@ $ruta = '/asignaciones';
                         <input type="hidden" name="<?= e($clave) ?>" value="<?= e($valor) ?>">
                     <?php endforeach; ?>
 
-                    <table class="tabla tabla--responsiva">
-                        <caption class="solo-lector">
+                    <div class="card table-wrap">
+                    <table class="table table--stack">
+                        <caption class="sr-only">
                             Talleres activos. Marca los que quieres asignar a <?= e($nombreAuditor) ?>.
                         </caption>
                         <thead>
                             <tr>
-                                <th scope="col" class="col-casilla"><span class="solo-lector">Asignar</span></th>
-                                <th scope="col" class="col-fecha">Fecha</th>
+                                <th scope="col" class="col-check"><span class="sr-only">Asignar</span></th>
                                 <th scope="col">Taller</th>
-                                <th scope="col" class="col-edificio">Edificio</th>
+                                <th scope="col" class="col-date">Fecha</th>
+                                <th scope="col">Edificio</th>
                                 <th scope="col">Estado</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($resultado['filas'] as $fila) : ?>
                                 <?php $yaAsignado = in_array($fila['id'], $idsAsignados, true); ?>
-                                <?php $claseFila = 'fila fila--' . estado_clase((string) $fila['estado']); ?>
-                                <tr class="<?= e($claseFila) ?>">
-                                    <td class="celda-casilla">
+                                <tr>
+                                    <td class="cell-check">
                                         <?php if ($yaAsignado) : ?>
-                                            <span class="ya-asignado"><?= icono('check') ?> Ya asignado</span>
+                                            <span class="already"><?= icono('check') ?> Ya asignado</span>
                                         <?php else : ?>
-                                            <input type="checkbox" name="actividades[]" value="<?= e($fila['id']) ?>"
-                                                   id="taller-<?= e($fila['id']) ?>">
+                                            <?php /* Etiqueta sin texto: da 44 × 44 px de área táctil. */ ?>
+                                            <label class="check-target">
+                                                <input type="checkbox" name="actividades[]"
+                                                       value="<?= e($fila['id']) ?>" id="taller-<?= e($fila['id']) ?>">
+                                            </label>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="celda-lateral">
-                                        <?= $vista->partial('partials/hoja', [
+                                    <td class="cell-title">
+                                        <span class="table__title">
+                                            <?php if ($yaAsignado) : ?>
+                                                <?= e($fila['nombre']) ?>
+                                            <?php else : ?>
+                                                <label for="taller-<?= e($fila['id']) ?>"><?= e($fila['nombre']) ?></label>
+                                            <?php endif; ?>
+                                        </span>
+                                        <span class="table__sub">
+                                            <?= icono('carrera') ?> <?= e($fila['carrera']) ?>
+                                        </span>
+                                    </td>
+                                    <td data-label="Fecha">
+                                        <?= $vista->partial('partials/fecha', [
                                             'fecha' => (string) $fila['fecha'],
                                             'inicio' => (string) $fila['hora_inicio'],
                                             'fin' => (string) $fila['hora_fin'],
                                         ]) ?>
                                     </td>
-                                    <td>
-                                        <span class="tabla__nombre">
-                                            <?php if ($yaAsignado) : ?>
-                                                <strong><?= e($fila['nombre']) ?></strong>
-                                            <?php else : ?>
-                                                <label for="taller-<?= e($fila['id']) ?>">
-                                                    <strong><?= e($fila['nombre']) ?></strong>
-                                                </label>
-                                            <?php endif; ?>
-                                        </span>
-                                        <span class="tabla__sub">
-                                            <?= icono('carrera') ?> <?= e($fila['carrera']) ?>
+                                    <td data-label="Edificio">
+                                        <span class="building">
+                                            <?= icono('edificio') ?> Edificio <?= e($fila['edificio']) ?>
                                         </span>
                                     </td>
-                                    <td data-etiqueta="Edificio" class="celda-en-linea">
-                                        <span class="placa"><?= e($fila['edificio']) ?></span>
-                                    </td>
-                                    <td><?= estado_insignia((string) $fila['estado']) ?></td>
+                                    <td data-label="Estado"><?= estado_insignia((string) $fila['estado']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                    <div class="barra-accion">
-                        <span class="barra-accion__conteo" data-conteo aria-live="polite"></span>
-                        <button type="submit" class="btn btn-primario">
+                    </div>
+                    <div class="action-bar">
+                        <span class="action-bar__count" data-conteo aria-live="polite"></span>
+                        <button type="submit" class="btn btn--primary">
                             <?= icono('asignar') ?> Asignar talleres seleccionados
                         </button>
                     </div>
@@ -163,19 +169,19 @@ $ruta = '/asignaciones';
             </div>
         </section>
 
-        <aside class="tarjeta asignar__lateral" aria-labelledby="t-actuales">
-            <h2 id="t-actuales"><?= icono('mis-talleres') ?> Talleres de <?= e($nombreAuditor) ?></h2>
+        <aside class="card" aria-labelledby="t-actuales">
+            <h2 class="card__title" id="t-actuales"><?= icono('mis-talleres') ?> Talleres de <?= e($nombreAuditor) ?></h2>
             <?php if ($asignados === []) : ?>
-                <p class="texto-secundario">Todavía no tiene talleres asignados.</p>
+                <p class="muted">Todavía no tiene talleres asignados.</p>
             <?php else : ?>
-                <ul class="lista-auditores">
+                <ul class="people">
                     <?php foreach ($asignados as $t) : ?>
                         <li>
-                            <div class="persona">
+                            <div class="person">
                                 <a href="<?= e(url('/actividades/' . $t['actividad_id'])) ?>">
                                     <strong><?= e($t['nombre']) ?></strong>
                                 </a>
-                                <span class="persona__meta numeros">
+                                <span class="person__meta nums">
                                     <?= icono('calendario') ?> <?= e(fecha_corta($t['fecha'])) ?>,
                                     <?= e(horario($t['hora_inicio'], $t['hora_fin'])) ?>
                                 </span>
@@ -189,9 +195,9 @@ $ruta = '/asignaciones';
                                     <?php foreach ($regreso as $clave => $valor) : ?>
                                         <input type="hidden" name="<?= e($clave) ?>" value="<?= e($valor) ?>">
                                     <?php endforeach; ?>
-                                    <button type="submit" class="btn btn-enlace btn-enlace--peligro">
+                                    <button type="submit" class="btn btn--link btn--link-danger">
                                         <?= icono('usuario-menos') ?>
-                                        Quitar<span class="solo-lector"> <?= e($t['nombre']) ?></span>
+                                        Quitar<span class="sr-only"> <?= e($t['nombre']) ?></span>
                                     </button>
                                 </form>
                             <?php endif; ?>

@@ -117,18 +117,6 @@ function fecha_corta(string $fecha): string
 }
 
 /**
- * Partes de una fecha AAAA-MM-DD para la hoja de calendario: ['dia' => 'lun', 'numero' => '5', 'mes' => 'oct'].
- *
- * @return array{dia: string, numero: string, mes: string}
- */
-function fecha_partes(string $fecha): array
-{
-    $partes = explode(' ', fecha_corta($fecha));
-
-    return ['dia' => $partes[0], 'numero' => $partes[1] ?? $fecha, 'mes' => $partes[2] ?? ''];
-}
-
-/**
  * Clase CSS de un estado ("no_realizado" → "no-realizado").
  */
 function estado_clase(string $estado): string

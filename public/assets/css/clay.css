@@ -1,0 +1,740 @@
+/*
+ * clay.css — Sistema de diseño Claymorphism de la aplicación (SDD, sección 7).
+ *
+ * Cada elemento parece de arcilla: superficies cálidas y claras, esquinas muy redondeadas y una
+ * receta de cuatro sombras teñidas de café (exterior difusa, luz arriba a la izquierda, sombra interior
+ * abajo a la derecha). Al pasar el cursor se eleva; al presionarlo se hunde. Los campos se ven hundidos.
+ *
+ * Reglas de marca: solo los tokens del SDD 7.1. El café lleva texto y botones; el naranja es acento y
+ * nunca fondo de texto blanco (2.5:1). Las sombras nunca son negras ni el único indicador de un control:
+ * los controles llevan borde de al menos 3:1.
+ *
+ * Orden: 1. Tokens · 2. Base · 3. Layout · 4. Componentes · 5. Utilidades · 6. Adaptaciones.
+ * Sin preprocesadores, sin recursos externos (la CSP solo permite 'self').
+ */
+
+/* =====================================================================================
+ * 1. TOKENS
+ * ===================================================================================== */
+:root {
+  /* Paleta institucional (SDD 7.1). No se agregan otros tonos. */
+  --anahuac-naranja: #FF8300;
+  --anahuac-cafe: #6B3F23;
+  --anahuac-cafe-oscuro: #4F2E19;
+  --anahuac-naranja-suave: #FFF3E6;
+  --gris-fondo: #F7F4F1;
+  --gris-borde: #D9D2CB;
+  --gris-texto: #5C524B;
+  --estado-realizado: #2E7D32;
+  --estado-no-realizado: #B3261E;
+  --texto: #2B211A;
+  --blanco: #FFFFFF;
+
+  /* Roles. Contrastes medidos: texto 14.4:1, secundario 6.9:1, café 8.1:1 sobre el fondo. */
+  --color-texto: var(--texto);
+  --color-texto-secundario: var(--gris-texto);
+  --color-titulo: var(--anahuac-cafe);
+  --color-enlace: var(--anahuac-cafe);
+  --color-borde-control: var(--gris-texto);   /* 6.9:1: cumple 3:1 para bordes de controles */
+  --color-divisor: var(--gris-borde);         /* 1.4:1: solo decorativo, nunca delimita un control */
+  --superficie-pagina: var(--gris-fondo);
+  --superficie: var(--blanco);
+  --superficie-calida: var(--anahuac-naranja-suave);
+  --superficie-hundida: var(--gris-fondo);
+
+  /* Arcilla: sombras teñidas de café (107, 63, 35) y luces blancas. */
+  --clay-raised:
+    8px 8px 20px rgba(107, 63, 35, 0.22),
+    -6px -6px 16px rgba(255, 255, 255, 0.9),
+    inset -4px -4px 8px rgba(107, 63, 35, 0.12),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.7);
+  --clay-raised-hover:
+    12px 14px 28px rgba(107, 63, 35, 0.26),
+    -8px -8px 20px rgba(255, 255, 255, 0.95),
+    inset -4px -4px 8px rgba(107, 63, 35, 0.12),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.7);
+  --clay-raised-sm:
+    4px 4px 10px rgba(107, 63, 35, 0.18),
+    -3px -3px 8px rgba(255, 255, 255, 0.9),
+    inset -2px -2px 4px rgba(107, 63, 35, 0.1),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.7);
+  --clay-pressed:
+    inset 4px 4px 10px rgba(107, 63, 35, 0.25),
+    inset -4px -4px 10px rgba(255, 255, 255, 0.8);
+  --clay-sunken:
+    inset 3px 3px 7px rgba(107, 63, 35, 0.16),
+    inset -3px -3px 7px rgba(255, 255, 255, 0.85);
+  /* Sobre café (encabezado, botón primario): la luz es blanca tenue y la sombra, café oscuro. */
+  --clay-on-dark:
+    8px 8px 20px rgba(107, 63, 35, 0.3),
+    -6px -6px 16px rgba(255, 255, 255, 0.85),
+    inset -4px -4px 8px rgba(79, 46, 25, 0.55),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.18);
+  --clay-on-dark-pressed:
+    inset 4px 4px 10px rgba(79, 46, 25, 0.7),
+    inset -3px -3px 8px rgba(255, 255, 255, 0.12);
+
+  /* Foco: anillo naranja de 3 px con separación de 2 px. El naranja da 2.3:1 sobre fondos claros,
+     así que un anillo café interior (8.1:1) garantiza el 3:1 del indicador. */
+  --foco-anillo: 3px solid var(--anahuac-naranja);
+  --foco-interior: 0 0 0 2px var(--anahuac-cafe);
+
+  /* Forma */
+  --radio-contenedor: 28px;
+  --radio-tarjeta: 24px;
+  --radio-control: 16px;
+  --radio-chico: 10px;
+  --radio-pildora: 999px;
+
+  /* Tipografía (SDD 7.2). Escala: 12 · 14 · 16 · 18 · 21 · 24 · 30 · 40 */
+  --fuente: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --t-12: 0.75rem;
+  --t-14: 0.875rem;
+  --t-16: 1rem;
+  --t-18: 1.125rem;
+  --t-21: 1.3125rem;
+  --t-24: 1.5rem;
+  --t-30: 1.875rem;
+  --t-40: 2.5rem;
+
+  /* Espacio y medidas */
+  --esp-1: 0.25rem;
+  --esp-2: 0.5rem;
+  --esp-3: 0.75rem;
+  --esp-4: 1rem;
+  --esp-5: 1.5rem;
+  --esp-6: 2rem;
+  --esp-7: 3rem;
+  --toque: 2.75rem;      /* 44 px: área táctil mínima */
+  --ancho: 1200px;
+  --gutter: 16px;
+
+  /* Movimiento */
+  --elevar: translateY(-2px);
+  --hundir: translateY(1px);
+  --transicion: transform 160ms ease-out, box-shadow 160ms ease-out, background-color 160ms ease-out;
+}
+
+/* =====================================================================================
+ * 2. BASE
+ * ===================================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--fuente);
+  font-size: var(--t-16);
+  line-height: 1.5;
+  color: var(--color-texto);
+  background: var(--superficie-pagina);
+}
+
+h1, h2, h3 {
+  display: flex; align-items: center; gap: var(--esp-2);
+  margin: 0 0 var(--esp-3); color: var(--color-titulo); line-height: 1.2; letter-spacing: -0.01em;
+}
+h1 { font-size: var(--t-30); font-weight: 800; }
+h2 { font-size: var(--t-21); font-weight: 700; }
+h3 { font-size: var(--t-18); font-weight: 700; }
+p { margin: 0 0 var(--esp-3); }
+
+a { color: var(--color-enlace); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+a:hover { color: var(--anahuac-cafe-oscuro); text-decoration-thickness: 2px; }
+
+strong { font-weight: 700; }
+pre { font-size: var(--t-14); white-space: pre-wrap; }
+
+/* Sprite de iconos: se carga oculto una vez por página. */
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* =====================================================================================
+ * 3. LAYOUT
+ * ===================================================================================== */
+.container { width: 100%; max-width: var(--ancho); margin: 0 auto; padding: 0 var(--gutter); }
+
+.skip-link {
+  position: absolute; left: var(--gutter); top: -4rem; z-index: 10;
+  padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-pildora);
+  background: var(--anahuac-cafe); color: var(--blanco); font-weight: 700;
+}
+.skip-link:focus { top: var(--esp-3); color: var(--blanco); }
+
+/* Encabezado: losa de arcilla café con franja naranja inferior. */
+.site-header { padding: var(--esp-4) var(--gutter) 0; }
+.site-header__slab {
+  max-width: calc(var(--ancho) - 2 * var(--gutter)); margin: 0 auto;
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-3) var(--esp-5);
+  padding: var(--esp-3) var(--esp-4) var(--esp-3) var(--esp-5);
+  background: var(--anahuac-cafe); color: var(--blanco);
+  border-radius: var(--radio-contenedor);
+  border-bottom: 6px solid var(--anahuac-naranja);
+  box-shadow: var(--clay-on-dark);
+}
+.brand {
+  display: flex; flex-direction: column; padding: var(--esp-1) 0; min-height: var(--toque); justify-content: center;
+  color: var(--blanco); text-decoration: none; border-radius: var(--radio-chico);
+}
+.brand:hover { color: var(--blanco); }
+.brand__org { font-size: var(--t-12); font-weight: 600; opacity: 0.9; }
+.brand__app { font-size: var(--t-18); font-weight: 800; line-height: 1.2; }
+.site-header__nav { flex: 1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--esp-3); }
+
+main.container { flex: 1; padding-top: var(--esp-6); padding-bottom: var(--esp-7); }
+
+.site-footer { padding: var(--esp-5) 0; color: var(--color-texto-secundario); font-size: var(--t-14); }
+
+/* Cabecera de página: título, descripción y acciones. */
+.page-header {
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+  gap: var(--esp-3) var(--esp-4); margin-bottom: var(--esp-5);
+}
+.page-header h1 { margin: 0; }
+.page-header p { margin: var(--esp-1) 0 0; color: var(--color-texto-secundario); max-width: 60ch; }
+
+/* Rejillas de página */
+.layout-detail { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: var(--esp-5); align-items: start; }
+.layout-assign { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--esp-5); align-items: start; }
+.stack > * + * { margin-top: var(--esp-5); }
+
+/* =====================================================================================
+ * 4. COMPONENTES
+ * ===================================================================================== */
+
+/* ---------- Iconos: trazo grueso con terminaciones redondeadas ---------- */
+.icon {
+  display: inline-block; flex: none; width: 1.15em; height: 1.15em; vertical-align: -0.2em;
+  fill: none; stroke: currentColor; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round;
+}
+.icon--lg { width: 1.6rem; height: 1.6rem; }
+/* Burbuja de arcilla que envuelve un ícono grande (estados vacíos, errores, ingreso). */
+.icon-bubble {
+  display: inline-grid; place-items: center; width: 4.5rem; height: 4.5rem; margin-bottom: var(--esp-4);
+  border-radius: 50%; background: var(--superficie-calida); color: var(--anahuac-cafe);
+  border: 3px solid var(--anahuac-naranja); box-shadow: var(--clay-raised);
+}
+.icon-bubble .icon { width: 2rem; height: 2rem; }
+
+/* ---------- Navegación ---------- */
+.nav__list { display: flex; flex-wrap: wrap; gap: var(--esp-2); margin: 0; padding: 0; list-style: none; }
+.nav__link {
+  --sombra: none;
+  display: inline-flex; align-items: center; gap: var(--esp-2);
+  min-height: var(--toque); padding: 0 var(--esp-4); border-radius: var(--radio-pildora);
+  color: var(--blanco); font-weight: 600; text-decoration: none;
+  box-shadow: var(--sombra); transition: var(--transicion);
+}
+.nav__link:hover { color: var(--blanco); background: var(--anahuac-cafe-oscuro); --sombra: var(--clay-on-dark-pressed); }
+/* Página actual: píldora de arcilla clara con barra naranja. Se distingue por fondo, peso y barra. */
+.nav__link[aria-current="page"] {
+  --sombra: var(--clay-raised-sm), inset 0 -4px 0 var(--anahuac-naranja);
+  background: var(--superficie-calida); color: var(--anahuac-cafe); font-weight: 800;
+}
+.nav__link[aria-current="page"]:hover { color: var(--anahuac-cafe-oscuro); }
+
+.session { display: flex; align-items: center; gap: var(--esp-3); font-size: var(--t-14); }
+.session__user { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.25; }
+.session__name { display: inline-flex; align-items: center; gap: var(--esp-1); font-weight: 700; }
+.session__role { font-size: var(--t-12); opacity: 0.9; }
+.session form { margin: 0; }
+
+/* ---------- Tarjetas ---------- */
+.card {
+  --sombra: var(--clay-raised);
+  background: var(--superficie); border-radius: var(--radio-tarjeta);
+  padding: var(--esp-5); margin-bottom: var(--esp-5); box-shadow: var(--sombra);
+}
+.card--warm { background: var(--superficie-calida); }
+.card--danger { border: 2px solid var(--estado-no-realizado); }
+.card--danger .card__title { color: var(--estado-no-realizado); }
+.card__title { font-size: var(--t-18); margin-bottom: var(--esp-4); }
+.card__header {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: var(--esp-3); margin-bottom: var(--esp-4);
+}
+.card__header .card__title { margin: 0; }
+.card > :last-child { margin-bottom: 0; }
+
+/* ---------- Botones: píldoras de arcilla ---------- */
+.btn {
+  --sombra: var(--clay-raised);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--esp-2);
+  min-height: var(--toque); padding: 0.6rem 1.35rem; border-radius: var(--radio-pildora);
+  border: 2px solid transparent; font: inherit; font-weight: 700; line-height: 1.2;
+  text-decoration: none; white-space: nowrap; cursor: pointer;
+  background: var(--superficie); color: var(--anahuac-cafe);
+  box-shadow: var(--sombra); transition: var(--transicion);
+}
+.btn:hover { transform: var(--elevar); --sombra: var(--clay-raised-hover); text-decoration: none; }
+.btn:active { transform: var(--hundir); --sombra: var(--clay-pressed); }
+
+/* Primario: café con texto blanco (8.9:1). */
+.btn--primary { --sombra: var(--clay-on-dark); background: var(--anahuac-cafe); color: var(--blanco); }
+.btn--primary:hover { --sombra: var(--clay-on-dark); background: var(--anahuac-cafe-oscuro); color: var(--blanco); }
+.btn--primary:active { --sombra: var(--clay-on-dark-pressed); background: var(--anahuac-cafe-oscuro); }
+
+/* Secundario: arcilla blanca con borde café (8.9:1). */
+.btn--secondary { border-color: var(--anahuac-cafe); }
+.btn--secondary:hover { background: var(--superficie-calida); color: var(--anahuac-cafe-oscuro); }
+
+/* Acento: naranja con texto #2B211A (6.4:1). Nunca texto blanco sobre naranja. */
+.btn--accent { background: var(--anahuac-naranja); color: var(--texto); border-color: var(--anahuac-cafe); }
+.btn--accent:hover { color: var(--texto); }
+
+/* Peligro: rojo semántico con texto blanco (6.5:1). */
+.btn--danger {
+  --sombra: var(--clay-on-dark);
+  background: var(--estado-no-realizado); color: var(--blanco);
+}
+.btn--danger:hover { --sombra: var(--clay-on-dark); color: var(--blanco); }
+.btn--danger:active { --sombra: var(--clay-on-dark-pressed); }
+
+/* Fantasma: sobre la losa café del encabezado. */
+.btn--ghost { --sombra: none; background: transparent; color: var(--blanco); border-color: rgba(255, 255, 255, 0.75); }
+.btn--ghost:hover { --sombra: var(--clay-on-dark-pressed); background: var(--anahuac-cafe-oscuro); color: var(--blanco); transform: none; }
+.btn--ghost:active { --sombra: var(--clay-on-dark-pressed); transform: none; }
+
+/* Enlace: acción secundaria dentro de listas; conserva el área táctil. */
+.btn--link {
+  --sombra: none; background: none; border: 0; padding: 0 var(--esp-2); margin: 0 calc(-1 * var(--esp-2));
+  color: var(--color-enlace); text-decoration: underline; text-underline-offset: 0.18em;
+}
+.btn--link:hover { transform: none; --sombra: none; text-decoration: underline; text-decoration-thickness: 2px; color: var(--anahuac-cafe-oscuro); }
+.btn--link:active { transform: none; --sombra: none; }
+.btn--link-danger, .btn--link-danger:hover { color: var(--estado-no-realizado); }
+
+.btn--small { min-height: var(--toque); padding: 0.45rem 1rem; font-size: var(--t-14); }
+.btn--block { display: flex; width: 100%; }
+
+.btn:disabled, .btn[aria-disabled="true"] {
+  --sombra: none; transform: none; cursor: not-allowed;
+  background: var(--superficie-hundida); color: var(--color-texto-secundario); border: 2px dashed var(--color-borde-control);
+}
+
+/* ---------- Formularios: campos hundidos con borde visible ---------- */
+.field { display: flex; flex-direction: column; gap: var(--esp-2); margin-bottom: var(--esp-4); }
+.field__label, .field > label {
+  display: inline-flex; align-items: center; gap: var(--esp-2);
+  font-weight: 700; font-size: var(--t-14); color: var(--color-texto);
+}
+.field__label .icon, .field > label .icon { color: var(--anahuac-cafe); }
+.field__hint { display: inline-flex; align-items: flex-start; gap: var(--esp-1); color: var(--color-texto-secundario); font-size: var(--t-14); }
+.field__hint .icon { margin-top: 0.15em; }
+.field__error {
+  display: inline-flex; align-items: flex-start; gap: var(--esp-1);
+  color: var(--estado-no-realizado); font-size: var(--t-14); font-weight: 700;
+}
+.field__error .icon { margin-top: 0.15em; }
+
+.input,
+input[type="text"], input[type="email"], input[type="password"], input[type="search"],
+input[type="date"], input[type="time"], select, textarea {
+  --sombra: var(--clay-sunken);
+  width: 100%; min-height: var(--toque); padding: 0.6rem 1rem;
+  font: inherit; color: var(--color-texto);
+  background: var(--superficie-hundida);
+  border: 2px solid var(--color-borde-control); border-radius: var(--radio-control);
+  box-shadow: var(--sombra); transition: var(--transicion);
+}
+select {
+  appearance: none; padding-right: 2.75rem; cursor: pointer;
+  /* Flecha dibujada en café; data: está permitido por la CSP (img-src 'self' data:). */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B3F23' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 0.9rem center; background-size: 1.1rem;
+}
+textarea { min-height: 7rem; resize: vertical; border-radius: var(--radio-tarjeta); }
+input::placeholder, textarea::placeholder { color: var(--color-texto-secundario); opacity: 1; }
+.input:hover, input:hover, select:hover, textarea:hover { border-color: var(--anahuac-cafe); }
+input:focus-visible, select:focus-visible, textarea:focus-visible { background-color: var(--superficie); border-color: var(--anahuac-cafe); }
+.field--error input, .field--error select, .field--error textarea { border-color: var(--estado-no-realizado); border-width: 3px; }
+input:disabled, select:disabled, textarea:disabled {
+  --sombra: none; cursor: not-allowed; border-style: dashed; color: var(--color-texto-secundario);
+}
+/* Filtro con valor: fondo cálido y borde café para verlo de un vistazo. */
+.is-active { background-color: var(--superficie-calida); border-color: var(--anahuac-cafe); }
+
+.fieldset { border: 0; margin: 0 0 var(--esp-5); padding: 0; min-width: 0; }
+.fieldset__legend {
+  display: inline-flex; align-items: center; gap: var(--esp-2); padding: 0; margin-bottom: var(--esp-4);
+  font-size: var(--t-18); font-weight: 700; color: var(--color-titulo);
+}
+.fieldset + .fieldset { padding-top: var(--esp-5); border-top: 2px dashed var(--color-divisor); }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0 var(--esp-4); }
+.form-actions { display: flex; flex-wrap: wrap; gap: var(--esp-3); margin-top: var(--esp-2); }
+.form-narrow { max-width: 780px; }
+
+/* Casillas y radios de arcilla: 26 px dibujados, 44 px de área táctil por su etiqueta. */
+input[type="checkbox"], input[type="radio"] {
+  --sombra: var(--clay-sunken);
+  appearance: none; flex: none; width: 1.625rem; height: 1.625rem; margin: 0; cursor: pointer;
+  background: var(--superficie-hundida); border: 2px solid var(--color-borde-control);
+  box-shadow: var(--sombra); transition: var(--transicion);
+  display: inline-grid; place-content: center;
+}
+input[type="checkbox"] { border-radius: var(--radio-chico); }
+input[type="radio"] { border-radius: 50%; }
+input[type="checkbox"]:checked {
+  --sombra: var(--clay-on-dark-pressed);
+  background: var(--anahuac-cafe) no-repeat center / 1.1rem
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  border-color: var(--anahuac-cafe);
+}
+input[type="radio"]:checked { --sombra: inset 0 0 0 5px var(--superficie); background: var(--anahuac-cafe); border-color: var(--anahuac-cafe); }
+input[type="checkbox"]:hover, input[type="radio"]:hover { border-color: var(--anahuac-cafe); }
+input[type="checkbox"]:disabled, input[type="radio"]:disabled { cursor: not-allowed; border-style: dashed; }
+
+.check {
+  display: flex; align-items: center; gap: var(--esp-3); min-height: var(--toque);
+  margin-bottom: var(--esp-3); cursor: pointer; font-weight: 600;
+}
+/* Envoltorio de una casilla sin texto (tabla de asignaciones): garantiza 44 × 44 px. */
+.check-target {
+  display: inline-grid; place-items: center; width: var(--toque); height: var(--toque);
+  margin: calc(-1 * var(--esp-2)); border-radius: var(--radio-control); cursor: pointer;
+}
+.check-target:hover { background: var(--superficie-calida); }
+
+/* Opciones grandes (nuevo estado del taller): la tarjeta entera es la etiqueta. */
+.choices { border: 0; margin: 0 0 var(--esp-4); padding: 0; display: grid; gap: var(--esp-3); }
+.choices legend { font-weight: 700; font-size: var(--t-14); margin-bottom: var(--esp-2); padding: 0; }
+.choice {
+  --sombra: var(--clay-raised-sm);
+  display: flex; align-items: center; gap: var(--esp-3); min-height: var(--toque); padding: var(--esp-2) var(--esp-4);
+  border-radius: var(--radio-control); border: 2px solid var(--color-divisor); background: var(--superficie);
+  cursor: pointer; box-shadow: var(--sombra); transition: var(--transicion);
+}
+.choice:hover { transform: var(--elevar); --sombra: var(--clay-raised); border-color: var(--anahuac-cafe); }
+.choice:has(input:checked) { --sombra: var(--clay-pressed); transform: none; border-color: var(--anahuac-cafe); background: var(--superficie-calida); }
+
+/* Contraseña con botón para mostrarla (el botón lo activa app.js). */
+.password-field { position: relative; }
+.password-field input { padding-right: calc(var(--toque) + var(--esp-2)); }
+.password-field__toggle {
+  --sombra: none;
+  position: absolute; top: 2px; right: 2px; bottom: 2px; width: var(--toque);
+  display: grid; place-items: center; padding: 0; border: 0; cursor: pointer;
+  border-radius: 0 calc(var(--radio-control) - 2px) calc(var(--radio-control) - 2px) 0;
+  background: transparent; color: var(--anahuac-cafe); transition: var(--transicion);
+}
+.password-field__toggle:hover { background: var(--superficie-calida); }
+.password-field__toggle:active { --sombra: var(--clay-pressed); }
+.password-field__toggle .icon { width: 1.3rem; height: 1.3rem; }
+.password-field__toggle .password-field__hide,
+.password-field__toggle[aria-pressed="true"] .password-field__show { display: none; }
+.password-field__toggle[aria-pressed="true"] .password-field__hide { display: inline-block; }
+
+/* ---------- Barra de filtros ---------- */
+.filters {
+  display: grid; grid-template-columns: minmax(220px, 2fr) repeat(2, minmax(170px, 1fr)) auto;
+  gap: var(--esp-4); align-items: end;
+}
+.filters .field { margin-bottom: 0; }
+.filters__actions { display: flex; gap: var(--esp-2); }
+/* Con JavaScript filtran solos: el botón de enviar sobra. */
+.filters--live .filters__submit { display: none; }
+
+[data-resultados] { transition: opacity 120ms ease-out; }
+[data-resultados][aria-busy="true"] { opacity: 0.55; }
+
+.summary {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--esp-2);
+  margin: 0 0 var(--esp-4); padding: 0 var(--esp-2); color: var(--color-texto-secundario); font-size: var(--t-14);
+}
+.summary strong { color: var(--color-texto); }
+
+/* ---------- Tabla del panel ---------- */
+.table-wrap { padding: var(--esp-3); }
+.table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.table th {
+  padding: var(--esp-3) var(--esp-4); text-align: left; vertical-align: bottom;
+  font-size: var(--t-14); font-weight: 700; color: var(--color-texto-secundario);
+  background: var(--superficie-hundida); box-shadow: var(--clay-sunken);
+}
+.table th:first-child { border-radius: var(--radio-control) 0 0 var(--radio-control); }
+.table th:last-child { border-radius: 0 var(--radio-control) var(--radio-control) 0; }
+.table td { padding: var(--esp-4); vertical-align: top; border-bottom: 2px dashed var(--color-divisor); }
+.table tbody tr:last-child td { border-bottom: 0; }
+.table tbody tr { transition: background-color 160ms ease-out; }
+.table tbody tr:hover td { background: var(--superficie-calida); }
+.table tbody tr:hover td:first-child { border-radius: var(--radio-control) 0 0 var(--radio-control); }
+.table tbody tr:hover td:last-child { border-radius: 0 var(--radio-control) var(--radio-control) 0; }
+.table tr:has(input[type="checkbox"]:checked) td { background: var(--superficie-calida); }
+.table__title { display: block; font-weight: 700; }
+.table__title a { font-weight: 700; }
+.table__sub { display: flex; align-items: center; gap: var(--esp-1); margin-top: var(--esp-1); color: var(--color-texto-secundario); font-size: var(--t-14); }
+.table .col-check { width: 3.5rem; }
+.table .col-date { width: 11.5rem; }
+
+/* Fecha y horario de un taller */
+.when { display: flex; flex-direction: column; gap: var(--esp-1); font-variant-numeric: tabular-nums; }
+.when__day { display: inline-flex; align-items: center; gap: var(--esp-2); font-weight: 700; color: var(--anahuac-cafe); }
+.when__time { display: inline-flex; align-items: center; gap: var(--esp-2); font-size: var(--t-14); color: var(--color-texto-secundario); }
+
+.building { display: inline-flex; align-items: center; gap: var(--esp-2); font-weight: 700; white-space: nowrap; }
+
+.reason { margin-top: var(--esp-2); max-width: 38ch; font-size: var(--t-14); color: var(--color-texto-secundario); }
+.already { display: inline-flex; align-items: center; gap: var(--esp-1); color: var(--estado-realizado); font-size: var(--t-14); font-weight: 700; white-space: nowrap; }
+
+/* ---------- Insignias: texto + ícono + color ---------- */
+.badge {
+  --sombra: var(--clay-raised-sm);
+  display: inline-flex; align-items: center; gap: var(--esp-1);
+  padding: 0.25rem 0.8rem; border-radius: var(--radio-pildora); border: 2px solid currentColor;
+  font-size: var(--t-14); font-weight: 700; white-space: nowrap;
+  background: var(--superficie); box-shadow: var(--sombra);
+}
+.badge--programado { color: var(--gris-texto); }
+.badge--realizado { color: var(--estado-realizado); }
+.badge--no-realizado { color: var(--estado-no-realizado); }
+.badge--role { color: var(--anahuac-cafe); }
+.badge--admin { color: var(--anahuac-cafe); background: var(--superficie-calida); border-color: var(--anahuac-naranja); }
+.badge--active { color: var(--estado-realizado); }
+.badge--inactive { color: var(--gris-texto); border-style: dashed; }
+
+/* ---------- Paginación ---------- */
+.pagination { display: flex; flex-wrap: wrap; gap: var(--esp-2); margin: var(--esp-5) 0 0; padding: 0; list-style: none; }
+.pagination a, .pagination [aria-current="page"] {
+  --sombra: var(--clay-raised-sm);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--esp-1);
+  min-width: var(--toque); min-height: var(--toque); padding: 0 var(--esp-4);
+  border-radius: var(--radio-pildora); background: var(--superficie); border: 2px solid var(--color-divisor);
+  font-weight: 700; text-decoration: none; font-variant-numeric: tabular-nums;
+  box-shadow: var(--sombra); transition: var(--transicion);
+}
+.pagination a:hover { transform: var(--elevar); --sombra: var(--clay-raised); border-color: var(--anahuac-cafe); }
+.pagination a:active { transform: var(--hundir); --sombra: var(--clay-pressed); }
+.pagination [aria-current="page"] { --sombra: var(--clay-on-dark-pressed); background: var(--anahuac-cafe); border-color: var(--anahuac-cafe); color: var(--blanco); }
+.pagination__gap { display: inline-grid; place-items: center; min-width: 1.5rem; min-height: var(--toque); color: var(--color-texto-secundario); }
+
+/* ---------- Mensajes flash y avisos ---------- */
+.alert {
+  --sombra: var(--clay-raised);
+  display: flex; align-items: flex-start; gap: var(--esp-3);
+  padding: var(--esp-4) var(--esp-5); margin-bottom: var(--esp-5);
+  background: var(--superficie); border: 2px solid var(--color-divisor); border-radius: var(--radio-tarjeta);
+  box-shadow: var(--sombra);
+}
+.alert > .icon { width: 1.4rem; height: 1.4rem; margin-top: 0.05rem; }
+.alert--exito { border-color: var(--estado-realizado); }
+.alert--exito > .icon { color: var(--estado-realizado); }
+.alert--error { border-color: var(--estado-no-realizado); }
+.alert--error > .icon { color: var(--estado-no-realizado); }
+.alert--aviso { background: var(--superficie-calida); border-color: var(--anahuac-naranja); }
+.alert--aviso > .icon { color: var(--anahuac-cafe); }
+/* Aviso dentro de otra superficie: hundido para no competir con la tarjeta que lo contiene. */
+.alert--inline { --sombra: var(--clay-sunken); margin: var(--esp-4) 0 0; background: var(--superficie-calida); }
+/* Único movimiento no solicitado: el aviso tras una acción llega con un leve deslizamiento. */
+main > .alert { animation: alert-in 320ms ease-out both; }
+@keyframes alert-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Estados vacíos ---------- */
+.empty {
+  --sombra: var(--clay-sunken);
+  padding: var(--esp-7) var(--esp-5); text-align: center; color: var(--color-texto-secundario);
+  background: var(--superficie-hundida); border: 2px dashed var(--color-divisor); border-radius: var(--radio-contenedor);
+  box-shadow: var(--sombra);
+}
+.empty p { max-width: 46ch; margin: 0 auto; }
+.empty strong { display: block; margin-bottom: var(--esp-1); color: var(--color-texto); font-size: var(--t-18); }
+.empty .btn { margin-top: var(--esp-4); }
+
+/* ---------- Ficha del taller (detalle) ---------- */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--esp-4); align-items: start; }
+.hero h1 { margin-bottom: var(--esp-4); }
+.hero .alert { grid-column: 1 / -1; }
+.facts { display: flex; flex-wrap: wrap; gap: var(--esp-3); margin: 0; }
+.facts > div {
+  display: flex; align-items: center; gap: var(--esp-2); min-height: var(--toque);
+  padding: var(--esp-1) var(--esp-4) var(--esp-1) var(--esp-3);
+  border-radius: var(--radio-pildora); background: var(--superficie-hundida); box-shadow: var(--clay-sunken);
+}
+.facts dt { display: inline-flex; align-items: center; gap: var(--esp-1); color: var(--color-texto-secundario); font-size: var(--t-14); }
+.facts dd { margin: 0; font-weight: 700; }
+
+/* Lista de personas o talleres con acción a la derecha */
+.people { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--esp-3); }
+.people > li {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--esp-2) var(--esp-4);
+  padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-control);
+  background: var(--superficie-hundida); box-shadow: var(--clay-sunken);
+}
+.people form { margin: 0; }
+.person { display: flex; flex-direction: column; gap: var(--esp-1); min-width: 0; }
+.person__meta { display: inline-flex; align-items: center; gap: var(--esp-1); color: var(--color-texto-secundario); font-size: var(--t-14); overflow-wrap: anywhere; }
+
+/* Historial de estados */
+.timeline { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--esp-3); }
+.timeline__item { padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-control); background: var(--superficie-hundida); box-shadow: var(--clay-sunken); }
+.timeline__change { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2); }
+.timeline__change > .icon { color: var(--color-texto-secundario); }
+.timeline__meta { display: flex; align-items: center; gap: var(--esp-1); margin-top: var(--esp-2); font-size: var(--t-14); color: var(--color-texto-secundario); }
+
+/* ---------- Pasos (asignaciones) ---------- */
+.step-title { font-size: var(--t-21); margin-bottom: var(--esp-4); }
+/* Número de paso: naranja con texto #2B211A (6.4:1). */
+.step-number {
+  display: inline-grid; place-items: center; flex: none; width: 2.25rem; height: 2.25rem;
+  border-radius: 50%; background: var(--anahuac-naranja); color: var(--texto); font-size: var(--t-16); font-weight: 800;
+  box-shadow: var(--clay-raised-sm);
+}
+.picker { display: flex; flex-wrap: wrap; gap: var(--esp-3); align-items: end; }
+.picker .field { flex: 1 1 320px; margin-bottom: 0; }
+
+/* Barra de acción fija al fondo mientras se marcan talleres */
+.action-bar {
+  --sombra: var(--clay-raised-hover);
+  position: sticky; bottom: var(--esp-4); z-index: 2;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--esp-3);
+  margin-top: var(--esp-4); padding: var(--esp-3) var(--esp-3) var(--esp-3) var(--esp-5);
+  background: var(--superficie-calida); border: 2px solid var(--anahuac-naranja); border-radius: var(--radio-pildora);
+  box-shadow: var(--sombra);
+}
+.action-bar__count { font-weight: 700; }
+
+/* ---------- Desplegable (cambiar rol) ---------- */
+.disclosure > summary {
+  display: inline-flex; align-items: center; gap: var(--esp-2); min-height: var(--toque);
+  color: var(--color-enlace); font-weight: 700; text-decoration: underline; text-underline-offset: 0.18em;
+  cursor: pointer; list-style: none; border-radius: var(--radio-chico);
+}
+.disclosure > summary::-webkit-details-marker { display: none; }
+.disclosure > summary:hover { text-decoration-thickness: 2px; color: var(--anahuac-cafe-oscuro); }
+.disclosure[open] {
+  flex-basis: 100%; padding: var(--esp-2) var(--esp-4) var(--esp-4); border-radius: var(--radio-tarjeta);
+  background: var(--superficie-hundida); box-shadow: var(--clay-sunken);
+}
+.disclosure p { font-size: var(--t-14); }
+.row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2) var(--esp-5); }
+.row-actions form { margin: 0; }
+
+/* ---------- Ingreso y registro ---------- */
+.auth {
+  --sombra: var(--clay-raised);
+  display: grid; grid-template-columns: 1fr 1fr; max-width: 940px; margin: var(--esp-5) auto 0;
+  border-radius: var(--radio-contenedor); background: var(--superficie); box-shadow: var(--sombra); overflow: hidden;
+}
+.auth__intro {
+  display: flex; flex-direction: column; justify-content: center; gap: var(--esp-3);
+  padding: var(--esp-7) var(--esp-6); background: var(--anahuac-cafe); color: var(--blanco);
+  border-right: 6px solid var(--anahuac-naranja); box-shadow: inset -6px -6px 14px rgba(79, 46, 25, 0.5), inset 6px 6px 14px rgba(255, 255, 255, 0.12);
+}
+.auth__intro .icon-bubble { color: var(--anahuac-cafe); }
+.auth__intro p { margin: 0; }
+.auth__tagline { font-size: var(--t-40); font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; }
+.auth__form { padding: var(--esp-7) var(--esp-6); }
+.auth__form h1 { font-size: var(--t-24); }
+.auth__form form { margin-top: var(--esp-5); }
+
+/* ---------- Páginas de error ---------- */
+.error-page { max-width: 38rem; margin: var(--esp-5) auto; text-align: center; }
+.error-page__code {
+  display: block; margin-bottom: var(--esp-2); font-size: 5rem; font-weight: 800; line-height: 1;
+  color: var(--anahuac-cafe); letter-spacing: -0.04em; font-variant-numeric: tabular-nums;
+}
+.error-page h1 { justify-content: center; }
+.error-page__detail {
+  text-align: left; padding: var(--esp-4); border-radius: var(--radio-control); overflow-x: auto;
+  background: var(--superficie-hundida); box-shadow: var(--clay-sunken);
+}
+
+/* =====================================================================================
+ * 5. UTILIDADES
+ * ===================================================================================== */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.muted { color: var(--color-texto-secundario); }
+.with-icon { display: inline-flex; align-items: center; gap: var(--esp-1); }
+.nums { font-variant-numeric: tabular-nums; }
+.back-link {
+  display: inline-flex; align-items: center; gap: var(--esp-1); min-height: var(--toque);
+  margin-bottom: var(--esp-3); font-weight: 700; border-radius: var(--radio-chico);
+}
+.mt-0 { margin-top: 0; }
+
+/* =====================================================================================
+ * 6. ADAPTACIONES: tamaños de pantalla, movimiento reducido e impresión
+ * ===================================================================================== */
+
+/* Tableta (≤ 1023 px): columnas laterales debajo del contenido. */
+@media (max-width: 1023px) {
+  .layout-detail, .layout-assign { grid-template-columns: 1fr; }
+  .filters { grid-template-columns: 1fr 1fr; }
+  .filters .field:first-child, .filters__actions { grid-column: 1 / -1; }
+}
+
+/* Teléfono (≤ 767 px): menú en fila propia, tabla convertida en tarjetas apiladas. */
+@media (max-width: 767px) {
+  :root { --gutter: 16px; }
+  h1 { font-size: var(--t-24); }
+  .site-header { padding-top: var(--esp-3); }
+  .site-header__slab { padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-tarjeta); }
+  .site-header__nav { flex-basis: 100%; }
+  .nav__list { width: 100%; }
+  .nav__link { padding: 0 var(--esp-3); }
+  .session { width: 100%; justify-content: space-between; }
+  .session__user { align-items: flex-start; }
+  main.container { padding-top: var(--esp-5); }
+
+  .card { padding: var(--esp-4); border-radius: var(--radio-tarjeta); }
+  .filters { grid-template-columns: 1fr; }
+  .filters__actions .btn { flex: 1; }
+
+  /* Una tarjeta de arcilla por taller: la envoltura deja de ser tarjeta. */
+  .table-wrap { padding: 0; background: none; box-shadow: none; }
+  .table--stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+  .table--stack, .table--stack tbody { display: block; }
+  .table--stack tbody { display: grid; gap: var(--esp-4); }
+  .table--stack tr {
+    display: grid; grid-template-columns: 1fr; gap: var(--esp-2); padding: var(--esp-4);
+    background: var(--superficie); border-radius: var(--radio-tarjeta); box-shadow: var(--clay-raised);
+  }
+  .table--stack td { display: block; padding: 0; border: 0; }
+  .table--stack tbody tr:hover td { background: none; }
+  .table--stack tr:has(input[type="checkbox"]:checked) { background: var(--superficie-calida); }
+  .table--stack tr:has(input[type="checkbox"]:checked) td { background: none; }
+  .table--stack td[data-label]::before {
+    content: attr(data-label); display: block; margin-bottom: var(--esp-1);
+    font-size: var(--t-12); font-weight: 700; color: var(--color-texto-secundario);
+  }
+  .table--stack .cell-title { order: -2; font-size: var(--t-18); }
+  .table--stack td.cell-check { order: -3; }
+
+  .hero { grid-template-columns: 1fr; }
+  .action-bar { border-radius: var(--radio-tarjeta); padding: var(--esp-3); }
+  .action-bar .btn { flex: 1; }
+  .auth { grid-template-columns: 1fr; margin-top: 0; }
+  .auth__intro { padding: var(--esp-5); border-right: 0; border-bottom: 6px solid var(--anahuac-naranja); }
+  .auth__tagline { font-size: var(--t-24); }
+  .auth__form { padding: var(--esp-5) var(--esp-4); }
+  .error-page__code { font-size: 3.75rem; }
+}
+
+/* Foco visible en todo elemento interactivo: anillo naranja de 3 px con 2 px de separación, rellena
+   de café. Va al final para ganar a los componentes con la misma especificidad; cada componente guarda
+   su sombra de arcilla en --sombra y el foco la conserva. */
+:focus-visible {
+  outline: var(--foco-anillo);
+  outline-offset: 2px;
+  box-shadow: var(--foco-interior), var(--sombra, 0 0 transparent);
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* Movimiento reducido: sin elevación ni transiciones; los estados siguen visibles por sombra y color. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+  .btn:hover, .btn:active, .choice:hover, .pagination a:hover, .pagination a:active { transform: none; }
+}
+
+@media print {
+  body { background: var(--blanco); }
+  .site-header, .site-footer, .filters, .pagination, .action-bar, .skip-link { display: none; }
+  .card, .table--stack tr, .badge, .alert { box-shadow: none; border: 1px solid var(--color-divisor); }
+}

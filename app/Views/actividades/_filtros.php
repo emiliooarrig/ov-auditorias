@@ -8,9 +8,15 @@
  * @var list<array{id: int, nombre: string}>    $carreras
  * @var list<array{id: int, numero: int}>       $edificios
  * @var bool                                    $hayFiltros
+ * @var array<string, int|string>|null          $ocultos  Parámetros que se conservan al filtrar (p. ej. usuario).
  */
+
+$ocultos ??= [];
 ?>
 <form class="tarjeta filtros" method="get" action="<?= e(url($ruta)) ?>" role="search" aria-label="Filtrar talleres">
+    <?php foreach ($ocultos as $nombreOculto => $valorOculto) : ?>
+        <input type="hidden" name="<?= e($nombreOculto) ?>" value="<?= e($valorOculto) ?>">
+    <?php endforeach; ?>
     <div class="campo">
         <label for="f-nombre">Nombre</label>
         <input type="search" id="f-nombre" name="nombre" value="<?= e($filtros['nombre']) ?>" maxlength="150"
@@ -41,7 +47,7 @@
     <div class="filtros__acciones">
         <button type="submit" class="btn btn-primario">Filtrar</button>
         <?php if ($hayFiltros) : ?>
-            <a class="btn btn-secundario" href="<?= e(url($ruta)) ?>">Limpiar</a>
+            <a class="btn btn-secundario" href="<?= e(url($ruta, $ocultos)) ?>">Limpiar</a>
         <?php endif; ?>
     </div>
 </form>

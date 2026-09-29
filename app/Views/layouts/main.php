@@ -15,7 +15,7 @@ $rutaActual = app()->request()?->path ?? '';
 $enlaces = [];
 if ($usuario !== null) {
     $enlaces = app()->auth()->esAdministrador()
-        ? ['/' => 'Panel central']
+        ? ['/' => 'Panel central', '/asignaciones' => 'Asignaciones']
         : ['/mis-talleres' => 'Mis talleres'];
 }
 ?>

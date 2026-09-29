@@ -6,9 +6,6 @@ namespace App\Controllers;
 
 use App\Core\Request;
 use App\Core\Response;
-use App\Models\Actividad;
-use App\Models\Carrera;
-use App\Models\Edificio;
 
 /**
  * Panel central del administrador y "Mis talleres" del auditor (RF-03, RF-08, RF-11; CU-03).
@@ -44,39 +41,9 @@ final class DashboardController extends Controller
         string $titulo,
         ?int $usuarioSesion,
     ): Response {
-        $filtros = [
-            'nombre' => mb_substr($request->queryString('nombre'), 0, 150),
-            'carrera' => $this->idOpcional($request->queryString('carrera')),
-            'edificio' => $this->idOpcional($request->queryString('edificio')),
-        ];
-        $pagina = $this->idOpcional($request->queryString('pagina')) ?? 1;
-
-        $resultado = (new Actividad($this->db()))->filtrar(
-            [
-                'nombre' => $filtros['nombre'],
-                'carrera_id' => $filtros['carrera'],
-                'edificio_id' => $filtros['edificio'],
-            ],
-            $usuarioSesion,
-            $pagina,
-            (int) $this->app->config('pagination.per_page', 20)
-        );
-
         return $this->view($vista, [
             'titulo' => $titulo,
             'ruta' => $ruta,
-            'filtros' => $filtros,
-            'hayFiltros' => $filtros['nombre'] !== ''
-                || $filtros['carrera'] !== null
-                || $filtros['edificio'] !== null,
-            'resultado' => $resultado,
-            'carreras' => (new Carrera($this->db()))->activas(),
-            'edificios' => (new Edificio($this->db()))->activos(),
-        ]);
-    }
-
-    private function idOpcional(string $valor): ?int
-    {
-        return ctype_digit($valor) && (int) $valor > 0 ? (int) $valor : null;
+        ] + $this->listadoTalleres($request, $usuarioSesion));
     }
 }

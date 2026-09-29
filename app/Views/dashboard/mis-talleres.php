@@ -32,7 +32,7 @@ $vista = app()->view();
             <p>Ninguno de tus talleres coincide con los filtros. <a href="<?= e(url($ruta)) ?>">Quitar filtros</a></p>
         </section>
     <?php else : ?>
-        <?= $vista->partial('actividades/_tabla', ['filas' => $resultado['filas'], 'enlaceDetalle' => false]) ?>
+        <?= $vista->partial('actividades/_tabla', ['filas' => $resultado['filas'], 'enlaceDetalle' => true]) ?>
         <?= $vista->partial('partials/paginacion', [
             'ruta' => $ruta,
             'query' => $filtros,

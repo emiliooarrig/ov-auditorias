@@ -58,6 +58,23 @@ final class Usuario
         return $this->db->lastInsertId();
     }
 
+    /**
+     * Auditores activos, a quienes se pueden asignar talleres.
+     *
+     * @return list<array{id: int, nombre: string, apellidos: string, correo: string}>
+     */
+    public function auditoresActivos(): array
+    {
+        /** @var list<array{id: int, nombre: string, apellidos: string, correo: string}> */
+        return $this->db->fetchAll(
+            'SELECT u.id, u.nombre, u.apellidos, u.correo
+             FROM usuarios u JOIN roles r ON r.id = u.rol_id
+             WHERE r.nombre = :rol AND u.activo = 1
+             ORDER BY u.apellidos, u.nombre',
+            ['rol' => self::AUDITOR]
+        );
+    }
+
     public function registrarAcceso(int $id): void
     {
         $this->db->execute('UPDATE usuarios SET ultimo_acceso = NOW() WHERE id = :id', ['id' => $id]);

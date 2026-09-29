@@ -4,7 +4,8 @@
  * Tabla de talleres; en pantallas angostas se convierte en tarjetas apiladas.
  *
  * @var list<array{id: int, nombre: string, carrera: string, edificio: int, fecha: string, hora_inicio: string,
- *     hora_fin: string, estado: string, motivo_no_realizado: ?string, auditores: ?string}> $filas
+ *     hora_fin: string, estado: string, motivo_no_realizado: ?string, registrado_por: ?string,
+ *     auditores: ?string}> $filas
  * @var bool $enlaceDetalle
  */
 ?>
@@ -40,7 +41,12 @@
                 <td data-etiqueta="Estado">
                     <?= estado_insignia($fila['estado']) ?>
                     <?php if ($fila['estado'] === 'no_realizado' && $fila['motivo_no_realizado'] !== null) : ?>
-                        <div class="motivo"><?= e($fila['motivo_no_realizado']) ?></div>
+                        <div class="motivo">
+                            <?= e($fila['motivo_no_realizado']) ?>
+                            <?php if ($fila['registrado_por'] !== null) : ?>
+                                <br>Registró: <?= e($fila['registrado_por']) ?>
+                            <?php endif; ?>
+                        </div>
                     <?php endif; ?>
                 </td>
                 <td data-etiqueta="Auditores">

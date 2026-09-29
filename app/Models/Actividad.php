@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Core\Database;
 use DateTimeImmutable;
+use DomainException;
 
 /**
  * Talleres (actividades): filtros del panel, alta, edición y desactivación.
@@ -21,7 +22,8 @@ use DateTimeImmutable;
  * }
  * @phpstan-type PanelFila array{
  *     id: int, nombre: string, carrera: string, edificio: int, fecha: string, hora_inicio: string,
- *     hora_fin: string, estado: string, motivo_no_realizado: ?string, auditores: ?string
+ *     hora_fin: string, estado: string, motivo_no_realizado: ?string, registrado_por: ?string,
+ *     auditores: ?string
  * }
  */
 final class Actividad
@@ -29,6 +31,8 @@ final class Actividad
     public const PROGRAMADO = 'programado';
     public const REALIZADO = 'realizado';
     public const NO_REALIZADO = 'no_realizado';
+    public const ESTADOS = [self::PROGRAMADO, self::REALIZADO, self::NO_REALIZADO];
+    public const MOTIVO_MAX = 255;
 
     public function __construct(private readonly Database $db)
     {
@@ -54,6 +58,9 @@ final class Actividad
         $filas = $this->db->fetchAll(
             "SELECT a.id, a.nombre, c.nombre AS carrera, e.numero AS edificio,
                     a.fecha, a.hora_inicio, a.hora_fin, a.estado, a.motivo_no_realizado,
+                    (SELECT CONCAT(ub.nombre, ' ', ub.apellidos)
+                     FROM bitacora_estados b JOIN usuarios ub ON ub.id = b.usuario_id
+                     WHERE b.actividad_id = a.id ORDER BY b.id DESC LIMIT 1) AS registrado_por,
                     GROUP_CONCAT(CONCAT(u.nombre, ' ', u.apellidos)
                                  ORDER BY u.apellidos, u.nombre SEPARATOR ', ') AS auditores
              FROM actividades a
@@ -151,6 +158,59 @@ final class Actividad
              WHERE id = :id AND activo = 1',
             $datos + ['id' => $id]
         );
+    }
+
+    /**
+     * Cambia el estado y agrega la fila de bitácora en una sola transacción (CU-02, regla 5).
+     * El motivo solo se guarda en el taller mientras está no realizado; al salir de ese estado
+     * se limpia y queda únicamente en la bitácora.
+     *
+     * @param string|null $exigirActual Si se indica, el cambio solo procede si el estado actual es ese
+     *                                  (el auditor solo puede marcar talleres programados).
+     * @return string Estado anterior.
+     */
+    public function cambiarEstado(
+        int $id,
+        string $nuevo,
+        ?string $motivo,
+        int $usuarioId,
+        ?string $exigirActual = null,
+    ): string {
+        if (!in_array($nuevo, self::ESTADOS, true)) {
+            throw new DomainException('Estado no válido.');
+        }
+        $motivo = $motivo === null ? null : trim($motivo);
+        if ($nuevo === self::NO_REALIZADO && ($motivo === null || $motivo === '')) {
+            throw new DomainException('Escribe el motivo por el que no se realizó el taller.');
+        }
+        if ($motivo !== null && mb_strlen($motivo) > self::MOTIVO_MAX) {
+            throw new DomainException('El motivo no puede pasar de ' . self::MOTIVO_MAX . ' caracteres.');
+        }
+        $motivo = $nuevo === self::NO_REALIZADO ? $motivo : null;
+
+        return $this->db->transaction(function (Database $db) use ($id, $nuevo, $motivo, $usuarioId, $exigirActual) {
+            $actual = $db->fetchValue(
+                'SELECT estado FROM actividades WHERE id = :id AND activo = 1 FOR UPDATE',
+                ['id' => $id]
+            );
+            if (!is_string($actual)) {
+                throw new DomainException('El taller no existe.');
+            }
+            if ($exigirActual !== null && $actual !== $exigirActual) {
+                throw new DomainException('El taller ya no está programado; solo el administrador puede cambiarlo.');
+            }
+            if ($actual === $nuevo) {
+                throw new DomainException('El taller ya está en ese estado.');
+            }
+
+            $db->execute(
+                'UPDATE actividades SET estado = :estado, motivo_no_realizado = :motivo WHERE id = :id',
+                ['estado' => $nuevo, 'motivo' => $motivo, 'id' => $id]
+            );
+            (new Bitacora($db))->registrar($id, $actual, $nuevo, $motivo, $usuarioId);
+
+            return $actual;
+        });
     }
 
     /**

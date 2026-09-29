@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Controllers\ActividadController;
+use App\Controllers\AsignacionController;
 use App\Controllers\AuthController;
 use App\Controllers\DashboardController;
 use App\Core\Router;
@@ -37,15 +38,25 @@ return static function (Router $router): void {
     // Auditor (RF-11)
     $router->get('/mis-talleres', [DashboardController::class, 'misTalleres'], $soloAuditor);
 
+    // Administrador, o auditor solo si el taller está asignado a él: el controlador responde 404
+    // para talleres ajenos (RF-07, RF-09).
+    $autenticado = [AuthMiddleware::class];
+    $router->get('/actividades/{id:\d+}', [ActividadController::class, 'ver'], $autenticado);
+    $router->post('/actividades/{id:\d+}/estado', [ActividadController::class, 'cambiarEstado'], $autenticado);
+
     // Administrador
     $soloAdministrador = [AuthMiddleware::class, [RoleMiddleware::class, Usuario::ADMINISTRADOR]];
     $router->group($soloAdministrador, static function (Router $r): void {
-        // Talleres (RF-06, RF-09). En la fase 4 el detalle se abre también al auditor asignado.
+        // Talleres (RF-06)
         $r->get('/actividades/nueva', [ActividadController::class, 'crear']);
         $r->post('/actividades', [ActividadController::class, 'guardar']);
-        $r->get('/actividades/{id:\d+}', [ActividadController::class, 'ver']);
         $r->get('/actividades/{id:\d+}/editar', [ActividadController::class, 'editar']);
         $r->post('/actividades/{id:\d+}', [ActividadController::class, 'actualizar']);
         $r->post('/actividades/{id:\d+}/desactivar', [ActividadController::class, 'desactivar']);
+
+        // Asignaciones (RF-04, RF-05)
+        $r->get('/asignaciones', [AsignacionController::class, 'index']);
+        $r->post('/asignaciones', [AsignacionController::class, 'asignar']);
+        $r->post('/asignaciones/{id:\d+}/quitar', [AsignacionController::class, 'quitar']);
     });
 };

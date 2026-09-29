@@ -13,23 +13,41 @@
 
 $vista = app()->view();
 ?>
-<h1>Mis talleres</h1>
+<div class="cabecera-pagina">
+    <h1>Mis talleres</h1>
+    <p>Los talleres que te asignaron. Abre uno para ver sus datos o registrar que no se realizó.</p>
+</div>
 
 <?php if ($resultado['total'] === 0 && !$hayFiltros) : ?>
-    <section class="tarjeta vacio">
-        <p>Todavía no tienes talleres asignados. Cuando el administrador te asigne alguno, aparecerá aquí.</p>
+    <section class="vacio">
+        <?= icono('bandeja', 'vacio__icono') ?>
+        <p>
+            <strong>Todavía no tienes talleres asignados.</strong>
+            Cuando el administrador te asigne alguno, aparecerá aquí con su fecha, horario y edificio.
+        </p>
     </section>
 <?php else : ?>
     <?= $vista->partial('actividades/_filtros', compact('ruta', 'filtros', 'carreras', 'edificios', 'hayFiltros')) ?>
 
-    <p class="texto-secundario" role="status">
-        <?= e($resultado['total']) ?> <?= $resultado['total'] === 1 ? 'taller asignado' : 'talleres asignados' ?>
-        <?= $hayFiltros ? 'coinciden con los filtros' : '' ?>
+    <div data-resultados>
+    <p class="resumen" data-resumen>
+        <span>
+            <?php $unidad = $resultado['total'] === 1 ? 'taller asignado' : 'talleres asignados'; ?>
+            <strong><?= e($resultado['total']) ?> <?= $unidad ?></strong>
+            <?= $hayFiltros ? 'coinciden con los filtros' : '' ?>
+        </span>
+        <?php if ($resultado['paginas'] > 1) : ?>
+            <span>Página <?= e($resultado['pagina']) ?> de <?= e($resultado['paginas']) ?></span>
+        <?php endif; ?>
     </p>
 
     <?php if ($resultado['filas'] === []) : ?>
-        <section class="tarjeta vacio">
-            <p>Ninguno de tus talleres coincide con los filtros. <a href="<?= e(url($ruta)) ?>">Quitar filtros</a></p>
+        <section class="vacio">
+            <?= icono('sin-resultados', 'vacio__icono') ?>
+            <p><strong>Ninguno de tus talleres coincide con los filtros.</strong></p>
+            <a class="btn btn-secundario" href="<?= e(url($ruta)) ?>" data-limpiar>
+                <?= icono('cerrar') ?> Quitar filtros
+            </a>
         </section>
     <?php else : ?>
         <?= $vista->partial('actividades/_tabla', ['filas' => $resultado['filas'], 'enlaceDetalle' => true]) ?>
@@ -40,4 +58,5 @@ $vista = app()->view();
             'paginas' => $resultado['paginas'],
         ]) ?>
     <?php endif; ?>
+    </div>
 <?php endif; ?>

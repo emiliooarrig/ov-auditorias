@@ -42,7 +42,7 @@ final class AsignacionTest extends IntegrationTestCase
         );
         $html = $this->get('/asignaciones', ['usuario' => (string) $auditor])->body();
         $this->assertStringContainsString('Se asignaron 2 talleres: Taller B, Taller C. 1 ya estaba asignado.', $html);
-        $this->assertStringContainsString('✓ Ya asignado', $html);
+        $this->assertStringContainsString('Ya asignado', $html);
     }
 
     public function testUnTallerPuedeTenerVariosAuditores(): void

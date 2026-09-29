@@ -28,24 +28,31 @@ $aria = static fn (string $campo): string => $error($campo) !== null
     ? 'aria-invalid="true" aria-describedby="' . $campo . '-error"'
     : '';
 $mensaje = static fn (string $campo): string => $error($campo) !== null
-    ? '<span class="error-campo" id="' . $campo . '-error">' . e($error($campo)) . '</span>'
+    ? error_campo($campo . '-error', (string) $error($campo))
     : '';
 ?>
-<h1><?= $nuevo ? 'Nuevo taller' : 'Editar taller' ?></h1>
+<a class="volver" href="<?= e($cancelar) ?>">
+    <?= icono('izquierda') ?> <?= $nuevo ? 'Volver al panel' : 'Volver al taller' ?>
+</a>
+<div class="cabecera-pagina">
+    <h1><?= $nuevo ? 'Nuevo taller' : 'Editar taller' ?></h1>
+    <p>Todos los campos son obligatorios.</p>
+</div>
 
 <form class="tarjeta formulario" method="post" action="<?= e($accion) ?>" novalidate>
     <?= csrf_field() ?>
 
-    <div class="<?= $claseCampo('nombre') ?>">
-        <label for="nombre">Nombre del taller</label>
-        <input type="text" id="nombre" name="nombre" value="<?= e($valor('nombre')) ?>" maxlength="150" required
-               <?= $aria('nombre') ?>>
-        <?= $mensaje('nombre') ?>
-    </div>
+    <fieldset>
+        <legend><?= icono('calendario') ?> Taller</legend>
+        <div class="<?= $claseCampo('nombre') ?>">
+            <label for="nombre"><?= icono('editar') ?> Nombre del taller</label>
+            <input type="text" id="nombre" name="nombre" value="<?= e($valor('nombre')) ?>" maxlength="150" required
+                   <?= $aria('nombre') ?>>
+            <?= $mensaje('nombre') ?>
+        </div>
 
-    <div class="formulario__fila">
         <div class="<?= $claseCampo('carrera_id') ?>">
-            <label for="carrera_id">Carrera</label>
+            <label for="carrera_id"><?= icono('carrera') ?> Carrera</label>
             <select id="carrera_id" name="carrera_id" required <?= $aria('carrera_id') ?>>
                 <option value="">Elige una carrera</option>
                 <?php foreach ($carreras as $c) : ?>
@@ -57,44 +64,49 @@ $mensaje = static fn (string $campo): string => $error($campo) !== null
             </select>
             <?= $mensaje('carrera_id') ?>
         </div>
+    </fieldset>
 
-        <div class="<?= $claseCampo('edificio_id') ?>">
-            <label for="edificio_id">Edificio</label>
-            <select id="edificio_id" name="edificio_id" required <?= $aria('edificio_id') ?>>
-                <option value="">Elige un edificio</option>
-                <?php foreach ($edificios as $ed) : ?>
-                    <?php $sel = $valor('edificio_id') === (string) $ed['id'] ? ' selected' : ''; ?>
-                    <option value="<?= e($ed['id']) ?>"<?= $sel ?>>
-                        Edificio <?= e($ed['numero']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-            <?= $mensaje('edificio_id') ?>
+    <fieldset>
+        <legend><?= icono('reloj') ?> Cuándo y dónde</legend>
+        <div class="formulario__fila">
+            <div class="<?= $claseCampo('edificio_id') ?>">
+                <label for="edificio_id"><?= icono('edificio') ?> Edificio</label>
+                <select id="edificio_id" name="edificio_id" required <?= $aria('edificio_id') ?>>
+                    <option value="">Elige un edificio</option>
+                    <?php foreach ($edificios as $ed) : ?>
+                        <?php $sel = $valor('edificio_id') === (string) $ed['id'] ? ' selected' : ''; ?>
+                        <option value="<?= e($ed['id']) ?>"<?= $sel ?>>
+                            Edificio <?= e($ed['numero']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <?= $mensaje('edificio_id') ?>
+            </div>
+            <div class="<?= $claseCampo('fecha') ?>">
+                <label for="fecha"><?= icono('calendario') ?> Fecha</label>
+                <input type="date" id="fecha" name="fecha" value="<?= e($valor('fecha')) ?>" required
+                       <?= $aria('fecha') ?>>
+                <?= $mensaje('fecha') ?>
+            </div>
+            <div class="<?= $claseCampo('hora_inicio') ?>">
+                <label for="hora_inicio"><?= icono('reloj') ?> Hora de inicio</label>
+                <input type="time" id="hora_inicio" name="hora_inicio" required
+                       value="<?= e($valor('hora_inicio', 5)) ?>" <?= $aria('hora_inicio') ?>>
+                <?= $mensaje('hora_inicio') ?>
+            </div>
+            <div class="<?= $claseCampo('hora_fin') ?>">
+                <label for="hora_fin"><?= icono('reloj') ?> Hora de fin</label>
+                <input type="time" id="hora_fin" name="hora_fin" required
+                       value="<?= e($valor('hora_fin', 5)) ?>" <?= $aria('hora_fin') ?>>
+                <?= $mensaje('hora_fin') ?>
+            </div>
         </div>
-    </div>
-
-    <div class="formulario__fila">
-        <div class="<?= $claseCampo('fecha') ?>">
-            <label for="fecha">Fecha</label>
-            <input type="date" id="fecha" name="fecha" value="<?= e($valor('fecha')) ?>" required <?= $aria('fecha') ?>>
-            <?= $mensaje('fecha') ?>
-        </div>
-        <div class="<?= $claseCampo('hora_inicio') ?>">
-            <label for="hora_inicio">Hora de inicio</label>
-            <input type="time" id="hora_inicio" name="hora_inicio" value="<?= e($valor('hora_inicio', 5)) ?>" required
-                   <?= $aria('hora_inicio') ?>>
-            <?= $mensaje('hora_inicio') ?>
-        </div>
-        <div class="<?= $claseCampo('hora_fin') ?>">
-            <label for="hora_fin">Hora de fin</label>
-            <input type="time" id="hora_fin" name="hora_fin" value="<?= e($valor('hora_fin', 5)) ?>" required
-                   <?= $aria('hora_fin') ?>>
-            <?= $mensaje('hora_fin') ?>
-        </div>
-    </div>
+    </fieldset>
 
     <div class="formulario__acciones">
-        <button type="submit" class="btn btn-primario"><?= $nuevo ? 'Crear taller' : 'Guardar cambios' ?></button>
-        <a class="btn btn-secundario" href="<?= e($cancelar) ?>">Cancelar</a>
+        <button type="submit" class="btn btn-primario">
+            <?= icono($nuevo ? 'mas' : 'guardar') ?> <?= $nuevo ? 'Crear taller' : 'Guardar cambios' ?>
+        </button>
+        <a class="btn btn-secundario" href="<?= e($cancelar) ?>"><?= icono('cerrar') ?> Cancelar</a>
     </div>
 </form>

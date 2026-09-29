@@ -70,18 +70,34 @@ function csrf_field(): string
 }
 
 /**
+ * Ícono decorativo del sprite de partials/iconos.php. Siempre acompaña a un texto visible o para lector.
+ */
+function icono(string $nombre, string $clase = ''): string
+{
+    return '<svg class="icono' . ($clase !== '' ? ' ' . e($clase) : '') . '" aria-hidden="true" focusable="false">'
+        . '<use href="#i-' . e($nombre) . '"></use></svg>';
+}
+
+/**
  * Insignia de estado de un taller: ícono + texto + color, para no depender solo del color.
  */
 function estado_insignia(string $estado): string
 {
     [$icono, $texto, $clase] = match ($estado) {
-        'realizado' => ['✓', 'Realizado', 'realizado'],
-        'no_realizado' => ['✕', 'No realizado', 'no-realizado'],
-        default => ['◷', 'Programado', 'programado'],
+        'realizado' => ['check-circulo', 'Realizado', 'realizado'],
+        'no_realizado' => ['x-circulo', 'No realizado', 'no-realizado'],
+        default => ['reloj', 'Programado', 'programado'],
     };
 
-    return '<span class="insignia insignia--' . $clase . '"><span aria-hidden="true">' . $icono . '</span> '
-        . e($texto) . '</span>';
+    return '<span class="insignia insignia--' . $clase . '">' . icono($icono) . ' ' . e($texto) . '</span>';
+}
+
+/**
+ * Mensaje de error bajo un campo de formulario, con su ícono.
+ */
+function error_campo(string $id, string $mensaje): string
+{
+    return '<span class="error-campo" id="' . e($id) . '">' . icono('alerta') . ' ' . e($mensaje) . '</span>';
 }
 
 /**
@@ -98,6 +114,26 @@ function fecha_corta(string $fecha): string
 
     return $dias[(int) $dt->format('w')] . ' ' . $dt->format('j') . ' ' . $meses[(int) $dt->format('n') - 1]
         . ' ' . $dt->format('Y');
+}
+
+/**
+ * Partes de una fecha AAAA-MM-DD para la hoja de calendario: ['dia' => 'lun', 'numero' => '5', 'mes' => 'oct'].
+ *
+ * @return array{dia: string, numero: string, mes: string}
+ */
+function fecha_partes(string $fecha): array
+{
+    $partes = explode(' ', fecha_corta($fecha));
+
+    return ['dia' => $partes[0], 'numero' => $partes[1] ?? $fecha, 'mes' => $partes[2] ?? ''];
+}
+
+/**
+ * Clase CSS de un estado ("no_realizado" → "no-realizado").
+ */
+function estado_clase(string $estado): string
+{
+    return in_array($estado, ['realizado', 'no_realizado'], true) ? str_replace('_', '-', $estado) : 'programado';
 }
 
 /**

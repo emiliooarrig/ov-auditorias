@@ -15,22 +15,37 @@ $vista = app()->view();
 ?>
 <div class="titulo-acciones">
     <h1>Panel central</h1>
-    <a class="btn btn-primario" href="<?= e(url('/actividades/nueva')) ?>">+ Nuevo taller</a>
+    <a class="btn btn-primario" href="<?= e(url('/actividades/nueva')) ?>"><?= icono('mas') ?> Nuevo taller</a>
 </div>
 
 <?= $vista->partial('actividades/_filtros', compact('ruta', 'filtros', 'carreras', 'edificios', 'hayFiltros')) ?>
 
-<p class="texto-secundario" role="status">
-    <?= e($resultado['total']) ?> <?= $resultado['total'] === 1 ? 'taller' : 'talleres' ?>
-    <?= $hayFiltros ? 'coinciden con los filtros' : 'activos' ?>
+<div data-resultados>
+<p class="resumen" data-resumen>
+    <span>
+        <strong><?= e($resultado['total']) ?> <?= $resultado['total'] === 1 ? 'taller' : 'talleres' ?></strong>
+        <?= $hayFiltros ? 'coinciden con los filtros' : 'activos' ?>
+    </span>
+    <?php if ($resultado['paginas'] > 1) : ?>
+        <span>Página <?= e($resultado['pagina']) ?> de <?= e($resultado['paginas']) ?></span>
+    <?php endif; ?>
 </p>
 
 <?php if ($resultado['filas'] === []) : ?>
-    <section class="tarjeta vacio">
+    <section class="vacio">
         <?php if ($hayFiltros) : ?>
-            <p>Ningún taller coincide con los filtros. <a href="<?= e(url($ruta)) ?>">Quitar filtros</a></p>
+            <?= icono('sin-resultados', 'vacio__icono') ?>
+            <p>
+                <strong>Ningún taller coincide con los filtros.</strong>
+                Prueba con otro nombre o quita alguno de los filtros.
+            </p>
+            <a class="btn btn-secundario" href="<?= e(url($ruta)) ?>" data-limpiar>
+                <?= icono('cerrar') ?> Quitar filtros
+            </a>
         <?php else : ?>
-            <p>Todavía no hay talleres. <a href="<?= e(url('/actividades/nueva')) ?>">Crea el primero</a>.</p>
+            <?= icono('calendario', 'vacio__icono') ?>
+            <p><strong>Todavía no hay talleres.</strong>Crea el primero para poder asignarle auditores.</p>
+            <a class="btn btn-primario" href="<?= e(url('/actividades/nueva')) ?>"><?= icono('mas') ?> Crear taller</a>
         <?php endif; ?>
     </section>
 <?php else : ?>
@@ -42,3 +57,4 @@ $vista = app()->view();
         'paginas' => $resultado['paginas'],
     ]) ?>
 <?php endif; ?>
+</div>

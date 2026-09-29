@@ -24,12 +24,16 @@ final class App
     private ?Request $request = null;
     private string $urlPath;
 
+    /** @var array<string, mixed> */
+    private readonly array $config;
+
     /**
      * @param array<string, mixed> $config
      */
-    public function __construct(private readonly string $basePath, private readonly array $config)
+    public function __construct(private readonly string $basePath, array $config)
     {
-        $this->urlPath = rtrim((string) parse_url((string) ($config['url'] ?? ''), PHP_URL_PATH), '/');
+        $this->config = self::endurecer($config);
+        $this->urlPath = rtrim((string) parse_url((string) ($this->config['url'] ?? ''), PHP_URL_PATH), '/');
         $this->session = new Session([
             'name' => (string) $this->config('session.name', 'sesion'),
             'secure' => (bool) $this->config('session.secure', true),
@@ -38,7 +42,7 @@ final class App
         ]);
         $this->csrf = new Csrf($this->session);
         $this->view = new View($basePath . '/app/Views');
-        $this->logger = new Logger($basePath . '/storage/logs');
+        $this->logger = new Logger((string) $this->config('log_dir', $basePath . '/storage/logs'));
         $this->auth = new Auth($this);
 
         self::$instance = $this;
@@ -50,13 +54,35 @@ final class App
 
         /** @var array<string, mixed> $config */
         $config = require $basePath . '/app/Config/app.php';
+        $app = new self($basePath, $config);
 
-        date_default_timezone_set((string) $config['timezone']);
+        date_default_timezone_set((string) $app->config('timezone'));
         error_reporting(E_ALL);
-        ini_set('display_errors', $config['debug'] ? '1' : '0');
+        ini_set('display_errors', $app->debug() ? '1' : '0');
         ini_set('log_errors', '1');
+        // Los errores de PHP (incluidos los fatales) también quedan en storage/logs/.
+        ini_set('error_log', (string) $app->config('log_dir', $basePath . '/storage/logs') . '/php-errores.log');
+        // La sesión en el servidor dura al menos lo mismo que el cierre por inactividad.
+        ini_set('session.gc_maxlifetime', (string) max(1440, (int) $app->config('session.idle_minutes', 30) * 60));
 
-        return new self($basePath, $config);
+        return $app;
+    }
+
+    /**
+     * En producción la cookie de sesión siempre es Secure y el modo depuración está apagado,
+     * aunque el .env diga otra cosa (SDD, sección 6: transporte y fuga de configuración).
+     *
+     * @param array<string, mixed> $config
+     * @return array<string, mixed>
+     */
+    private static function endurecer(array $config): array
+    {
+        if (($config['env'] ?? 'production') === 'production') {
+            $config['debug'] = false;
+            $config['session'] = ['secure' => true] + (array) ($config['session'] ?? []);
+        }
+
+        return $config;
     }
 
     public static function instance(): self

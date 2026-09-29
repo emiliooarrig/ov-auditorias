@@ -40,6 +40,8 @@ return [
         'password_min' => 10,
     ],
 
+    'log_dir' => dirname(__DIR__, 2) . '/storage/logs',
+
     'pagination' => [
         'per_page' => 20,
     ],

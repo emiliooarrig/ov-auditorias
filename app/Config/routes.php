@@ -6,6 +6,7 @@ use App\Controllers\ActividadController;
 use App\Controllers\AsignacionController;
 use App\Controllers\AuthController;
 use App\Controllers\DashboardController;
+use App\Controllers\UsuarioController;
 use App\Core\Router;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\CsrfMiddleware;
@@ -58,5 +59,10 @@ return static function (Router $router): void {
         $r->get('/asignaciones', [AsignacionController::class, 'index']);
         $r->post('/asignaciones', [AsignacionController::class, 'asignar']);
         $r->post('/asignaciones/{id:\d+}/quitar', [AsignacionController::class, 'quitar']);
+
+        // Usuarios (RF-10)
+        $r->get('/usuarios', [UsuarioController::class, 'index']);
+        $r->post('/usuarios/{id:\d+}/rol', [UsuarioController::class, 'cambiarRol']);
+        $r->post('/usuarios/{id:\d+}/estado', [UsuarioController::class, 'cambiarEstado']);
     });
 };

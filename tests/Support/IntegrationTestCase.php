@@ -67,6 +67,7 @@ abstract class IntegrationTestCase extends TestCase
     protected function entrarComoAdministrador(string $correo = 'admin@anahuac.mx'): int
     {
         $id = $this->crearUsuario(Usuario::ADMINISTRADOR, $correo, 'Clave-segura-2026');
+        $this->post('/logout');
         $this->post('/login', ['correo' => $correo]);
         $this->post('/login', ['password' => 'Clave-segura-2026']);
         $this->assertSame($id, $this->usuarioEnSesion());

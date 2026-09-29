@@ -58,6 +58,9 @@ final class Response
             'X-Content-Type-Options' => 'nosniff',
             'X-Frame-Options' => 'DENY',
             'Referrer-Policy' => 'strict-origin-when-cross-origin',
+            'Permissions-Policy' => 'camera=(), microphone=(), geolocation=(), payment=()',
+            'Cross-Origin-Opener-Policy' => 'same-origin',
+            // Las páginas llevan datos de la sesión: no se guardan en caché (tampoco al usar "Atrás").
             'Cache-Control' => 'no-store',
         ];
         if ($https) {

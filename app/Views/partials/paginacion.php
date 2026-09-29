@@ -24,7 +24,7 @@ $enlace = static fn (int $p): string => url($ruta, $query + ['pagina' => $p > 1 
 <nav aria-label="Paginación">
     <ul class="paginacion">
         <?php if ($pagina > 1) : ?>
-            <li><a href="<?= e($enlace($pagina - 1)) ?>" rel="prev">‹ Anterior</a></li>
+            <li><a href="<?= e($enlace($pagina - 1)) ?>" rel="prev"><?= icono('izquierda') ?> Anterior</a></li>
         <?php endif; ?>
         <?php $anterior = 0; ?>
         <?php foreach ($visibles as $p) : ?>
@@ -41,7 +41,7 @@ $enlace = static fn (int $p): string => url($ruta, $query + ['pagina' => $p > 1 
             <?php $anterior = $p; ?>
         <?php endforeach; ?>
         <?php if ($pagina < $paginas) : ?>
-            <li><a href="<?= e($enlace($pagina + 1)) ?>" rel="next">Siguiente ›</a></li>
+            <li><a href="<?= e($enlace($pagina + 1)) ?>" rel="next">Siguiente <?= icono('derecha') ?></a></li>
         <?php endif; ?>
     </ul>
 </nav>

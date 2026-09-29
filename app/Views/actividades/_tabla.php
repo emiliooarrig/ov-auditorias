@@ -12,48 +12,54 @@
 <table class="tabla tabla--responsiva">
     <thead>
         <tr>
+            <th scope="col" class="col-fecha">Fecha</th>
             <th scope="col">Taller</th>
-            <th scope="col">Carrera</th>
-            <th scope="col">Edificio</th>
-            <th scope="col">Horario</th>
+            <th scope="col" class="col-edificio">Edificio</th>
             <th scope="col">Estado</th>
             <th scope="col">Auditores</th>
         </tr>
     </thead>
     <tbody>
         <?php foreach ($filas as $fila) : ?>
-            <tr>
-                <td data-etiqueta="Taller">
-                    <?php if ($enlaceDetalle) : ?>
-                        <a href="<?= e(url('/actividades/' . $fila['id'])) ?>">
+            <tr class="fila fila--<?= e(estado_clase($fila['estado'])) ?>">
+                <td class="celda-lateral">
+                    <?= app()->view()->partial('partials/hoja', [
+                        'fecha' => $fila['fecha'],
+                        'inicio' => $fila['hora_inicio'],
+                        'fin' => $fila['hora_fin'],
+                    ]) ?>
+                </td>
+                <td>
+                    <span class="tabla__nombre">
+                        <?php if ($enlaceDetalle) : ?>
+                            <a href="<?= e(url('/actividades/' . $fila['id'])) ?>">
+                                <strong><?= e($fila['nombre']) ?></strong>
+                            </a>
+                        <?php else : ?>
                             <strong><?= e($fila['nombre']) ?></strong>
-                        </a>
-                    <?php else : ?>
-                        <strong><?= e($fila['nombre']) ?></strong>
-                    <?php endif; ?>
+                        <?php endif; ?>
+                    </span>
+                    <span class="tabla__sub"><?= icono('carrera') ?> <?= e($fila['carrera']) ?></span>
                 </td>
-                <td data-etiqueta="Carrera"><?= e($fila['carrera']) ?></td>
-                <td data-etiqueta="Edificio"><?= e($fila['edificio']) ?></td>
-                <td data-etiqueta="Horario">
-                    <?= e(fecha_corta($fila['fecha'])) ?><br>
-                    <span class="texto-secundario"><?= e(horario($fila['hora_inicio'], $fila['hora_fin'])) ?></span>
+                <td data-etiqueta="Edificio" class="celda-en-linea">
+                    <span class="placa"><?= e($fila['edificio']) ?></span>
                 </td>
-                <td data-etiqueta="Estado">
+                <td>
                     <?= estado_insignia($fila['estado']) ?>
                     <?php if ($fila['estado'] === 'no_realizado' && $fila['motivo_no_realizado'] !== null) : ?>
                         <div class="motivo">
                             <?= e($fila['motivo_no_realizado']) ?>
                             <?php if ($fila['registrado_por'] !== null) : ?>
-                                <br>Registró: <?= e($fila['registrado_por']) ?>
+                                <br><?= icono('usuario') ?> Registró: <?= e($fila['registrado_por']) ?>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </td>
                 <td data-etiqueta="Auditores">
                     <?php if ($fila['auditores'] === null) : ?>
-                        <span class="texto-secundario">Sin asignar</span>
+                        <span class="texto-secundario con-icono"><?= icono('usuario-menos') ?> Sin asignar</span>
                     <?php else : ?>
-                        <?= e($fila['auditores']) ?>
+                        <span class="con-icono"><?= icono('usuarios') ?> <?= e($fila['auditores']) ?></span>
                     <?php endif; ?>
                 </td>
             </tr>

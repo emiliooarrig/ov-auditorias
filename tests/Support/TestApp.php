@@ -28,6 +28,20 @@ final class TestApp
             'session' => ['name' => 'prueba', 'secure' => false, 'idle_minutes' => 30],
             'auth' => ['allowed_domains' => ['anahuac.mx'], 'max_fails' => 5, 'lock_minutes' => 15],
             'pagination' => ['per_page' => 20],
+            'log_dir' => self::logDir(),
         ], $overrides));
+    }
+
+    /**
+     * Carpeta temporal para los logs de las pruebas (no ensucia storage/logs/).
+     */
+    public static function logDir(): string
+    {
+        $dir = sys_get_temp_dir() . '/auditores-talleres-pruebas';
+        if (!is_dir($dir)) {
+            mkdir($dir, 0700, true);
+        }
+
+        return $dir;
     }
 }

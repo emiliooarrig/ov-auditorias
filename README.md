@@ -48,6 +48,21 @@ storage/logs/  bitácora de errores de la aplicación
 tests/         PHPUnit
 ```
 
+## Seguridad (SDD, sección 6)
+
+- Con `APP_ENV=production` la depuración se apaga y la cookie de sesión es `Secure` aunque el `.env`
+  diga otra cosa. Los errores se registran en `storage/logs/` (`app-*.log` y `php-errores.log`).
+- La raíz web debe ser `public/`. El `.htaccess` de la raíz niega todo acceso por si el servidor
+  se configura mal.
+- HTTPS es obligatorio: la redirección de HTTP a HTTPS se configura en el servidor web.
+  La aplicación envía HSTS.
+- Cada petición que cambia datos exige sesión, rol y token CSRF; el auditor solo ve sus talleres
+  (404 para los ajenos).
+- Bloqueo temporal tras `AUTH_MAX_FAILS` fallos en `AUTH_LOCK_MINUTES` minutos por correo
+  (por IP, el cuádruple, porque en el campus muchos usuarios comparten IP).
+- Riesgo aceptado: el auditor ingresa solo con su correo. Se recomienda publicar la aplicación
+  únicamente en la red interna de la universidad.
+
 ## Decisiones sobre huecos del SDD
 
 1. Promover un auditor a administrador exige asignarle contraseña.
@@ -65,5 +80,5 @@ tests/         PHPUnit
 - [x] Fase 2 — Base de datos y autenticación
 - [x] Fase 3 — Talleres y panel
 - [x] Fase 4 — Asignaciones y estados
-- [ ] Fase 5 — Usuarios y endurecimiento
+- [x] Fase 5 — Usuarios y endurecimiento
 - [ ] Fase 6 — Pruebas y despliegue

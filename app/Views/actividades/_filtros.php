@@ -2,6 +2,7 @@
 
 /**
  * Barra de filtros por nombre, carrera y edificio (RF-08). Se envía por GET y conserva los valores.
+ * Con JavaScript filtra en tiempo real: app.js pide la misma URL y reemplaza el bloque [data-resultados].
  *
  * @var string                                  $ruta
  * @var array{nombre: string, carrera: ?int, edificio: ?int} $filtros
@@ -13,17 +14,19 @@
 
 $ocultos ??= [];
 ?>
-<form class="tarjeta filtros" method="get" action="<?= e(url($ruta)) ?>" role="search" aria-label="Filtrar talleres">
+<form class="filtros" method="get" action="<?= e(url($ruta)) ?>" role="search" aria-label="Filtrar talleres"
+      data-filtro-vivo>
     <?php foreach ($ocultos as $nombreOculto => $valorOculto) : ?>
         <input type="hidden" name="<?= e($nombreOculto) ?>" value="<?= e($valorOculto) ?>">
     <?php endforeach; ?>
     <div class="campo">
-        <label for="f-nombre">Nombre</label>
+        <label for="f-nombre"><?= icono('buscar') ?> Nombre del taller</label>
         <input type="search" id="f-nombre" name="nombre" value="<?= e($filtros['nombre']) ?>" maxlength="150"
-               class="<?= $filtros['nombre'] !== '' ? 'filtro-activo' : '' ?>" placeholder="Buscar por nombre">
+               class="<?= $filtros['nombre'] !== '' ? 'filtro-activo' : '' ?>" placeholder="Ej. Liderazgo"
+               autocomplete="off">
     </div>
     <div class="campo">
-        <label for="f-carrera">Carrera</label>
+        <label for="f-carrera"><?= icono('carrera') ?> Carrera</label>
         <select id="f-carrera" name="carrera" class="<?= $filtros['carrera'] !== null ? 'filtro-activo' : '' ?>">
             <option value="">Todas</option>
             <?php foreach ($carreras as $c) : ?>
@@ -34,7 +37,7 @@ $ocultos ??= [];
         </select>
     </div>
     <div class="campo">
-        <label for="f-edificio">Edificio</label>
+        <label for="f-edificio"><?= icono('edificio') ?> Edificio</label>
         <select id="f-edificio" name="edificio" class="<?= $filtros['edificio'] !== null ? 'filtro-activo' : '' ?>">
             <option value="">Todos</option>
             <?php foreach ($edificios as $ed) : ?>
@@ -45,9 +48,9 @@ $ocultos ??= [];
         </select>
     </div>
     <div class="filtros__acciones">
-        <button type="submit" class="btn btn-primario">Filtrar</button>
-        <?php if ($hayFiltros) : ?>
-            <a class="btn btn-secundario" href="<?= e(url($ruta, $ocultos)) ?>">Limpiar</a>
-        <?php endif; ?>
+        <button type="submit" class="btn btn-primario filtros__enviar"><?= icono('buscar') ?> Filtrar</button>
+        <a class="btn btn-secundario" href="<?= e(url($ruta, $ocultos)) ?>" data-limpiar
+           <?= $hayFiltros ? '' : 'hidden' ?>><?= icono('cerrar') ?> Limpiar</a>
     </div>
+    <p class="solo-lector" aria-live="polite" data-anuncio></p>
 </form>

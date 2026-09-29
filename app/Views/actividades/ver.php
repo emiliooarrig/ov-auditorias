@@ -19,42 +19,40 @@ $programado = $estado === 'programado';
 $errorMotivo = error_de('motivo');
 $ultimo = $historial[0] ?? null;
 ?>
-<a class="volver" href="<?= e(url($esAdministrador ? '/' : '/mis-talleres')) ?>">
+<a class="back-link" href="<?= e(url($esAdministrador ? '/' : '/mis-talleres')) ?>">
     <?= icono('izquierda') ?> <?= $esAdministrador ? 'Volver al panel' : 'Volver a mis talleres' ?>
 </a>
 
-<header class="ficha fila--<?= e(estado_clase($estado)) ?>">
-    <?= app()->view()->partial('partials/hoja', [
-        'fecha' => (string) $actividad['fecha'],
-        'inicio' => (string) $actividad['hora_inicio'],
-        'fin' => (string) $actividad['hora_fin'],
-    ]) ?>
+<header class="card hero">
     <div>
         <h1><?= e($actividad['nombre']) ?></h1>
-        <dl class="ficha__datos">
+        <dl class="facts">
             <div><dt><?= icono('info') ?> Estado</dt><dd><?= estado_insignia($estado) ?></dd></div>
             <div>
-                <dt><?= icono('edificio') ?> Edificio</dt>
-                <dd><span class="placa placa--chica"><?= e($actividad['edificio']) ?></span></dd>
+                <dt><?= icono('calendario') ?> Fecha</dt>
+                <dd class="nums">
+                    <time datetime="<?= e(substr((string) $actividad['fecha'], 0, 10)) ?>">
+                        <?= e(fecha_corta((string) $actividad['fecha'])) ?></time>,
+                    <?= e(horario((string) $actividad['hora_inicio'], (string) $actividad['hora_fin'])) ?>
+                </dd>
             </div>
+            <div><dt><?= icono('edificio') ?> Edificio</dt><dd><?= e($actividad['edificio']) ?></dd></div>
             <div><dt><?= icono('carrera') ?> Carrera</dt><dd><?= e($actividad['carrera']) ?></dd></div>
         </dl>
     </div>
     <?php if ($esAdministrador) : ?>
-        <div class="ficha__accion">
-            <a class="btn btn-secundario" href="<?= e(url('/actividades/' . $id . '/editar')) ?>">
-                <?= icono('editar') ?> Editar
-            </a>
-        </div>
+        <a class="btn btn--secondary" href="<?= e(url('/actividades/' . $id . '/editar')) ?>">
+            <?= icono('editar') ?> Editar
+        </a>
     <?php endif; ?>
 
     <?php if ($estado === 'no_realizado') : ?>
-        <div class="aviso aviso--error aviso--dentro">
+        <div class="alert alert--error alert--inline">
             <?= icono('x-circulo') ?>
             <div>
                 <strong>No se realizó.</strong> Motivo: <?= e($actividad['motivo_no_realizado']) ?>
                 <?php if ($ultimo !== null) : ?>
-                    <div class="texto-secundario">
+                    <div class="muted">
                         Lo registró <?= e($ultimo['usuario']) ?> el <?= e(fecha_hora($ultimo['creado_en'])) ?>.
                     </div>
                 <?php endif; ?>
@@ -63,28 +61,28 @@ $ultimo = $historial[0] ?? null;
     <?php endif; ?>
 </header>
 
-<div class="detalle">
-    <div class="detalle__principal">
-        <section class="tarjeta detalle__auditores" aria-labelledby="t-auditores">
-            <div class="titulo-acciones">
-                <h2 id="t-auditores"><?= icono('usuarios') ?> Auditores asignados</h2>
+<div class="layout-detail">
+    <div>
+        <section class="card" aria-labelledby="t-auditores">
+            <div class="card__header">
+                <h2 class="card__title" id="t-auditores"><?= icono('usuarios') ?> Auditores asignados</h2>
                 <?php if ($esAdministrador) : ?>
-                    <a class="btn btn-secundario btn-chico" href="<?= e(url('/asignaciones')) ?>">
+                    <a class="btn btn--secondary btn--small" href="<?= e(url('/asignaciones')) ?>">
                         <?= icono('usuario-mas') ?> Asignar auditores
                     </a>
                 <?php endif; ?>
             </div>
             <?php if ($auditores === []) : ?>
-                <p class="texto-secundario">Todavía no hay auditores asignados a este taller.</p>
+                <p class="muted">Todavía no hay auditores asignados a este taller.</p>
             <?php else : ?>
-                <ul class="lista-auditores">
+                <ul class="people">
                     <?php foreach ($auditores as $a) : ?>
                         <li>
-                            <div class="persona">
+                            <div class="person">
                                 <strong><?= e($a['nombre'] . ' ' . $a['apellidos']) ?></strong>
-                                <span class="persona__meta"><?= icono('correo') ?> <?= e($a['correo']) ?></span>
+                                <span class="person__meta"><?= icono('correo') ?> <?= e($a['correo']) ?></span>
                                 <?php if ($esAdministrador) : ?>
-                                    <span class="persona__meta">
+                                    <span class="person__meta">
                                         <?= icono('asignar') ?> Lo asignó <?= e($a['asignado_por']) ?>
                                         el <?= e(fecha_hora($a['asignado_en'])) ?>
                                     </span>
@@ -95,9 +93,9 @@ $ultimo = $historial[0] ?? null;
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="volver" value="detalle">
                                     <input type="hidden" name="actividad_id" value="<?= e($id) ?>">
-                                    <button type="submit" class="btn btn-enlace btn-enlace--peligro">
+                                    <button type="submit" class="btn btn--link btn--link-danger">
                                         <?= icono('usuario-menos') ?>
-                                        Quitar<span class="solo-lector"> a <?= e($a['nombre']) ?></span>
+                                        Quitar<span class="sr-only"> a <?= e($a['nombre']) ?></span>
                                     </button>
                                 </form>
                             <?php endif; ?>
@@ -105,35 +103,35 @@ $ultimo = $historial[0] ?? null;
                     <?php endforeach; ?>
                 </ul>
                 <?php if ($esAdministrador && !$programado) : ?>
-                    <p class="texto-secundario aviso--dentro">
-                        Las asignaciones quedan fijas como registro porque el taller ya no está programado.
+                    <p class="muted field__hint">
+                        <?= icono('info') ?> Las asignaciones quedan fijas como registro porque el taller ya no está programado.
                     </p>
                 <?php endif; ?>
             <?php endif; ?>
         </section>
 
-        <section class="tarjeta detalle__historial" aria-labelledby="t-historial">
-            <h2 id="t-historial"><?= icono('historial') ?> Historial de estados</h2>
+        <section class="card" aria-labelledby="t-historial">
+            <h2 class="card__title" id="t-historial"><?= icono('historial') ?> Historial de estados</h2>
             <?php if ($historial === []) : ?>
-                <p class="texto-secundario">Sin movimientos.</p>
+                <p class="muted">Sin movimientos.</p>
             <?php else : ?>
-                <ol class="historial">
+                <ol class="timeline">
                     <?php foreach ($historial as $h) : ?>
-                        <li class="fila--<?= e(estado_clase($h['estado_nuevo'])) ?>">
-                            <div class="historial__cambio">
+                        <li class="timeline__item">
+                            <div class="timeline__change">
                                 <?php if ($h['estado_anterior'] === null) : ?>
                                     Creado como <?= estado_insignia($h['estado_nuevo']) ?>
                                 <?php else : ?>
                                     <?= estado_insignia($h['estado_anterior']) ?>
-                                    <?= icono('flecha-derecha') ?><span class="solo-lector">cambió a</span>
+                                    <?= icono('flecha-derecha') ?><span class="sr-only">cambió a</span>
                                     <?= estado_insignia($h['estado_nuevo']) ?>
                                 <?php endif; ?>
                             </div>
-                            <div class="historial__meta">
+                            <div class="timeline__meta">
                                 <?= icono('usuario') ?> <?= e($h['usuario']) ?>, <?= e(fecha_hora($h['creado_en'])) ?>
                             </div>
                             <?php if ($h['motivo'] !== null) : ?>
-                                <div class="motivo">Motivo: <?= e($h['motivo']) ?></div>
+                                <div class="reason">Motivo: <?= e($h['motivo']) ?></div>
                             <?php endif; ?>
                         </li>
                     <?php endforeach; ?>
@@ -142,18 +140,18 @@ $ultimo = $historial[0] ?? null;
         </section>
     </div>
 
-    <div class="detalle__lateral">
+    <div>
         <?php if ($puedeMarcarNoRealizado) : ?>
-            <section class="tarjeta detalle__estado" aria-labelledby="t-estado">
-                <h2 id="t-estado">
+            <section class="card card--warm" aria-labelledby="t-estado">
+                <h2 class="card__title" id="t-estado">
                     <?= icono('editar') ?>
                     <?= $esAdministrador ? 'Cambiar estado' : 'Registrar que no se realizó' ?>
                 </h2>
-                <form class="form-estado" method="post" novalidate
+                <form method="post" novalidate
                       action="<?= e(url('/actividades/' . $id . '/estado')) ?>">
                     <?= csrf_field() ?>
                     <?php if ($esAdministrador) : ?>
-                        <fieldset class="opciones-estado">
+                        <fieldset class="choices">
                             <legend>Nuevo estado</legend>
                             <?php
                             $opciones = ['programado', 'realizado', 'no_realizado'];
@@ -163,7 +161,7 @@ $ultimo = $historial[0] ?? null;
                                 <?php if ($valor === $estado) {
                                     continue;
                                 } ?>
-                                <label class="opcion-estado">
+                                <label class="choice">
                                     <?php $marcado = $elegido === $valor ? ' checked' : ''; ?>
                                     <input type="radio" name="estado" value="<?= e($valor) ?>"<?= $marcado ?>>
                                     <?= estado_insignia($valor) ?>
@@ -172,12 +170,12 @@ $ultimo = $historial[0] ?? null;
                         </fieldset>
                     <?php else : ?>
                         <input type="hidden" name="estado" value="no_realizado">
-                        <p class="texto-secundario">
+                        <p class="muted">
                             Si el taller no se llevó a cabo, escribe el motivo. Solo el administrador podrá revertirlo.
                         </p>
                     <?php endif; ?>
 
-                    <div class="campo campo-motivo<?= $errorMotivo !== null ? ' campo--error' : '' ?>">
+                    <div class="field<?= $errorMotivo !== null ? ' field--error' : '' ?>">
                         <label for="motivo">
                             <?= $esAdministrador ? 'Motivo por el que no se realizó' : 'Motivo' ?>
                         </label>
@@ -190,12 +188,12 @@ $ultimo = $historial[0] ?? null;
                         <?php if ($errorMotivo !== null) : ?>
                             <?= error_campo('motivo-error', $errorMotivo) ?>
                         <?php else : ?>
-                            <span class="campo__ayuda" id="motivo-ayuda">
+                            <span class="field__hint" id="motivo-ayuda">
                                 <?= icono('info') ?> Hasta 255 caracteres. Queda en el historial.
                             </span>
                         <?php endif; ?>
                     </div>
-                    <button type="submit" class="btn btn-primario btn-bloque">
+                    <button type="submit" class="btn btn--primary btn--block">
                         <?= icono($esAdministrador ? 'guardar' : 'x-circulo') ?>
                         <?= $esAdministrador ? 'Guardar estado' : 'Marcar como no realizado' ?>
                     </button>
@@ -204,19 +202,19 @@ $ultimo = $historial[0] ?? null;
         <?php endif; ?>
 
         <?php if ($esAdministrador) : ?>
-            <section class="tarjeta zona-peligro detalle__peligro" aria-labelledby="t-peligro">
-                <h2 id="t-peligro"><?= icono('alerta') ?> Desactivar taller</h2>
-                <p class="texto-secundario">
+            <section class="card card--danger" aria-labelledby="t-peligro">
+                <h2 class="card__title" id="t-peligro"><?= icono('alerta') ?> Desactivar taller</h2>
+                <p class="muted">
                     El taller dejará de aparecer en el panel. No se borra: su registro, asignaciones e historial
                     se conservan.
                 </p>
                 <form method="post" action="<?= e(url('/actividades/' . $id . '/desactivar')) ?>">
                     <?= csrf_field() ?>
-                    <label class="casilla">
+                    <label class="check">
                         <input type="checkbox" name="confirmar" value="1" required>
                         Confirmo que quiero desactivar este taller.
                     </label>
-                    <button type="submit" class="btn btn-peligro"><?= icono('prohibido') ?> Desactivar</button>
+                    <button type="submit" class="btn btn--danger"><?= icono('prohibido') ?> Desactivar</button>
                 </form>
             </section>
         <?php endif; ?>

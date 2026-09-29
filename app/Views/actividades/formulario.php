@@ -23,7 +23,7 @@ $valor = static function (string $campo, int $largo = 0) use ($actividad): strin
     return $largo > 0 ? substr($guardado, 0, $largo) : $guardado;
 };
 $error = static fn (string $campo): ?string => error_de($campo);
-$claseCampo = static fn (string $campo): string => 'campo' . ($error($campo) !== null ? ' campo--error' : '');
+$claseCampo = static fn (string $campo): string => 'field' . ($error($campo) !== null ? ' field--error' : '');
 $aria = static fn (string $campo): string => $error($campo) !== null
     ? 'aria-invalid="true" aria-describedby="' . $campo . '-error"'
     : '';
@@ -31,19 +31,21 @@ $mensaje = static fn (string $campo): string => $error($campo) !== null
     ? error_campo($campo . '-error', (string) $error($campo))
     : '';
 ?>
-<a class="volver" href="<?= e($cancelar) ?>">
+<a class="back-link" href="<?= e($cancelar) ?>">
     <?= icono('izquierda') ?> <?= $nuevo ? 'Volver al panel' : 'Volver al taller' ?>
 </a>
-<div class="cabecera-pagina">
-    <h1><?= $nuevo ? 'Nuevo taller' : 'Editar taller' ?></h1>
-    <p>Todos los campos son obligatorios.</p>
+<div class="page-header">
+    <div>
+        <h1><?= $nuevo ? 'Nuevo taller' : 'Editar taller' ?></h1>
+        <p>Todos los campos son obligatorios.</p>
+    </div>
 </div>
 
-<form class="tarjeta formulario" method="post" action="<?= e($accion) ?>" novalidate>
+<form class="card form-narrow" method="post" action="<?= e($accion) ?>" novalidate>
     <?= csrf_field() ?>
 
-    <fieldset>
-        <legend><?= icono('calendario') ?> Taller</legend>
+    <fieldset class="fieldset">
+        <legend class="fieldset__legend"><?= icono('calendario') ?> Taller</legend>
         <div class="<?= $claseCampo('nombre') ?>">
             <label for="nombre"><?= icono('editar') ?> Nombre del taller</label>
             <input type="text" id="nombre" name="nombre" value="<?= e($valor('nombre')) ?>" maxlength="150" required
@@ -66,9 +68,9 @@ $mensaje = static fn (string $campo): string => $error($campo) !== null
         </div>
     </fieldset>
 
-    <fieldset>
-        <legend><?= icono('reloj') ?> Cuándo y dónde</legend>
-        <div class="formulario__fila">
+    <fieldset class="fieldset">
+        <legend class="fieldset__legend"><?= icono('reloj') ?> Cuándo y dónde</legend>
+        <div class="form-grid">
             <div class="<?= $claseCampo('edificio_id') ?>">
                 <label for="edificio_id"><?= icono('edificio') ?> Edificio</label>
                 <select id="edificio_id" name="edificio_id" required <?= $aria('edificio_id') ?>>
@@ -103,10 +105,10 @@ $mensaje = static fn (string $campo): string => $error($campo) !== null
         </div>
     </fieldset>
 
-    <div class="formulario__acciones">
-        <button type="submit" class="btn btn-primario">
+    <div class="form-actions">
+        <button type="submit" class="btn btn--primary">
             <?= icono($nuevo ? 'mas' : 'guardar') ?> <?= $nuevo ? 'Crear taller' : 'Guardar cambios' ?>
         </button>
-        <a class="btn btn-secundario" href="<?= e($cancelar) ?>"><?= icono('cerrar') ?> Cancelar</a>
+        <a class="btn btn--secondary" href="<?= e($cancelar) ?>"><?= icono('cerrar') ?> Cancelar</a>
     </div>
 </form>

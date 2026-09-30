@@ -118,18 +118,22 @@ final class Session
         $_SESSION[self::ULTIMA_ACTIVIDAD] = time();
     }
 
-    public function flash(string $type, string $message): void
+    /**
+     * Mensaje para la siguiente petición. Con $alerta, app.js lo muestra como ventana de SweetAlert;
+     * sin JavaScript se ve como aviso normal.
+     */
+    public function flash(string $type, string $message, bool $alerta = false): void
     {
         $flash = $_SESSION[self::FLASH] ?? [];
         $flash = is_array($flash) ? $flash : [];
-        $flash[] = ['tipo' => $type, 'mensaje' => $message];
+        $flash[] = ['tipo' => $type, 'mensaje' => $message, 'alerta' => $alerta];
         $_SESSION[self::FLASH] = $flash;
     }
 
     /**
      * Devuelve y borra los mensajes flash pendientes.
      *
-     * @return list<array{tipo: string, mensaje: string}>
+     * @return list<array{tipo: string, mensaje: string, alerta?: bool}>
      */
     public function pullFlash(): array
     {

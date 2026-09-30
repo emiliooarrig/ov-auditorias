@@ -30,7 +30,9 @@ $iconoAviso = ['exito' => 'check-circulo', 'error' => 'x-circulo', 'aviso' => 'a
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e(isset($titulo) ? $titulo . ' · ' . $nombreApp : $nombreApp) ?></title>
+    <link rel="stylesheet" href="<?= e(asset('vendor/sweetalert2/sweetalert2.min.css')) ?>">
     <link rel="stylesheet" href="<?= e(asset('css/clay.css')) ?>">
+    <script src="<?= e(asset('vendor/sweetalert2/sweetalert2.min.js')) ?>" defer></script>
     <script src="<?= e(asset('js/app.js')) ?>" defer></script>
 </head>
 <body>
@@ -66,7 +68,10 @@ $iconoAviso = ['exito' => 'check-circulo', 'error' => 'x-circulo', 'aviso' => 'a
                                 <?= app()->auth()->esAdministrador() ? 'Administrador' : 'Auditor' ?>
                             </span>
                         </span>
-                        <form method="post" action="<?= e(url('/logout')) ?>">
+                        <form method="post" action="<?= e(url('/logout')) ?>"
+                              data-confirmar="¿Cerrar sesión?"
+                              data-confirmar-texto="Tendrás que ingresar de nuevo con tu correo institucional."
+                              data-confirmar-boton="Cerrar sesión">
                             <?= csrf_field() ?>
                             <button type="submit" class="btn btn--ghost btn--small">
                                 <?= icono('salir') ?> Cerrar sesión
@@ -80,7 +85,9 @@ $iconoAviso = ['exito' => 'check-circulo', 'error' => 'x-circulo', 'aviso' => 'a
 
     <main id="contenido" class="container">
         <?php foreach ($mensajes as $m) : ?>
-            <div class="alert alert--<?= e($m['tipo']) ?>" role="status">
+            <?php /* Con alerta, app.js lo muestra con SweetAlert; sin JavaScript se queda como aviso. */ ?>
+            <?php $alerta = ($m['alerta'] ?? false) ? ' data-alerta' : ''; ?>
+            <div class="alert alert--<?= e($m['tipo']) ?>" role="status"<?= $alerta ?>>
                 <?= icono($iconoAviso[$m['tipo']] ?? 'info') ?>
                 <span><?= e($m['mensaje']) ?></span>
             </div>

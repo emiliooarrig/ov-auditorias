@@ -613,6 +613,40 @@ main > .alert { animation: alert-in 320ms ease-out both; }
 .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2) var(--esp-5); }
 .row-actions form { margin: 0; }
 
+/* ---------- Diálogos y avisos (SweetAlert2, servido desde /assets/vendor) ----------
+   SweetAlert2 v11 declara sus estilos con :where(), así que estas clases ganan sin !important. */
+.swal2-container.swal2-backdrop-show { background: rgba(79, 46, 25, 0.45); }
+.dialog {
+  --sombra: var(--clay-raised);
+  width: min(30rem, calc(100vw - 2 * var(--gutter)));
+  padding: var(--esp-6) var(--esp-5) var(--esp-5);
+  border-radius: var(--radio-contenedor);
+  background: var(--superficie); color: var(--color-texto); font-family: var(--fuente);
+  border-top: 6px solid var(--anahuac-naranja);
+  box-shadow: var(--sombra);
+}
+.dialog__title { display: block; margin: 0; padding: 0 var(--esp-2); color: var(--color-titulo); font-size: var(--t-21); font-weight: 800; line-height: 1.25; }
+.dialog__text { margin: var(--esp-3) 0 0; padding: 0 var(--esp-2); color: var(--color-texto-secundario); font-size: var(--t-16); line-height: 1.5; }
+.dialog__actions { gap: var(--esp-3); margin-top: var(--esp-5); }
+.dialog .swal2-icon { margin-top: 0; margin-bottom: var(--esp-4); }
+/* Aviso breve (toast) arriba a la derecha tras una acción */
+.dialog--toast.swal2-popup {
+  width: min(24rem, calc(100vw - 2 * var(--gutter)));
+  padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-tarjeta);
+  border-top: 0; border-left: 6px solid var(--anahuac-naranja);
+}
+.dialog--toast .dialog__title { padding: 0; font-size: var(--t-16); font-weight: 700; color: var(--color-texto); }
+.dialog--toast .swal2-icon { margin: 0 var(--esp-2) 0 0; }
+.swal2-timer-progress-bar { background: var(--anahuac-cafe); }
+/* El aviso no tapa el encabezado (ni "Cerrar sesión"): debajo de él en escritorio, abajo en pantallas angostas. */
+/* Misma especificidad que la regla de SweetAlert (body.swal2-toast-shown .swal2-container.swal2-top-end);
+   gana por cargarse después. */
+body .swal2-container.swal2-top-end:has(> .swal2-toast) {
+  inset: 6.75rem var(--gutter) auto auto; height: auto; width: auto; max-width: calc(100vw - 2 * var(--gutter));
+  padding: 0; background: transparent; pointer-events: none;
+}
+.swal2-container > .swal2-toast { pointer-events: auto; }
+
 /* ---------- Ingreso y registro ---------- */
 .auth {
   --sombra: var(--clay-raised);
@@ -694,6 +728,8 @@ main > .alert { animation: alert-in 320ms ease-out both; }
   }
   .table--stack .cell-title { order: -2; font-size: var(--t-18); }
   .table--stack td.cell-check { order: -3; }
+
+  body .swal2-container.swal2-top-end:has(> .swal2-toast) { inset: auto var(--gutter) var(--esp-4) var(--gutter); justify-items: center; }
 }
 
 /* Teléfono (≤ 767 px): menú en fila propia, tabla convertida en tarjetas apiladas. */
@@ -702,6 +738,7 @@ main > .alert { animation: alert-in 320ms ease-out both; }
   h1 { font-size: var(--t-24); }
   .site-header { padding-top: var(--esp-3); }
   .site-header__slab { padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-tarjeta); }
+
   .nav__link { padding: 0 var(--esp-3); }
   .table--stack tbody { grid-template-columns: 1fr; }
   main.container { padding-top: var(--esp-5); }

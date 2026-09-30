@@ -1,6 +1,7 @@
 /*
  * Mejoras progresivas. Sin este archivo los talleres se filtran enviando el formulario;
- * aquí se agregan el filtrado en tiempo real y el filtro de usuarios en el navegador.
+ * aquí se agregan el filtrado en tiempo real, el filtro de usuarios en el navegador
+ * y las alertas de SweetAlert2.
  */
 
 // Asignaciones: cuenta los talleres marcados en la barra de acción.
@@ -151,7 +152,7 @@ const iniciarFiltroLocal = (formulario) => {
     estado: formulario.elements.estado,
   };
   // Sin acentos ni mayúsculas: "gonzalez" encuentra "González".
-  const normalizar = (texto) => texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+  const normalizar = (texto) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   const indice = new Map(filas.map((fila) => [fila, normalizar(fila.dataset.buscar ?? '')]));
 
   const aplicar = () => {
@@ -240,7 +241,123 @@ const iniciarVerClave = (boton) => {
   });
 };
 
+/*
+ * Alertas con SweetAlert2 (public/assets/vendor/sweetalert2, servido localmente por la CSP).
+ * Sin la biblioteca o sin JavaScript todo sigue funcionando: los formularios se envían directo
+ * (el del taller conserva su casilla de confirmación) y los mensajes se ven como avisos normales.
+ * El texto siempre entra como `text`, nunca como `html`, para no interpretar datos del usuario.
+ */
+const Swal = window.Sweetalert2 ?? window.Swal ?? null;
+const token = (nombre) => getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
+const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const animacion = sinMovimiento ? { showClass: { popup: '' }, hideClass: { popup: '' } } : {};
+
+// fire() reemplaza customClass completo en lugar de mezclarlo; por eso cada llamada parte de esta base.
+const clasesDialogo = {
+  popup: 'dialog',
+  title: 'dialog__title',
+  htmlContainer: 'dialog__text',
+  actions: 'dialog__actions',
+  confirmButton: 'btn btn--primary',
+  cancelButton: 'btn btn--secondary',
+};
+
+const dialogo = Swal?.mixin({
+  ...animacion,
+  buttonsStyling: false,
+  reverseButtons: true,
+  customClass: clasesDialogo,
+});
+
+const aviso = Swal?.mixin({
+  ...animacion,
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 5000,
+  timerProgressBar: !sinMovimiento,
+  customClass: { popup: 'dialog dialog--toast', title: 'dialog__title' },
+  // Pausa mientras el cursor está encima, para dar tiempo de leerlo.
+  didOpen: (ventana) => {
+    ventana.addEventListener('mouseenter', Swal.stopTimer);
+    ventana.addEventListener('mouseleave', Swal.resumeTimer);
+  },
+});
+
+// Confirmación antes de enviar un formulario con data-confirmar (desactivar, cambiar rol, cerrar sesión).
+const iniciarConfirmaciones = () => {
+  // La casilla de confirmación sin JavaScript se sustituye por el diálogo. Se le quita `required`:
+  // oculta y obligatoria impediría enviar el formulario sin mostrar por qué. El servidor la sigue exigiendo.
+  document.querySelectorAll('[data-confirmacion-manual]').forEach((etiqueta) => {
+    etiqueta.hidden = true;
+    etiqueta.querySelectorAll('input').forEach((casilla) => { casilla.required = false; });
+  });
+
+  document.addEventListener('submit', async (evento) => {
+    const formulario = evento.target;
+    if (!(formulario instanceof HTMLFormElement) || !formulario.dataset.confirmar) {
+      return;
+    }
+    if (formulario.dataset.confirmado === '1') {
+      delete formulario.dataset.confirmado;
+      return;
+    }
+    evento.preventDefault();
+    const boton = evento.submitter;
+    const peligro = formulario.dataset.confirmarTipo === 'peligro';
+    // Un aviso breve abierto (p. ej. "Cuenta activada.") impide abrir el diálogo: se cierra antes.
+    if (Swal.isVisible()) {
+      Swal.close();
+      await new Promise((listo) => { setTimeout(listo, 0); });
+    }
+
+    const { isConfirmed } = await dialogo.fire({
+      icon: peligro ? 'warning' : 'question',
+      iconColor: token(peligro ? '--estado-no-realizado' : '--anahuac-cafe'),
+      title: formulario.dataset.confirmar,
+      text: formulario.dataset.confirmarTexto ?? '',
+      showCancelButton: true,
+      confirmButtonText: formulario.dataset.confirmarBoton ?? 'Confirmar',
+      cancelButtonText: 'Cancelar',
+      // En acciones de peligro el foco inicial queda en "Cancelar".
+      focusCancel: peligro,
+      customClass: { ...clasesDialogo, confirmButton: peligro ? 'btn btn--danger' : 'btn btn--primary' },
+    });
+    if (!isConfirmed) {
+      return;
+    }
+    formulario.querySelectorAll('[data-confirmacion-manual] input[type="checkbox"]').forEach((c) => {
+      c.checked = true;
+    });
+    formulario.dataset.confirmado = '1';
+    formulario.requestSubmit(boton ?? undefined);
+  });
+};
+
+// Mensajes marcados con data-alerta: los de éxito como aviso breve, los de error como ventana.
+const mostrarAlertas = async () => {
+  const tipos = {
+    exito: ['success', '--estado-realizado'],
+    error: ['error', '--estado-no-realizado'],
+    aviso: ['warning', '--anahuac-cafe'],
+  };
+  for (const mensaje of document.querySelectorAll('[data-alerta]')) {
+    const tipo = Object.keys(tipos).find((t) => mensaje.classList.contains(`alert--${t}`)) ?? 'aviso';
+    const [icono, color] = tipos[tipo];
+    const texto = mensaje.textContent.replace(/\s+/g, ' ').trim();
+    mensaje.remove();
+    // eslint-disable-next-line no-await-in-loop -- uno tras otro, nunca encimados
+    await (tipo === 'error'
+      ? dialogo.fire({ icon: icono, iconColor: token(color), title: texto, confirmButtonText: 'Entendido' })
+      : aviso.fire({ icon: icono, iconColor: token(color), title: texto }));
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+  if (Swal) {
+    iniciarConfirmaciones();
+    mostrarAlertas();
+  }
   iniciarConteoSeleccion(document);
   document.querySelectorAll('[data-ver-clave]').forEach(iniciarVerClave);
   document.querySelectorAll('form[data-filtro-vivo]').forEach(iniciarFiltroVivo);

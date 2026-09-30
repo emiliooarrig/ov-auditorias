@@ -18,6 +18,7 @@ $estado = (string) $actividad['estado'];
 $programado = $estado === 'programado';
 $errorMotivo = error_de('motivo');
 $ultimo = $historial[0] ?? null;
+$detalleDesactivar = 'Dejará de aparecer en el panel. Su registro, asignaciones e historial se conservan.';
 ?>
 <a class="back-link" href="<?= e(url($esAdministrador ? '/' : '/mis-talleres')) ?>">
     <?= icono('izquierda') ?> <?= $esAdministrador ? 'Volver al panel' : 'Volver a mis talleres' ?>
@@ -209,9 +210,14 @@ $ultimo = $historial[0] ?? null;
                     El taller dejará de aparecer en el panel. No se borra: su registro, asignaciones e historial
                     se conservan.
                 </p>
-                <form method="post" action="<?= e(url('/actividades/' . $id . '/desactivar')) ?>">
+                <form method="post" action="<?= e(url('/actividades/' . $id . '/desactivar')) ?>"
+                      data-confirmar="<?= e('¿Desactivar «' . $actividad['nombre'] . '»?') ?>"
+                      data-confirmar-texto="<?= e($detalleDesactivar) ?>"
+                      data-confirmar-boton="Desactivar"
+                      data-confirmar-tipo="peligro">
                     <?= csrf_field() ?>
-                    <label class="check">
+                    <?php /* Sin JavaScript se confirma con la casilla; con él, la marca el diálogo. */ ?>
+                    <label class="check" data-confirmacion-manual>
                         <input type="checkbox" name="confirmar" value="1" required>
                         Confirmo que quiero desactivar este taller.
                     </label>

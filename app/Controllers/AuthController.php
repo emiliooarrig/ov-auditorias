@@ -82,6 +82,7 @@ final class AuthController extends Controller
         }
 
         $auth->iniciarSesion($usuario, $request);
+        $this->bienvenida($usuario['nombre']);
 
         return $this->redirect($auth->inicio());
     }
@@ -118,6 +119,7 @@ final class AuthController extends Controller
 
         $this->session()->forget(self::ADMIN_PENDIENTE);
         $auth->iniciarSesion($usuario, $request);
+        $this->bienvenida($usuario['nombre']);
 
         return $this->redirect($auth->inicio());
     }
@@ -174,7 +176,7 @@ final class AuthController extends Controller
             return $this->redirect('/login');
         }
         $auth->iniciarSesion($usuario, $request);
-        $this->session()->flash('exito', 'Tu cuenta quedó registrada. Aquí verás los talleres que te asignen.');
+        $this->session()->flash('exito', 'Tu cuenta quedó registrada. Aquí verás los talleres que te asignen.', true);
 
         return $this->redirect($auth->inicio());
     }
@@ -182,9 +184,14 @@ final class AuthController extends Controller
     public function logout(Request $request): Response
     {
         $this->app->auth()->cerrarSesion($request);
-        $this->session()->flash('exito', 'Cerraste sesión.');
+        $this->session()->flash('exito', 'Cerraste sesión.', true);
 
         return $this->redirect('/login');
+    }
+
+    private function bienvenida(string $nombre): void
+    {
+        $this->session()->flash('exito', 'Hola, ' . $nombre . '. Iniciaste sesión.', true);
     }
 
     /**

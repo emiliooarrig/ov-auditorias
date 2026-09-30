@@ -1,0 +1,7 @@
+sweetalert2 11.26.25 (MIT)
+Origen: https://registry.npmjs.org/sweetalert2/-/sweetalert2-11.26.25.tgz
+Integridad (npm dist.integrity, verificada al copiar):
+sha512-+hunCOJdJ6FLj04T9YSLvvZXRjsvIkTeTKP2e4VF8CaBias961BTnWiSFAy7F/CM5eq3QK2Rraoc5Gzftslvkg==
+Archivos: dist/sweetalert2.min.js y dist/sweetalert2.min.css.
+Se usa la versión sin CSS incrustado (no .all.js): la CSP (style-src 'self') bloquearía el <style> que inyecta.
+Se sirve localmente porque la CSP (script-src 'self') no permite CDNs.

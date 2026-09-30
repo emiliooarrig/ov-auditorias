@@ -63,7 +63,7 @@ final class UsuarioController extends Controller
             }
             (new Usuario($this->db()))->cambiarRol($id, $rol, $hash, (int) $this->app->auth()->id());
         } catch (DomainException $e) {
-            $this->session()->flash('error', $e->getMessage());
+            $this->session()->flash('error', $e->getMessage(), true);
 
             return $this->regresar($request);
         }
@@ -71,7 +71,7 @@ final class UsuarioController extends Controller
         $this->registrarAccion('cambio de rol', $id, ['rol' => $rol]);
         $this->session()->flash('exito', $rol === Usuario::ADMINISTRADOR
             ? 'El usuario ahora es administrador. Ingresará con su correo y la contraseña asignada.'
-            : 'El usuario ahora es auditor. Ingresará solo con su correo.');
+            : 'El usuario ahora es auditor. Ingresará solo con su correo.', true);
 
         return $this->regresar($request);
     }
@@ -84,7 +84,7 @@ final class UsuarioController extends Controller
         try {
             (new Usuario($this->db()))->cambiarActivo($id, $activo, (int) $this->app->auth()->id());
         } catch (DomainException $e) {
-            $this->session()->flash('error', $e->getMessage());
+            $this->session()->flash('error', $e->getMessage(), true);
 
             return $this->regresar($request);
         }
@@ -92,7 +92,7 @@ final class UsuarioController extends Controller
         $this->registrarAccion($activo ? 'activación' : 'desactivación', $id);
         $this->session()->flash('exito', $activo
             ? 'Cuenta activada.'
-            : 'Cuenta desactivada. Su historial y asignaciones se conservan.');
+            : 'Cuenta desactivada. Su historial y asignaciones se conservan.', true);
 
         return $this->regresar($request);
     }

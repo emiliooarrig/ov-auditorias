@@ -128,7 +128,11 @@ final class ActividadController extends Controller
         }
 
         (new Actividad($this->db()))->desactivar($actividad['id']);
-        $this->session()->flash('exito', 'Taller "' . $actividad['nombre'] . '" desactivado. Su registro se conserva.');
+        $this->session()->flash(
+            'exito',
+            'Taller "' . $actividad['nombre'] . '" desactivado. Su registro se conserva.',
+            true
+        );
 
         return $this->redirect('/');
     }

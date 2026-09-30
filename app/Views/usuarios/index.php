@@ -99,6 +99,14 @@ $camposRegreso = static function () use ($query): string {
                 $esYo = $u['id'] === $actorId;
                 $activo = (int) $u['activo'] === 1;
                 $esAdmin = $u['rol'] === 'administrador';
+                $nombreCompleto = $u['nombre'] . ' ' . $u['apellidos'];
+                // Textos del diálogo de confirmación (app.js + SweetAlert).
+                $confirmarEstado = ($activo ? '¿Desactivar a ' : '¿Activar a ') . $nombreCompleto . '?';
+                $detalleEstado = $activo
+                    ? 'No podrá ingresar. Su historial y sus asignaciones se conservan.'
+                    : 'Podrá volver a ingresar con su correo institucional.';
+                $confirmarRol = '¿Cambiar a ' . $nombreCompleto . ' a auditor?';
+                $detalleRol = 'Perderá el acceso a la administración y su contraseña se borrará.';
                 ?>
                 <tr data-buscar="<?= e($u['nombre'] . ' ' . $u['apellidos'] . ' ' . $u['correo']) ?>"
                     data-rol="<?= e($u['rol']) ?>" data-estado="<?= $activo ? 'activos' : 'desactivados' ?>">
@@ -144,7 +152,11 @@ $camposRegreso = static function () use ($query): string {
                             <span class="muted">Es tu cuenta</span>
                         <?php else : ?>
                             <div class="row-actions">
-                            <form method="post" action="<?= e(url('/usuarios/' . $u['id'] . '/estado')) ?>">
+                            <form method="post" action="<?= e(url('/usuarios/' . $u['id'] . '/estado')) ?>"
+                                  data-confirmar="<?= e($confirmarEstado) ?>"
+                                  data-confirmar-texto="<?= e($detalleEstado) ?>"
+                                  data-confirmar-boton="<?= $activo ? 'Desactivar' : 'Activar' ?>"
+                                  data-confirmar-tipo="<?= $activo ? 'peligro' : 'primario' ?>">
                                 <?= $camposRegreso() ?>
                                 <input type="hidden" name="activo" value="<?= $activo ? '0' : '1' ?>">
                                 <?php $claseBoton = 'btn btn--link' . ($activo ? ' btn--link-danger' : ''); ?>
@@ -159,7 +171,13 @@ $camposRegreso = static function () use ($query): string {
                                     <?= icono($esAdmin ? 'usuario' : 'escudo') ?>
                                     <?= $esAdmin ? 'Cambiar a auditor' : 'Hacer administrador' ?>
                                 </summary>
-                                <form method="post" action="<?= e(url('/usuarios/' . $u['id'] . '/rol')) ?>">
+                                <form method="post" action="<?= e(url('/usuarios/' . $u['id'] . '/rol')) ?>"
+                                    <?php if ($esAdmin) : ?>
+                                      data-confirmar="<?= e($confirmarRol) ?>"
+                                      data-confirmar-texto="<?= e($detalleRol) ?>"
+                                      data-confirmar-boton="Cambiar a auditor"
+                                      data-confirmar-tipo="peligro"
+                                    <?php endif; ?>>
                                     <?= $camposRegreso() ?>
                                     <?php if ($esAdmin) : ?>
                                         <input type="hidden" name="rol" value="auditor">

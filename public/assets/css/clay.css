@@ -178,12 +178,24 @@ pre { font-size: var(--t-14); white-space: pre-wrap; }
   box-shadow: var(--clay-on-dark);
 }
 .brand {
-  display: flex; flex-direction: column; padding: var(--esp-1) 0; min-height: var(--toque); justify-content: center;
-  color: var(--blanco); text-decoration: none; border-radius: var(--radio-chico);
+  display: inline-flex; align-items: center; min-height: var(--toque); padding: var(--esp-1) 0;
+  color: var(--blanco); text-decoration: none; border-radius: 16px;
 }
 .brand:hover { color: var(--blanco); }
-.brand__org { font-size: var(--t-12); font-weight: 600; opacity: 0.9; }
-.brand__app { font-size: var(--t-18); font-weight: 800; line-height: 1.2; }
+
+/* Logo "OV" (partials/logo.php): ficha de arcilla crema sobre la losa café. */
+.logo {
+  display: block; width: 3rem; height: 3rem; border-radius: 14px; overflow: visible;
+  box-shadow:
+    4px 4px 10px rgba(79, 46, 25, 0.55),
+    inset -2px -2px 4px rgba(107, 63, 35, 0.18),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.8);
+  transition: var(--transicion);
+}
+.logo__fondo { fill: var(--anahuac-naranja-suave); stroke: var(--anahuac-naranja); stroke-width: 3; }
+.logo__letras { fill: var(--anahuac-cafe); font-family: var(--fuente); font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.logo__acento { fill: var(--anahuac-naranja); }
+.brand:hover .logo { transform: var(--elevar); }
 .site-header__nav { flex: 1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--esp-3); }
 
 main.container { flex: 1; padding-top: var(--esp-6); padding-bottom: var(--esp-7); }
@@ -807,7 +819,7 @@ body .swal2-container.swal2-top-end:has(> .swal2-toast) {
 /* Movimiento reducido: sin elevación ni transiciones; los estados siguen visibles por sombra y color. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
-  .btn:hover, .btn:active, .choice:hover, .pagination a:hover, .pagination a:active { transform: none; }
+  .btn:hover, .btn:active, .choice:hover, .pagination a:hover, .pagination a:active, .brand:hover .logo { transform: none; }
 }
 
 @media print {

@@ -40,9 +40,9 @@ $iconoAviso = ['exito' => 'check-circulo', 'error' => 'x-circulo', 'aviso' => 'a
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
     <header class="site-header">
         <div class="site-header__slab" data-menu>
-            <a class="brand" href="<?= e(url('/')) ?>">
-                <span class="brand__org">Universidad Anáhuac</span>
-                <span class="brand__app"><?= e($nombreApp) ?></span>
+            <a class="brand" href="<?= e(url('/')) ?>" title="<?= e($nombreApp) ?>, Universidad Anáhuac">
+                <?= app()->view()->partial('partials/logo') ?>
+                <span class="sr-only"><?= e($nombreApp) ?>, Universidad Anáhuac. Ir al inicio</span>
             </a>
             <?php if ($usuario !== null) : ?>
                 <?php /* Solo en celulares y con JavaScript: sin él, el menú queda siempre desplegado. */ ?>

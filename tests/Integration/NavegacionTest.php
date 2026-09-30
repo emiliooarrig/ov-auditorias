@@ -21,6 +21,16 @@ final class NavegacionTest extends IntegrationTestCase
         $this->assertStringContainsString('class="session__logout"', $html);
     }
 
+    public function testLaMarcaEsElLogoOvConNombreAccesible(): void
+    {
+        $html = $this->get('/login')->body();
+
+        $this->assertStringContainsString('<svg class="logo"', $html);
+        $this->assertMatchesRegularExpression('#<text class="logo__letras"[^>]*>OV</text>#', $html);
+        $this->assertStringContainsString('<span class="sr-only">Pruebas, Universidad Anáhuac. Ir al inicio</span>', $html);
+        $this->assertStringNotContainsString('brand__org', $html);
+    }
+
     public function testSinSesionNoHayMenu(): void
     {
         $html = $this->get('/login')->body();

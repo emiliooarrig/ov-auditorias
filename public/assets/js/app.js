@@ -353,7 +353,46 @@ const mostrarAlertas = async () => {
   }
 };
 
+/*
+ * Menú de hamburguesa en celulares (≤ 767 px). Sin JavaScript el menú queda desplegado.
+ * Se cierra con Escape (el foco vuelve al botón), con un clic fuera o al pasar a pantalla ancha.
+ */
+const iniciarMenu = (cabecera) => {
+  const boton = cabecera.querySelector('.menu-toggle');
+  const panel = boton ? document.getElementById(boton.getAttribute('aria-controls')) : null;
+  if (!boton || !panel) {
+    return;
+  }
+  const etiqueta = boton.querySelector('span');
+  const celular = window.matchMedia('(max-width: 767px)');
+
+  const abrir = (abierto) => {
+    boton.setAttribute('aria-expanded', String(abierto));
+    cabecera.classList.toggle('is-open', abierto);
+    if (etiqueta) {
+      etiqueta.textContent = abierto ? 'Cerrar' : 'Menú';
+    }
+  };
+
+  cabecera.classList.add('is-collapsible');
+  abrir(false);
+  boton.addEventListener('click', () => abrir(boton.getAttribute('aria-expanded') !== 'true'));
+  document.addEventListener('keydown', (evento) => {
+    if (evento.key === 'Escape' && cabecera.classList.contains('is-open')) {
+      abrir(false);
+      boton.focus();
+    }
+  });
+  document.addEventListener('click', (evento) => {
+    if (cabecera.classList.contains('is-open') && !cabecera.contains(evento.target)) {
+      abrir(false);
+    }
+  });
+  celular.addEventListener('change', () => abrir(false));
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-menu]').forEach(iniciarMenu);
   if (Swal) {
     iniciarConfirmaciones();
     mostrarAlertas();

@@ -243,6 +243,28 @@ main.container { flex: 1; padding-top: var(--esp-6); padding-bottom: var(--esp-7
 .session__name { display: inline-flex; align-items: center; gap: var(--esp-1); font-weight: 700; }
 .session__role { font-size: var(--t-12); opacity: 0.9; }
 .session form { margin: 0; }
+/* Cerrar sesión queda separado del resto de acciones por una línea vertical. */
+.session__logout { padding-left: var(--esp-4); margin-left: var(--esp-2); border-left: 2px solid rgba(255, 255, 255, 0.35); }
+
+/* Botón de menú (hamburguesa): solo aparece en celulares cuando app.js marca el encabezado como plegable. */
+.menu-toggle {
+  --sombra: none;
+  display: none; align-items: center; gap: var(--esp-2);
+  min-height: var(--toque); padding: 0 var(--esp-4); margin-left: auto;
+  border: 2px solid rgba(255, 255, 255, 0.75); border-radius: var(--radio-pildora);
+  background: transparent; color: var(--blanco); font: inherit; font-weight: 700; cursor: pointer;
+  /* Fondo y texto cambian a la vez, sin transición: si el fondo se animara, el texto café
+     quedaría un instante invisible sobre la losa café. */
+  box-shadow: var(--sombra); transition: box-shadow 160ms ease-out;
+}
+.menu-toggle:hover { --sombra: var(--clay-on-dark-pressed); background: var(--anahuac-cafe-oscuro); }
+.menu-toggle .icon { width: 1.3rem; height: 1.3rem; }
+.menu-toggle__close, .menu-toggle[aria-expanded="true"] .menu-toggle__open { display: none; }
+.menu-toggle[aria-expanded="true"] .menu-toggle__close { display: inline-block; }
+/* Abierto: píldora clara hundida, como la página actual del menú. */
+.menu-toggle[aria-expanded="true"] {
+  --sombra: var(--clay-pressed); background: var(--superficie-calida); color: var(--anahuac-cafe); border-color: var(--superficie-calida);
+}
 
 /* ---------- Tarjetas ---------- */
 .card {
@@ -739,7 +761,21 @@ body .swal2-container.swal2-top-end:has(> .swal2-toast) {
   .site-header { padding-top: var(--esp-3); }
   .site-header__slab { padding: var(--esp-3) var(--esp-4); border-radius: var(--radio-tarjeta); }
 
-  .nav__link { padding: 0 var(--esp-3); }
+  /* Menú de hamburguesa: la marca y el botón en una fila; el panel se despliega debajo, dentro de la losa. */
+  .site-header__slab.is-collapsible { row-gap: 0; }
+  .is-collapsible .menu-toggle { display: inline-flex; }
+  .is-collapsible:not(.is-open) .site-header__nav { display: none; }
+  .site-header__nav {
+    flex-direction: column; align-items: stretch; gap: var(--esp-3);
+    margin-top: var(--esp-3); padding-top: var(--esp-3); border-top: 2px solid rgba(255, 255, 255, 0.25);
+  }
+  .nav__list { flex-direction: column; gap: var(--esp-1); }
+  .nav__link { width: 100%; padding: 0 var(--esp-4); }
+  .session { flex-direction: column; align-items: stretch; gap: var(--esp-3); margin-left: 0; }
+  .session__user { align-items: flex-start; padding: 0 var(--esp-4); }
+  /* En el panel la separación de Cerrar sesión es horizontal y el botón ocupa todo el ancho. */
+  .session__logout { padding: var(--esp-3) 0 var(--esp-1); margin: 0; border-left: 0; border-top: 2px dashed rgba(255, 255, 255, 0.35); }
+  .session__logout .btn { width: 100%; }
   .table--stack tbody { grid-template-columns: 1fr; }
   main.container { padding-top: var(--esp-5); }
 

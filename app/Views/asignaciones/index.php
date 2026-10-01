@@ -9,7 +9,7 @@
  * @var bool $hayFiltros
  * @var array{filas: list<array<string, mixed>>, total: int, pagina: int, paginas: int} $resultado
  * @var list<array{id: int, nombre: string}> $carreras
- * @var list<array{id: int, numero: int}> $edificios
+ * @var list<array{id: int, numero: int, nombre: string}> $edificios
  * @var list<array{id: int, actividad_id: int, nombre: string, fecha: string, hora_inicio: string,
  *     hora_fin: string, estado: string}> $asignados
  * @var list<int> $idsAsignados
@@ -145,7 +145,8 @@ $ruta = '/asignaciones';
                                     </td>
                                     <td data-label="Edificio">
                                         <span class="building">
-                                            <?= icono('edificio') ?> Edificio <?= e($fila['edificio']) ?>
+                                            <?= icono('edificio') ?>
+                                            <?= e(edificio_etiqueta($fila['edificio'], $fila['edificio_nombre'])) ?>
                                         </span>
                                     </td>
                                     <td data-label="Estado"><?= estado_insignia((string) $fila['estado']) ?></td>

@@ -25,5 +25,13 @@ INSERT IGNORE INTO carreras (nombre) VALUES
   ('Relaciones Internacionales'),
   ('Turismo Internacional');
 
-INSERT IGNORE INTO edificios (numero) VALUES
-  (1), (2), (3), (4), (5), (6), (7), (8), (9), (10);
+-- Edificios donde se imparten talleres, con el área que ocupa cada uno.
+INSERT IGNORE INTO edificios (numero, nombre) VALUES
+  (5, 'Derecho'),
+  (6, 'Anáhuac Labs'),
+  (7, 'Psicología'),
+  (8, 'Medicina'),
+  (9, 'Ingeniería'),
+  (11, 'Economía'),
+  (17, 'CAD'),
+  (22, 'Artes');

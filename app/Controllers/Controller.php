@@ -48,7 +48,7 @@ abstract class Controller
      *     hayFiltros: bool,
      *     resultado: array{filas: list<array<string, mixed>>, total: int, pagina: int, paginas: int},
      *     carreras: list<array{id: int, nombre: string}>,
-     *     edificios: list<array{id: int, numero: int}>
+     *     edificios: list<array{id: int, numero: int, nombre: string}>
      * }
      */
     protected function listadoTalleres(Request $request, ?int $usuarioSesion): array

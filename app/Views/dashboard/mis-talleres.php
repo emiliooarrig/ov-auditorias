@@ -8,7 +8,7 @@
  * @var bool $hayFiltros
  * @var array{filas: list<array<string, mixed>>, total: int, pagina: int, paginas: int} $resultado
  * @var list<array{id: int, nombre: string}> $carreras
- * @var list<array{id: int, numero: int}> $edificios
+ * @var list<array{id: int, numero: int, nombre: string}> $edificios
  */
 
 $vista = app()->view();

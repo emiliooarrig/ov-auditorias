@@ -7,7 +7,7 @@ namespace App\Models;
 use App\Core\Database;
 
 /**
- * Catálogo de edificios (por número) para filtros y formularios.
+ * Catálogo de edificios (número y área, p. ej. 9 e "Ingeniería") para filtros y formularios.
  */
 final class Edificio
 {
@@ -16,12 +16,12 @@ final class Edificio
     }
 
     /**
-     * @return list<array{id: int, numero: int}>
+     * @return list<array{id: int, numero: int, nombre: string}>
      */
     public function activos(): array
     {
-        /** @var list<array{id: int, numero: int}> */
-        return $this->db->fetchAll('SELECT id, numero FROM edificios WHERE activo = 1 ORDER BY numero');
+        /** @var list<array{id: int, numero: int, nombre: string}> */
+        return $this->db->fetchAll('SELECT id, numero, nombre FROM edificios WHERE activo = 1 ORDER BY numero');
     }
 
     public function existeActivo(int $id): bool

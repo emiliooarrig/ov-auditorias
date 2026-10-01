@@ -117,6 +117,17 @@ function fecha_corta(string $fecha): string
 }
 
 /**
+ * Edificio con su área: "Edificio 9 (Ingeniería)". Sin $conPalabra, "9 (Ingeniería)".
+ * Los edificios retirados del catálogo pueden no tener nombre; entonces solo va el número.
+ */
+function edificio_etiqueta(int|string $numero, ?string $nombre, bool $conPalabra = true): string
+{
+    $nombre = trim((string) $nombre);
+
+    return ($conPalabra ? 'Edificio ' : '') . $numero . ($nombre !== '' ? ' (' . $nombre . ')' : '');
+}
+
+/**
  * Clase CSS de un estado ("no_realizado" → "no-realizado").
  */
 function estado_clase(string $estado): string

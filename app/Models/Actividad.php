@@ -17,12 +17,13 @@ use DomainException;
  * }
  * @phpstan-type TallerFila array{
  *     id: int, nombre: string, carrera_id: int, carrera: string, edificio_id: int, edificio: int,
- *     fecha: string, hora_inicio: string, hora_fin: string, estado: string, motivo_no_realizado: ?string,
- *     activo: int, creado_por: int, creado_en: string, actualizado_en: string
+ *     edificio_nombre: string, fecha: string, hora_inicio: string, hora_fin: string, estado: string,
+ *     motivo_no_realizado: ?string, activo: int, creado_por: int, creado_en: string, actualizado_en: string
  * }
  * @phpstan-type PanelFila array{
- *     id: int, nombre: string, carrera: string, edificio: int, fecha: string, hora_inicio: string,
- *     hora_fin: string, estado: string, motivo_no_realizado: ?string, registrado_por: ?string,
+ *     id: int, nombre: string, carrera: string, edificio: int, edificio_nombre: string, fecha: string,
+ *     hora_inicio: string, hora_fin: string, estado: string, motivo_no_realizado: ?string,
+ *     registrado_por: ?string,
  *     auditores: ?string
  * }
  */
@@ -56,7 +57,7 @@ final class Actividad
 
         /** @var list<PanelFila> $filas */
         $filas = $this->db->fetchAll(
-            "SELECT a.id, a.nombre, c.nombre AS carrera, e.numero AS edificio,
+            "SELECT a.id, a.nombre, c.nombre AS carrera, e.numero AS edificio, e.nombre AS edificio_nombre,
                     a.fecha, a.hora_inicio, a.hora_fin, a.estado, a.motivo_no_realizado,
                     (SELECT CONCAT(ub.nombre, ' ', ub.apellidos)
                      FROM bitacora_estados b JOIN usuarios ub ON ub.id = b.usuario_id
@@ -69,7 +70,7 @@ final class Actividad
              LEFT JOIN asignaciones s ON s.actividad_id = a.id
              LEFT JOIN usuarios     u ON u.id = s.usuario_id
              WHERE {$where}
-             GROUP BY a.id, c.nombre, e.numero
+             GROUP BY a.id, c.nombre, e.numero, e.nombre
              ORDER BY a.fecha, a.hora_inicio, a.id
              LIMIT :limite OFFSET :desplazamiento",
             $params + ['limite' => $porPagina, 'desplazamiento' => ($pagina - 1) * $porPagina]
@@ -117,7 +118,7 @@ final class Actividad
     {
         /** @var TallerFila|null */
         return $this->db->fetchOne(
-            'SELECT a.*, c.nombre AS carrera, e.numero AS edificio
+            'SELECT a.*, c.nombre AS carrera, e.numero AS edificio, e.nombre AS edificio_nombre
              FROM actividades a
              JOIN carreras  c ON c.id = a.carrera_id
              JOIN edificios e ON e.id = a.edificio_id

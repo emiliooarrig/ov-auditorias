@@ -47,6 +47,7 @@ CREATE TABLE carreras (
 CREATE TABLE edificios (
   id     SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
   numero SMALLINT UNSIGNED NOT NULL,
+  nombre VARCHAR(60) NOT NULL DEFAULT '',  -- área que ocupa el edificio, p. ej. 'Ingeniería'
   activo TINYINT(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (id),
   UNIQUE KEY uq_edificios_numero (numero)

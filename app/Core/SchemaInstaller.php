@@ -9,8 +9,8 @@ use PDO;
 use RuntimeException;
 
 /**
- * Crea la base de datos y ejecuta database/schema.sql y database/seeds.sql.
- * Lo usan bin/instalar-bd.php y las pruebas de integración.
+ * Crea la base de datos y ejecuta database/schema.sql y database/seeds.sql; también aplica
+ * database/migraciones a bases existentes. Lo usan bin/instalar-bd.php, bin/migrar-bd.php y las pruebas.
  */
 final class SchemaInstaller
 {
@@ -52,6 +52,32 @@ final class SchemaInstaller
         if ($seeds) {
             $this->runFile($pdo, $this->databaseDir . '/seeds.sql');
         }
+    }
+
+    /**
+     * Aplica a una base existente los archivos de database/migraciones en orden de nombre.
+     * Cada migración debe ser idempotente: se pueden ejecutar todas cada vez.
+     *
+     * @return list<string> Archivos ejecutados.
+     */
+    public function migrate(string $name): array
+    {
+        if (preg_match('/^[A-Za-z0-9_]{1,64}$/', $name) !== 1) {
+            throw new InvalidArgumentException('Nombre de base de datos no válido: ' . $name);
+        }
+        if (!$this->databaseExists($name)) {
+            throw new RuntimeException("La base de datos '{$name}' no existe. Instálala con bin/instalar-bd.php.");
+        }
+
+        $archivos = glob($this->databaseDir . '/migraciones/*.sql') ?: [];
+        sort($archivos);
+        $pdo = $this->server();
+        $pdo->exec("USE `{$name}`");
+        foreach ($archivos as $archivo) {
+            $this->runFile($pdo, $archivo);
+        }
+
+        return array_map('basename', $archivos);
     }
 
     /**

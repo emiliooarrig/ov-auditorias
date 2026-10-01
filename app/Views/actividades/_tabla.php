@@ -3,7 +3,8 @@
 /**
  * Tabla de talleres; en pantallas angostas se convierte en tarjetas apiladas, una por taller.
  *
- * @var list<array{id: int, nombre: string, carrera: string, edificio: int, fecha: string, hora_inicio: string,
+ * @var list<array{id: int, nombre: string, carrera: string, edificio: int, edificio_nombre: string,
+ *     fecha: string, hora_inicio: string,
  *     hora_fin: string, estado: string, motivo_no_realizado: ?string, registrado_por: ?string,
  *     auditores: ?string}> $filas
  * @var bool $enlaceDetalle
@@ -41,7 +42,10 @@
                         ]) ?>
                     </td>
                     <td data-label="Edificio">
-                        <span class="building"><?= icono('edificio') ?> Edificio <?= e($fila['edificio']) ?></span>
+                        <span class="building">
+                            <?= icono('edificio') ?>
+                            <?= e(edificio_etiqueta($fila['edificio'], $fila['edificio_nombre'])) ?>
+                        </span>
                     </td>
                     <td data-label="Estado">
                         <?= estado_insignia($fila['estado']) ?>

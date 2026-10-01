@@ -5,7 +5,7 @@
  *
  * @var array<string, mixed>|null              $actividad
  * @var list<array{id: int, nombre: string}>   $carreras
- * @var list<array{id: int, numero: int}>      $edificios
+ * @var list<array{id: int, numero: int, nombre: string}> $edificios
  */
 
 $nuevo = $actividad === null;
@@ -78,7 +78,7 @@ $mensaje = static fn (string $campo): string => $error($campo) !== null
                     <?php foreach ($edificios as $ed) : ?>
                         <?php $sel = $valor('edificio_id') === (string) $ed['id'] ? ' selected' : ''; ?>
                         <option value="<?= e($ed['id']) ?>"<?= $sel ?>>
-                            Edificio <?= e($ed['numero']) ?>
+                            <?= e(edificio_etiqueta($ed['numero'], $ed['nombre'])) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>

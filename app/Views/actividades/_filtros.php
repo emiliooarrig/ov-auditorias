@@ -7,7 +7,7 @@
  * @var string                                  $ruta
  * @var array{nombre: string, carrera: ?int, edificio: ?int} $filtros
  * @var list<array{id: int, nombre: string}>    $carreras
- * @var list<array{id: int, numero: int}>       $edificios
+ * @var list<array{id: int, numero: int, nombre: string}> $edificios
  * @var bool                                    $hayFiltros
  * @var array<string, int|string>|null          $ocultos  Parámetros que se conservan al filtrar (p. ej. usuario).
  */
@@ -42,7 +42,7 @@ $ocultos ??= [];
             <option value="">Todos</option>
             <?php foreach ($edificios as $ed) : ?>
                 <option value="<?= e($ed['id']) ?>"<?= $filtros['edificio'] === (int) $ed['id'] ? ' selected' : '' ?>>
-                    Edificio <?= e($ed['numero']) ?>
+                    <?= e(edificio_etiqueta($ed['numero'], $ed['nombre'])) ?>
                 </option>
             <?php endforeach; ?>
         </select>

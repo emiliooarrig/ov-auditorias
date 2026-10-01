@@ -11,7 +11,7 @@ use DomainException;
 /**
  * Talleres (actividades): filtros del panel, alta, edición y desactivación.
  *
- * @phpstan-type Filtros array{nombre?: string, carrera_id?: int|null, edificio_id?: int|null}
+ * @phpstan-type Filtros array{nombre?: string, carrera_id?: int|null, edificio_id?: int|null, grupo_id?: int|null}
  * @phpstan-type DatosTaller array{
  *     nombre: string, carrera_id: int, edificio_id: int, grupo_id: int, fecha: string, hora_inicio: string,
  *     hora_fin: string
@@ -104,6 +104,10 @@ final class Actividad
         if (($filtros['edificio_id'] ?? null) !== null) {
             $where[] = 'a.edificio_id = :edificio_id';
             $params['edificio_id'] = $filtros['edificio_id'];
+        }
+        if (($filtros['grupo_id'] ?? null) !== null) {
+            $where[] = 'a.grupo_id = :grupo_id';
+            $params['grupo_id'] = $filtros['grupo_id'];
         }
         if ($usuarioSesion !== null) {
             $where[] = 'EXISTS (SELECT 1 FROM asignaciones m

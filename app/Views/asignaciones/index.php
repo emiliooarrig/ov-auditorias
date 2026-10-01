@@ -5,11 +5,12 @@
  *
  * @var list<array{id: int, nombre: string, apellidos: string, correo: string}> $auditores
  * @var array{id: int, nombre: string, apellidos: string, correo: string}|null $seleccionado
- * @var array{nombre: string, carrera: ?int, edificio: ?int} $filtros
+ * @var array{nombre: string, carrera: ?int, edificio: ?int, grupo: ?int} $filtros
  * @var bool $hayFiltros
  * @var array{filas: list<array<string, mixed>>, total: int, pagina: int, paginas: int} $resultado
  * @var list<array{id: int, nombre: string}> $carreras
  * @var list<array{id: int, numero: int, nombre: string}> $edificios
+ * @var list<array{id: int, numero: int, nombre: string, hora_inicio: string, hora_fin: string}> $grupos
  * @var list<array{id: int, actividad_id: int, nombre: string, fecha: string, hora_inicio: string,
  *     hora_fin: string, grupo_nombre: string, estado: string}> $asignados
  * @var list<int> $idsAsignados
@@ -67,7 +68,7 @@ $ruta = '/asignaciones';
             </h2>
             <?= $vista->partial(
                 'actividades/_filtros',
-                compact('ruta', 'filtros', 'carreras', 'edificios', 'hayFiltros')
+                compact('ruta', 'filtros', 'carreras', 'edificios', 'grupos', 'hayFiltros')
                     + ['ocultos' => ['usuario' => $seleccionado['id']]]
             ) ?>
 

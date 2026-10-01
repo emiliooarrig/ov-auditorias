@@ -4,11 +4,12 @@
  * Panel central del administrador (RF-03, RF-08).
  *
  * @var string $ruta
- * @var array{nombre: string, carrera: ?int, edificio: ?int} $filtros
+ * @var array{nombre: string, carrera: ?int, edificio: ?int, grupo: ?int} $filtros
  * @var bool $hayFiltros
  * @var array{filas: list<array<string, mixed>>, total: int, pagina: int, paginas: int} $resultado
  * @var list<array{id: int, nombre: string}> $carreras
  * @var list<array{id: int, numero: int, nombre: string}> $edificios
+ * @var list<array{id: int, numero: int, nombre: string, hora_inicio: string, hora_fin: string}> $grupos
  */
 
 $vista = app()->view();
@@ -16,12 +17,15 @@ $vista = app()->view();
 <div class="page-header">
     <div>
         <h1>Panel central</h1>
-        <p>Todos los talleres activos. Filtra por nombre, carrera o edificio y abre uno para ver su detalle.</p>
+        <p>Todos los talleres activos. Filtra por nombre, carrera, edificio o grupo y abre uno para ver su detalle.</p>
     </div>
     <a class="btn btn--primary" href="<?= e(url('/actividades/nueva')) ?>"><?= icono('mas') ?> Nuevo taller</a>
 </div>
 
-<?= $vista->partial('actividades/_filtros', compact('ruta', 'filtros', 'carreras', 'edificios', 'hayFiltros')) ?>
+<?= $vista->partial(
+    'actividades/_filtros',
+    compact('ruta', 'filtros', 'carreras', 'edificios', 'grupos', 'hayFiltros')
+) ?>
 
 <div data-resultados>
 <p class="summary" data-resumen>

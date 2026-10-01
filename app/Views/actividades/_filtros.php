@@ -1,13 +1,14 @@
 <?php
 
 /**
- * Barra de filtros por nombre, carrera y edificio (RF-08). Se envía por GET y conserva los valores.
+ * Barra de filtros por nombre, carrera, edificio y grupo (RF-08). Se envía por GET y conserva los valores.
  * Con JavaScript filtra en tiempo real: app.js pide la misma URL y reemplaza el bloque [data-resultados].
  *
  * @var string                                  $ruta
- * @var array{nombre: string, carrera: ?int, edificio: ?int} $filtros
+ * @var array{nombre: string, carrera: ?int, edificio: ?int, grupo: ?int} $filtros
  * @var list<array{id: int, nombre: string}>    $carreras
  * @var list<array{id: int, numero: int, nombre: string}> $edificios
+ * @var list<array{id: int, numero: int, nombre: string, hora_inicio: string, hora_fin: string}> $grupos
  * @var bool                                    $hayFiltros
  * @var array<string, int|string>|null          $ocultos  Parámetros que se conservan al filtrar (p. ej. usuario).
  */
@@ -43,6 +44,17 @@ $ocultos ??= [];
             <?php foreach ($edificios as $ed) : ?>
                 <option value="<?= e($ed['id']) ?>"<?= $filtros['edificio'] === (int) $ed['id'] ? ' selected' : '' ?>>
                     <?= e(edificio_etiqueta($ed['numero'], $ed['nombre'])) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="field">
+        <label for="f-grupo"><?= icono('reloj') ?> Grupo</label>
+        <select id="f-grupo" name="grupo" class="<?= $filtros['grupo'] !== null ? 'is-active' : '' ?>">
+            <option value="">Todos</option>
+            <?php foreach ($grupos as $g) : ?>
+                <option value="<?= e($g['id']) ?>"<?= $filtros['grupo'] === (int) $g['id'] ? ' selected' : '' ?>>
+                    <?= e(grupo_etiqueta($g['nombre'], $g['hora_inicio'], $g['hora_fin'])) ?>
                 </option>
             <?php endforeach; ?>
         </select>

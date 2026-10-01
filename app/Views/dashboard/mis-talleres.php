@@ -4,11 +4,12 @@
  * "Mis talleres": los talleres asignados al auditor en sesión (RF-11), con filtros limitados a ellos.
  *
  * @var string $ruta
- * @var array{nombre: string, carrera: ?int, edificio: ?int} $filtros
+ * @var array{nombre: string, carrera: ?int, edificio: ?int, grupo: ?int} $filtros
  * @var bool $hayFiltros
  * @var array{filas: list<array<string, mixed>>, total: int, pagina: int, paginas: int} $resultado
  * @var list<array{id: int, nombre: string}> $carreras
  * @var list<array{id: int, numero: int, nombre: string}> $edificios
+ * @var list<array{id: int, numero: int, nombre: string, hora_inicio: string, hora_fin: string}> $grupos
  */
 
 $vista = app()->view();
@@ -29,7 +30,10 @@ $vista = app()->view();
         </p>
     </section>
 <?php else : ?>
-    <?= $vista->partial('actividades/_filtros', compact('ruta', 'filtros', 'carreras', 'edificios', 'hayFiltros')) ?>
+    <?= $vista->partial(
+        'actividades/_filtros',
+        compact('ruta', 'filtros', 'carreras', 'edificios', 'grupos', 'hayFiltros')
+    ) ?>
 
     <div data-resultados>
     <p class="summary" data-resumen>

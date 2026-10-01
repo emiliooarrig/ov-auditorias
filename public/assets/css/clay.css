@@ -465,7 +465,9 @@ input[type="checkbox"]:disabled, input[type="radio"]:disabled { cursor: not-allo
 
 /* ---------- Barra de filtros ---------- */
 .filters {
-  display: grid; grid-template-columns: minmax(220px, 2fr) repeat(2, minmax(170px, 1fr)) auto;
+  /* Nombre, carrera, edificio, grupo (sus opciones "Taller 1 (10:00–11:00)" piden ~230 px) y acciones. */
+  display: grid;
+  grid-template-columns: minmax(200px, 1.5fr) minmax(160px, 1fr) minmax(160px, 1fr) minmax(230px, 1.1fr) auto;
   gap: var(--esp-4); align-items: end;
 }
 .filters .field { margin-bottom: 0; }

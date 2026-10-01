@@ -116,6 +116,7 @@ final class AsignacionController extends Controller
             'nombre' => mb_substr($request->inputString('nombre'), 0, 150),
             'carrera' => $this->idOpcional($request->inputString('carrera')),
             'edificio' => $this->idOpcional($request->inputString('edificio')),
+            'grupo' => $this->idOpcional($request->inputString('grupo')),
             'pagina' => $this->idOpcional($request->inputString('pagina')),
         ];
     }

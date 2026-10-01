@@ -107,6 +107,60 @@ final class GrupoTallerTest extends IntegrationTestCase
         $this->assertMatchesRegularExpression('#Grupo</dt>\s*<dd>Taller 2</dd>#', $this->get("/actividades/{$id}")->body());
     }
 
+    public function testElPanelFiltraPorGrupo(): void
+    {
+        $admin = $this->entrarComoAdministrador();
+        $this->crearActividad($admin, ['nombre' => 'Robótica temprano', 'grupo' => 1]);
+        $this->crearActividad($admin, ['nombre' => 'Oratoria mediodía', 'grupo' => 3]);
+        $grupo3 = (string) $this->idDelGrupo(3);
+
+        $html = $this->get('/', ['grupo' => $grupo3])->body();
+
+        $this->assertStringContainsString('Oratoria mediodía', $html);
+        $this->assertStringNotContainsString('Robótica temprano', $html);
+        $this->assertStringContainsString('1 taller</strong>', $html);
+        $this->assertMatchesRegularExpression('#<option value="' . $grupo3 . '" selected>\s*Taller 3 \(12:00–13:00\)#', $html);
+        $this->assertMatchesRegularExpression('#id="f-grupo" name="grupo" class="is-active"#', $html);
+
+        // Combinado con otro filtro y con un valor inválido (se ignora).
+        $combinado = $this->get('/', ['grupo' => $grupo3, 'nombre' => 'Robótica'])->body();
+        $this->assertStringContainsString('Ningún taller coincide con los filtros.', $combinado);
+        $invalido = $this->get('/', ['grupo' => '1 OR 1=1'])->body();
+        $this->assertStringContainsString('Robótica temprano', $invalido);
+        $this->assertStringContainsString('Oratoria mediodía', $invalido);
+    }
+
+    public function testElAuditorFiltraPorGrupoSoloEntreSusTalleres(): void
+    {
+        $admin = $this->entrarComoAdministrador();
+        $suyo = $this->crearActividad($admin, ['nombre' => 'Suyo en Taller 2', 'grupo' => 2]);
+        $this->crearActividad($admin, ['nombre' => 'Ajeno en Taller 2', 'grupo' => 2]);
+        $auditor = $this->crearUsuario('auditor', 'ana.lopez@anahuac.mx');
+        $this->asignar($suyo, $auditor, $admin);
+
+        $this->entrarComoAuditor('ana.lopez@anahuac.mx');
+        $html = $this->get('/mis-talleres', ['grupo' => (string) $this->idDelGrupo(2)])->body();
+
+        $this->assertStringContainsString('Suyo en Taller 2', $html);
+        $this->assertStringNotContainsString('Ajeno en Taller 2', $html);
+    }
+
+    public function testAsignacionesVuelveConElFiltroDeGrupo(): void
+    {
+        $admin = $this->entrarComoAdministrador();
+        $taller = $this->crearActividad($admin, ['grupo' => 4]);
+        $auditor = $this->crearUsuario('auditor', 'ana.lopez@anahuac.mx');
+        $grupo4 = (string) $this->idDelGrupo(4);
+
+        $response = $this->post('/asignaciones', [
+            'usuario_id' => (string) $auditor,
+            'actividades' => [(string) $taller],
+            'grupo' => $grupo4,
+        ]);
+
+        $this->assertRedirige("/asignaciones?grupo={$grupo4}&usuario={$auditor}", $response);
+    }
+
     public function testLaBaseNoAceptaUnTallerSinGrupo(): void
     {
         $admin = $this->entrarComoAdministrador();

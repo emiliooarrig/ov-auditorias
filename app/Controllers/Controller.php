@@ -13,6 +13,7 @@ use App\Core\Session;
 use App\Models\Actividad;
 use App\Models\Carrera;
 use App\Models\Edificio;
+use App\Models\GrupoTaller;
 
 /**
  * Base de los controladores: acceso a servicios y atajos para responder.
@@ -40,15 +41,16 @@ abstract class Controller
     }
 
     /**
-     * Listado de talleres con los filtros GET nombre, carrera, edificio y pagina (CU-03).
+     * Listado de talleres con los filtros GET nombre, carrera, edificio, grupo y pagina (CU-03).
      * Con $usuarioSesion se limita a los talleres asignados a ese usuario.
      *
      * @return array{
-     *     filtros: array{nombre: string, carrera: ?int, edificio: ?int},
+     *     filtros: array{nombre: string, carrera: ?int, edificio: ?int, grupo: ?int},
      *     hayFiltros: bool,
      *     resultado: array{filas: list<array<string, mixed>>, total: int, pagina: int, paginas: int},
      *     carreras: list<array{id: int, nombre: string}>,
-     *     edificios: list<array{id: int, numero: int, nombre: string}>
+     *     edificios: list<array{id: int, numero: int, nombre: string}>,
+     *     grupos: list<array{id: int, numero: int, nombre: string, hora_inicio: string, hora_fin: string}>
      * }
      */
     protected function listadoTalleres(Request $request, ?int $usuarioSesion): array
@@ -57,6 +59,7 @@ abstract class Controller
             'nombre' => mb_substr($request->queryString('nombre'), 0, 150),
             'carrera' => $this->idOpcional($request->queryString('carrera')),
             'edificio' => $this->idOpcional($request->queryString('edificio')),
+            'grupo' => $this->idOpcional($request->queryString('grupo')),
         ];
 
         $resultado = (new Actividad($this->db()))->filtrar(
@@ -64,6 +67,7 @@ abstract class Controller
                 'nombre' => $filtros['nombre'],
                 'carrera_id' => $filtros['carrera'],
                 'edificio_id' => $filtros['edificio'],
+                'grupo_id' => $filtros['grupo'],
             ],
             $usuarioSesion,
             $this->idOpcional($request->queryString('pagina')) ?? 1,
@@ -72,10 +76,12 @@ abstract class Controller
 
         return [
             'filtros' => $filtros,
-            'hayFiltros' => $filtros['nombre'] !== '' || $filtros['carrera'] !== null || $filtros['edificio'] !== null,
+            'hayFiltros' => $filtros['nombre'] !== ''
+                || $filtros['carrera'] !== null || $filtros['edificio'] !== null || $filtros['grupo'] !== null,
             'resultado' => $resultado,
             'carreras' => (new Carrera($this->db()))->activas(),
             'edificios' => (new Edificio($this->db()))->activos(),
+            'grupos' => (new GrupoTaller($this->db()))->activos(),
         ];
     }
 

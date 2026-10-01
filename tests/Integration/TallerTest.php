@@ -21,8 +21,7 @@ final class TallerTest extends IntegrationTestCase
             'carrera_id' => '2',
             'edificio_id' => '4',
             'fecha' => '2026-10-20',
-            'hora_inicio' => '09:00',
-            'hora_fin' => '11:30',
+            'grupo_id' => '3', // Taller 3: 12:00–13:00
         ];
     }
 
@@ -36,7 +35,9 @@ final class TallerTest extends IntegrationTestCase
         $this->assertNotNull($taller);
         $this->assertRedirige('/actividades/' . $taller['id'], $response);
         $this->assertSame('programado', $taller['estado']);
-        $this->assertSame('11:30:00', $taller['hora_fin']);
+        $this->assertSame((int) $taller['grupo_id'], 3);
+        $this->assertSame('12:00:00', $taller['hora_inicio']);
+        $this->assertSame('13:00:00', $taller['hora_fin']);
         $this->assertSame($admin, $taller['creado_por']);
 
         $bitacora = $this->app->db()->fetchOne('SELECT * FROM bitacora_estados WHERE actividad_id = ?', [$taller['id']]);
@@ -47,7 +48,8 @@ final class TallerTest extends IntegrationTestCase
 
         $detalle = $this->get('/actividades/' . $taller['id'])->body();
         $this->assertStringContainsString('Taller de liderazgo', $detalle);
-        $this->assertStringContainsString('09:00–11:30', $detalle);
+        $this->assertStringContainsString('12:00–13:00', $detalle);
+        $this->assertStringContainsString('Taller 3', $detalle);
         $this->assertStringContainsString('Creado como', $detalle);
     }
 
@@ -60,8 +62,7 @@ final class TallerTest extends IntegrationTestCase
             'carrera_id' => '999',
             'edificio_id' => 'x',
             'fecha' => '2026-02-30',
-            'hora_inicio' => '12:00',
-            'hora_fin' => '11:00',
+            'grupo_id' => '99',
         ]));
 
         $this->assertRedirige('/actividades/nueva', $response);
@@ -73,12 +74,12 @@ final class TallerTest extends IntegrationTestCase
                 'Elige una carrera de la lista.',
                 'Elige un edificio de la lista.',
                 'Escribe una fecha válida.',
-                'La hora de fin debe ser posterior a la de inicio.',
+                'Elige un grupo de la lista (Taller 1 a Taller 6).',
             ] as $mensaje
         ) {
             $this->assertStringContainsString($mensaje, $html);
         }
-        $this->assertStringContainsString('value="12:00"', $html, 'Conserva lo enviado');
+        $this->assertStringContainsString('value="2026-02-30"', $html, 'Conserva lo enviado');
     }
 
     public function testEditarActualizaElTaller(): void

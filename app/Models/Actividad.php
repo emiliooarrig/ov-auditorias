@@ -13,16 +13,18 @@ use DomainException;
  *
  * @phpstan-type Filtros array{nombre?: string, carrera_id?: int|null, edificio_id?: int|null}
  * @phpstan-type DatosTaller array{
- *     nombre: string, carrera_id: int, edificio_id: int, fecha: string, hora_inicio: string, hora_fin: string
+ *     nombre: string, carrera_id: int, edificio_id: int, grupo_id: int, fecha: string, hora_inicio: string,
+ *     hora_fin: string
  * }
  * @phpstan-type TallerFila array{
  *     id: int, nombre: string, carrera_id: int, carrera: string, edificio_id: int, edificio: int,
- *     edificio_nombre: string, fecha: string, hora_inicio: string, hora_fin: string, estado: string,
- *     motivo_no_realizado: ?string, activo: int, creado_por: int, creado_en: string, actualizado_en: string
+ *     edificio_nombre: string, grupo_id: int, grupo_nombre: string, fecha: string, hora_inicio: string,
+ *     hora_fin: string, estado: string, motivo_no_realizado: ?string, activo: int, creado_por: int,
+ *     creado_en: string, actualizado_en: string
  * }
  * @phpstan-type PanelFila array{
- *     id: int, nombre: string, carrera: string, edificio: int, edificio_nombre: string, fecha: string,
- *     hora_inicio: string, hora_fin: string, estado: string, motivo_no_realizado: ?string,
+ *     id: int, nombre: string, carrera: string, edificio: int, edificio_nombre: string, grupo_nombre: string,
+ *     fecha: string, hora_inicio: string, hora_fin: string, estado: string, motivo_no_realizado: ?string,
  *     registrado_por: ?string,
  *     auditores: ?string
  * }
@@ -58,7 +60,7 @@ final class Actividad
         /** @var list<PanelFila> $filas */
         $filas = $this->db->fetchAll(
             "SELECT a.id, a.nombre, c.nombre AS carrera, e.numero AS edificio, e.nombre AS edificio_nombre,
-                    a.fecha, a.hora_inicio, a.hora_fin, a.estado, a.motivo_no_realizado,
+                    g.nombre AS grupo_nombre, a.fecha, a.hora_inicio, a.hora_fin, a.estado, a.motivo_no_realizado,
                     (SELECT CONCAT(ub.nombre, ' ', ub.apellidos)
                      FROM bitacora_estados b JOIN usuarios ub ON ub.id = b.usuario_id
                      WHERE b.actividad_id = a.id ORDER BY b.id DESC LIMIT 1) AS registrado_por,
@@ -67,10 +69,11 @@ final class Actividad
              FROM actividades a
              JOIN carreras  c ON c.id = a.carrera_id
              JOIN edificios e ON e.id = a.edificio_id
+             JOIN grupos_taller g ON g.id = a.grupo_id
              LEFT JOIN asignaciones s ON s.actividad_id = a.id
              LEFT JOIN usuarios     u ON u.id = s.usuario_id
              WHERE {$where}
-             GROUP BY a.id, c.nombre, e.numero, e.nombre
+             GROUP BY a.id, c.nombre, e.numero, e.nombre, g.nombre
              ORDER BY a.fecha, a.hora_inicio, a.id
              LIMIT :limite OFFSET :desplazamiento",
             $params + ['limite' => $porPagina, 'desplazamiento' => ($pagina - 1) * $porPagina]
@@ -118,10 +121,12 @@ final class Actividad
     {
         /** @var TallerFila|null */
         return $this->db->fetchOne(
-            'SELECT a.*, c.nombre AS carrera, e.numero AS edificio, e.nombre AS edificio_nombre
+            'SELECT a.*, c.nombre AS carrera, e.numero AS edificio, e.nombre AS edificio_nombre,
+                    g.nombre AS grupo_nombre
              FROM actividades a
              JOIN carreras  c ON c.id = a.carrera_id
              JOIN edificios e ON e.id = a.edificio_id
+             JOIN grupos_taller g ON g.id = a.grupo_id
              WHERE a.id = :id',
             ['id' => $id]
         );
@@ -136,8 +141,10 @@ final class Actividad
     {
         return $this->db->transaction(function (Database $db) use ($datos, $usuarioId): int {
             $db->execute(
-                'INSERT INTO actividades (nombre, carrera_id, edificio_id, fecha, hora_inicio, hora_fin, creado_por)
-                 VALUES (:nombre, :carrera_id, :edificio_id, :fecha, :hora_inicio, :hora_fin, :creado_por)',
+                'INSERT INTO actividades (nombre, carrera_id, edificio_id, grupo_id, fecha, hora_inicio, hora_fin,
+                                          creado_por)
+                 VALUES (:nombre, :carrera_id, :edificio_id, :grupo_id, :fecha, :hora_inicio, :hora_fin,
+                         :creado_por)',
                 $datos + ['creado_por' => $usuarioId]
             );
             $id = $db->lastInsertId();
@@ -154,7 +161,7 @@ final class Actividad
     {
         $this->db->execute(
             'UPDATE actividades
-             SET nombre = :nombre, carrera_id = :carrera_id, edificio_id = :edificio_id,
+             SET nombre = :nombre, carrera_id = :carrera_id, edificio_id = :edificio_id, grupo_id = :grupo_id,
                  fecha = :fecha, hora_inicio = :hora_inicio, hora_fin = :hora_fin
              WHERE id = :id AND activo = 1',
             $datos + ['id' => $id]
@@ -224,11 +231,12 @@ final class Actividad
 
     /**
      * Valida el formulario de taller. Devuelve los datos listos para guardar y los errores por campo.
+     * El horario no se captura: se toma del grupo elegido (Taller 1 … 6), así que nunca queda fuera de él.
      *
      * @param array<string, mixed> $input
      * @return array{0: DatosTaller, 1: array<string, string>}
      */
-    public static function validar(array $input, Carrera $carreras, Edificio $edificios): array
+    public static function validar(array $input, Carrera $carreras, Edificio $edificios, GrupoTaller $grupos): array
     {
         $texto = static fn (string $campo): string => is_string($input[$campo] ?? null) ? trim($input[$campo]) : '';
         $errores = [];
@@ -255,24 +263,20 @@ final class Actividad
             $errores['fecha'] = 'Escribe una fecha válida.';
         }
 
-        $inicio = self::normalizarHora($texto('hora_inicio'));
-        $fin = self::normalizarHora($texto('hora_fin'));
-        if ($inicio === null) {
-            $errores['hora_inicio'] = 'Escribe una hora válida (HH:MM).';
-        }
-        if ($fin === null) {
-            $errores['hora_fin'] = 'Escribe una hora válida (HH:MM).';
-        } elseif ($inicio !== null && $fin <= $inicio) {
-            $errores['hora_fin'] = 'La hora de fin debe ser posterior a la de inicio.';
+        $grupoId = ctype_digit($texto('grupo_id')) ? (int) $texto('grupo_id') : 0;
+        $grupo = $grupoId > 0 ? $grupos->buscarActivo($grupoId) : null;
+        if ($grupo === null) {
+            $errores['grupo_id'] = 'Elige un grupo de la lista (Taller 1 a Taller 6).';
         }
 
         return [[
             'nombre' => $nombre,
             'carrera_id' => $carreraId,
             'edificio_id' => $edificioId,
+            'grupo_id' => $grupoId,
             'fecha' => (string) $fecha,
-            'hora_inicio' => (string) $inicio,
-            'hora_fin' => (string) $fin,
+            'hora_inicio' => $grupo['hora_inicio'] ?? '',
+            'hora_fin' => $grupo['hora_fin'] ?? '',
         ], $errores];
     }
 
@@ -281,17 +285,5 @@ final class Actividad
         $fecha = DateTimeImmutable::createFromFormat('!Y-m-d', $valor);
 
         return $fecha !== false && $fecha->format('Y-m-d') === $valor ? $valor : null;
-    }
-
-    /**
-     * Acepta HH:MM o HH:MM:SS y devuelve HH:MM:00.
-     */
-    private static function normalizarHora(string $valor): ?string
-    {
-        if (preg_match('/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', $valor, $m) !== 1) {
-            return null;
-        }
-
-        return $m[1] . ':' . $m[2] . ':00';
     }
 }

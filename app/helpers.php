@@ -128,6 +128,14 @@ function edificio_etiqueta(int|string $numero, ?string $nombre, bool $conPalabra
 }
 
 /**
+ * Grupo de taller con su horario fijo: "Taller 3 (12:00–13:00)".
+ */
+function grupo_etiqueta(string $nombre, string $inicio, string $fin): string
+{
+    return $nombre . ' (' . horario($inicio, $fin) . ')';
+}
+
+/**
  * Clase CSS de un estado ("no_realizado" → "no-realizado").
  */
 function estado_clase(string $estado): string

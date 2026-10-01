@@ -138,15 +138,17 @@ final class Asignacion
      * Talleres activos asignados a un usuario (para la pantalla de asignaciones).
      *
      * @return list<array{id: int, actividad_id: int, nombre: string, fecha: string, hora_inicio: string,
-     *     hora_fin: string, estado: string}>
+     *     hora_fin: string, grupo_nombre: string, estado: string}>
      */
     public function talleresDe(int $usuarioId): array
     {
-        /** @var list<array{id: int, actividad_id: int, nombre: string, fecha: string, hora_inicio: string, hora_fin: string, estado: string}> */
+        /** @var list<array{id: int, actividad_id: int, nombre: string, fecha: string, hora_inicio: string, hora_fin: string, grupo_nombre: string, estado: string}> */
         return $this->db->fetchAll(
-            'SELECT s.id, a.id AS actividad_id, a.nombre, a.fecha, a.hora_inicio, a.hora_fin, a.estado
+            'SELECT s.id, a.id AS actividad_id, a.nombre, a.fecha, a.hora_inicio, a.hora_fin,
+                    g.nombre AS grupo_nombre, a.estado
              FROM asignaciones s
              JOIN actividades a ON a.id = s.actividad_id
+             JOIN grupos_taller g ON g.id = a.grupo_id
              WHERE s.usuario_id = :id AND a.activo = 1
              ORDER BY a.fecha, a.hora_inicio',
             ['id' => $usuarioId]

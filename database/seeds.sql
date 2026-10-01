@@ -25,6 +25,15 @@ INSERT IGNORE INTO carreras (nombre) VALUES
   ('Relaciones Internacionales'),
   ('Turismo Internacional');
 
+-- Grupos de talleres y su horario fijo: el grupo que se elige para un taller define su hora.
+INSERT IGNORE INTO grupos_taller (numero, nombre, hora_inicio, hora_fin) VALUES
+  (1, 'Taller 1', '10:00:00', '11:00:00'),
+  (2, 'Taller 2', '11:00:00', '12:00:00'),
+  (3, 'Taller 3', '12:00:00', '13:00:00'),
+  (4, 'Taller 4', '13:00:00', '14:00:00'),
+  (5, 'Taller 5', '15:00:00', '16:00:00'),
+  (6, 'Taller 6', '16:00:00', '17:00:00');
+
 -- Edificios donde se imparten talleres, con el área que ocupa cada uno.
 INSERT IGNORE INTO edificios (numero, nombre) VALUES
   (5, 'Derecho'),

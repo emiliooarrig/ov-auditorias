@@ -37,6 +37,7 @@ $detalleDesactivar = 'Dejará de aparecer en el panel. Su registro, asignaciones
                     <?= e(horario((string) $actividad['hora_inicio'], (string) $actividad['hora_fin'])) ?>
                 </dd>
             </div>
+            <div><dt><?= icono('mis-talleres') ?> Grupo</dt><dd><?= e($actividad['grupo_nombre']) ?></dd></div>
             <div>
                 <dt><?= icono('edificio') ?> Edificio</dt>
                 <dd><?= e(edificio_etiqueta($actividad['edificio'], $actividad['edificio_nombre'], false)) ?></dd>

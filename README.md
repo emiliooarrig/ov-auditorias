@@ -19,7 +19,8 @@ composer serve              # http://localhost:8000
   registra como auditor. El administrador escribe su correo y luego su contraseña.
 - `php bin/instalar-bd.php --reiniciar` borra y recrea la base (pide escribir su nombre para confirmar).
 - `php bin/migrar-bd.php` pone al día una base ya instalada con los cambios de `database/migraciones`
-  (por ejemplo, los edificios con nombre del 2026-09-30). Se puede ejecutar varias veces.
+  (por ejemplo, los edificios con nombre y los grupos de talleres Taller 1 a 6 del 2026-09-30).
+  Se puede ejecutar varias veces.
 - `php bin/crear-admin.php` también convierte en administrador a un usuario existente o cambia
   la contraseña de un administrador.
 - Las pruebas de integración usan la base `auditores_talleres_test`, que se borra y recrea en cada

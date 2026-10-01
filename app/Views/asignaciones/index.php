@@ -11,7 +11,7 @@
  * @var list<array{id: int, nombre: string}> $carreras
  * @var list<array{id: int, numero: int, nombre: string}> $edificios
  * @var list<array{id: int, actividad_id: int, nombre: string, fecha: string, hora_inicio: string,
- *     hora_fin: string, estado: string}> $asignados
+ *     hora_fin: string, grupo_nombre: string, estado: string}> $asignados
  * @var list<int> $idsAsignados
  */
 
@@ -141,6 +141,7 @@ $ruta = '/asignaciones';
                                             'fecha' => (string) $fila['fecha'],
                                             'inicio' => (string) $fila['hora_inicio'],
                                             'fin' => (string) $fila['hora_fin'],
+                                            'grupo' => (string) $fila['grupo_nombre'],
                                         ]) ?>
                                     </td>
                                     <td data-label="Edificio">
@@ -188,7 +189,7 @@ $ruta = '/asignaciones';
                                 </a>
                                 <span class="person__meta nums">
                                     <?= icono('calendario') ?> <?= e(fecha_corta($t['fecha'])) ?>,
-                                    <?= e(horario($t['hora_inicio'], $t['hora_fin'])) ?>
+                                    <?= e(grupo_etiqueta($t['grupo_nombre'], $t['hora_inicio'], $t['hora_fin'])) ?>
                                 </span>
                                 <span><?= estado_insignia($t['estado']) ?></span>
                             </div>

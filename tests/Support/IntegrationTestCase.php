@@ -90,28 +90,36 @@ abstract class IntegrationTestCase extends TestCase
     }
 
     /**
-     * Inserta un taller directamente en la base (carreras y edificios vienen de seeds.sql).
+     * Inserta un taller directamente en la base (carreras, edificios y grupos vienen de seeds.sql).
+     * El horario es el del grupo: 'grupo' es su número (1 a 6, Taller 1 por omisión).
      *
      * @param array<string, mixed> $datos
      */
     protected function crearActividad(int $creadoPor, array $datos = []): int
     {
+        $grupo = $this->app->db()->fetchOne(
+            'SELECT id, hora_inicio, hora_fin FROM grupos_taller WHERE numero = ?',
+            [(int) ($datos['grupo'] ?? 1)]
+        );
+        $this->assertNotNull($grupo, 'El grupo existe en seeds.sql');
+        unset($datos['grupo']);
         $datos += [
             'nombre' => 'Taller de prueba',
             'carrera_id' => 1,
             'edificio_id' => 1,
+            'grupo_id' => $grupo['id'],
             'fecha' => '2026-10-15',
-            'hora_inicio' => '10:00:00',
-            'hora_fin' => '12:00:00',
+            'hora_inicio' => $grupo['hora_inicio'],
+            'hora_fin' => $grupo['hora_fin'],
             'estado' => 'programado',
             'motivo_no_realizado' => null,
             'activo' => 1,
         ];
         $this->app->db()->execute(
-            'INSERT INTO actividades (nombre, carrera_id, edificio_id, fecha, hora_inicio, hora_fin, estado,
-                                      motivo_no_realizado, activo, creado_por)
-             VALUES (:nombre, :carrera_id, :edificio_id, :fecha, :hora_inicio, :hora_fin, :estado,
-                     :motivo_no_realizado, :activo, :creado_por)',
+            'INSERT INTO actividades (nombre, carrera_id, edificio_id, grupo_id, fecha, hora_inicio, hora_fin,
+                                      estado, motivo_no_realizado, activo, creado_por)
+             VALUES (:nombre, :carrera_id, :edificio_id, :grupo_id, :fecha, :hora_inicio, :hora_fin,
+                     :estado, :motivo_no_realizado, :activo, :creado_por)',
             $datos + ['creado_por' => $creadoPor]
         );
 

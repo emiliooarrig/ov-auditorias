@@ -6,6 +6,7 @@
  * @var array<string, mixed>|null              $actividad
  * @var list<array{id: int, nombre: string}>   $carreras
  * @var list<array{id: int, numero: int, nombre: string}> $edificios
+ * @var list<array{id: int, numero: int, nombre: string, hora_inicio: string, hora_fin: string}> $grupos
  */
 
 $nuevo = $actividad === null;
@@ -90,17 +91,27 @@ $mensaje = static fn (string $campo): string => $error($campo) !== null
                        <?= $aria('fecha') ?>>
                 <?= $mensaje('fecha') ?>
             </div>
-            <div class="<?= $claseCampo('hora_inicio') ?>">
-                <label for="hora_inicio"><?= icono('reloj') ?> Hora de inicio</label>
-                <input type="time" id="hora_inicio" name="hora_inicio" required
-                       value="<?= e($valor('hora_inicio', 5)) ?>" <?= $aria('hora_inicio') ?>>
-                <?= $mensaje('hora_inicio') ?>
-            </div>
-            <div class="<?= $claseCampo('hora_fin') ?>">
-                <label for="hora_fin"><?= icono('reloj') ?> Hora de fin</label>
-                <input type="time" id="hora_fin" name="hora_fin" required
-                       value="<?= e($valor('hora_fin', 5)) ?>" <?= $aria('hora_fin') ?>>
-                <?= $mensaje('hora_fin') ?>
+            <div class="<?= $claseCampo('grupo_id') ?>">
+                <label for="grupo_id"><?= icono('reloj') ?> Grupo y horario</label>
+                <select id="grupo_id" name="grupo_id" required
+                        <?= $error('grupo_id') !== null
+                            ? 'aria-invalid="true" aria-describedby="grupo_id-error"'
+                            : 'aria-describedby="grupo_id-ayuda"' ?>>
+                    <option value="">Elige un grupo</option>
+                    <?php foreach ($grupos as $g) : ?>
+                        <?php $sel = $valor('grupo_id') === (string) $g['id'] ? ' selected' : ''; ?>
+                        <option value="<?= e($g['id']) ?>"<?= $sel ?>>
+                            <?= e(grupo_etiqueta($g['nombre'], $g['hora_inicio'], $g['hora_fin'])) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <?php if ($error('grupo_id') !== null) : ?>
+                    <?= $mensaje('grupo_id') ?>
+                <?php else : ?>
+                    <span class="field__hint" id="grupo_id-ayuda">
+                        <?= icono('info') ?> El horario del taller es el de su grupo.
+                    </span>
+                <?php endif; ?>
             </div>
         </div>
     </fieldset>

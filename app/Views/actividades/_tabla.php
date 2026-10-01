@@ -4,7 +4,7 @@
  * Tabla de talleres; en pantallas angostas se convierte en tarjetas apiladas, una por taller.
  *
  * @var list<array{id: int, nombre: string, carrera: string, edificio: int, edificio_nombre: string,
- *     fecha: string, hora_inicio: string,
+ *     grupo_nombre: string, fecha: string, hora_inicio: string,
  *     hora_fin: string, estado: string, motivo_no_realizado: ?string, registrado_por: ?string,
  *     auditores: ?string}> $filas
  * @var bool $enlaceDetalle
@@ -39,6 +39,7 @@
                             'fecha' => $fila['fecha'],
                             'inicio' => $fila['hora_inicio'],
                             'fin' => $fila['hora_fin'],
+                            'grupo' => $fila['grupo_nombre'],
                         ]) ?>
                     </td>
                     <td data-label="Edificio">

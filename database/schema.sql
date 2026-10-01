@@ -53,13 +53,26 @@ CREATE TABLE edificios (
   UNIQUE KEY uq_edificios_numero (numero)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE grupos_taller (
+  id          TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  numero      TINYINT UNSIGNED NOT NULL,
+  nombre      VARCHAR(30) NOT NULL,              -- 'Taller 1' … 'Taller 6'
+  hora_inicio TIME NOT NULL,                     -- horario fijo del grupo
+  hora_fin    TIME NOT NULL,
+  activo      TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_grupos_taller_numero (numero),
+  CONSTRAINT ck_grupos_taller_horario CHECK (hora_fin > hora_inicio)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE actividades (
   id                  INT UNSIGNED NOT NULL AUTO_INCREMENT,
   nombre              VARCHAR(150) NOT NULL,
   carrera_id          SMALLINT UNSIGNED NOT NULL,
   edificio_id         SMALLINT UNSIGNED NOT NULL,
+  grupo_id            TINYINT UNSIGNED NOT NULL,   -- grupo (Taller 1 … 6) que fija el horario
   fecha               DATE NOT NULL,
-  hora_inicio         TIME NOT NULL,
+  hora_inicio         TIME NOT NULL,               -- copia del horario del grupo; la fija el modelo
   hora_fin            TIME NOT NULL,
   estado              ENUM('programado','realizado','no_realizado') NOT NULL DEFAULT 'programado',
   motivo_no_realizado VARCHAR(255) NULL,
@@ -71,9 +84,11 @@ CREATE TABLE actividades (
   KEY idx_actividades_nombre (nombre),
   KEY idx_actividades_carrera (carrera_id),
   KEY idx_actividades_edificio (edificio_id),
+  KEY idx_actividades_grupo (grupo_id),
   KEY idx_actividades_fecha (fecha, hora_inicio),
   CONSTRAINT fk_actividades_carrera  FOREIGN KEY (carrera_id)  REFERENCES carreras (id),
   CONSTRAINT fk_actividades_edificio FOREIGN KEY (edificio_id) REFERENCES edificios (id),
+  CONSTRAINT fk_actividades_grupo    FOREIGN KEY (grupo_id)    REFERENCES grupos_taller (id),
   CONSTRAINT fk_actividades_creador  FOREIGN KEY (creado_por)  REFERENCES usuarios (id),
   CONSTRAINT ck_actividades_horario CHECK (hora_fin > hora_inicio),
   CONSTRAINT ck_actividades_motivo  CHECK (estado <> 'no_realizado' OR motivo_no_realizado IS NOT NULL)

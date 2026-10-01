@@ -12,6 +12,7 @@ use App\Models\Asignacion;
 use App\Models\Bitacora;
 use App\Models\Carrera;
 use App\Models\Edificio;
+use App\Models\GrupoTaller;
 use DomainException;
 
 /**
@@ -147,6 +148,7 @@ final class ActividadController extends Controller
             'actividad' => $actividad,
             'carreras' => (new Carrera($this->db()))->activas(),
             'edificios' => (new Edificio($this->db()))->activos(),
+            'grupos' => (new GrupoTaller($this->db()))->activos(),
         ]);
     }
 
@@ -155,7 +157,12 @@ final class ActividadController extends Controller
      */
     private function validar(Request $request): array
     {
-        return Actividad::validar($request->allInput(), new Carrera($this->db()), new Edificio($this->db()));
+        return Actividad::validar(
+            $request->allInput(),
+            new Carrera($this->db()),
+            new Edificio($this->db()),
+            new GrupoTaller($this->db())
+        );
     }
 
     /**

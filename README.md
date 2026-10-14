@@ -11,31 +11,34 @@ PHP 8.2+ · MVC propio · Composer (PSR-4) · MySQL 8.0.16+ / MariaDB 10.6+.
 ```bash
 composer install
 cp .env.example .env        # en local: APP_DEBUG=true, SESSION_SECURE=false, credenciales de BD
-php bin/instalar-bd.php     # crea la base, el esquema y los catálogos de carreras y edificios
-php bin/crear-admin.php     # primer administrador (pide la contraseña; solo guarda el hash)
+php bin/instalar-bd.php     # crea la base con database/schema.sql y database/datos.sql
+php bin/crear-admin.php     # contraseña del administrador (datos.sql lo trae sin ella; solo guarda el hash)
 composer serve              # http://localhost:8000
 ```
 
-- **Ingreso:** solo administradores, con su correo `@anahuac.mx` y su contraseña. El primero se crea con
-  `bin/crear-admin.php`; los demás, desde la pantalla Administradores.
+- **Ingreso:** solo administradores, con su correo `@anahuac.mx` y su contraseña. `datos.sql` trae al
+  administrador sin contraseña: se la asigna `php bin/crear-admin.php --correo=earriaga@anahuac.mx`.
+  Los demás se crean desde la pantalla Administradores.
 - **Alumnos:** el administrador los da de alta con nombre, apellidos y horario (Matutino 07:00–14:00,
-  Vespertino 14:00–19:00 o Todo el día 07:00–19:00), uno por uno o pegando una lista (un alumno por
+  Vespertino 13:00–19:00 o Todo el día 07:00–19:00), uno por uno o pegando una lista (un alumno por
   renglón, con coma o en columnas de Excel; todos los de la lista reciben el horario elegido). No tienen
   cuenta ni correo.
 - **Asignaciones:** a mano desde el panel del alumno o el detalle del taller, o al azar desde
   Asignaciones (ver abajo). Un alumno solo audita talleres que caben en su horario.
-- **Reporte PDF:** el botón "Descargar reporte PDF" del Panel central descarga todos los talleres activos
-  con su información completa y sus auditores, en una tabla horizontal (carta apaisada) agrupada por
-  fecha y grupo. Lo genera Dompdf; las métricas de fuentes se guardan en `storage/cache/dompdf`.
+- **Reportes PDF** (Panel central), pensados para repartir: sin métricas ni quién o cuándo se generaron.
+  - "Reporte de talleres PDF": todos los talleres activos con su información y sus auditores, en una
+    tabla horizontal (carta apaisada) agrupada por fecha y grupo.
+  - "Directorio de alumnos PDF": para imprimir. Cada alumno activo en un renglón, por apellido y con
+    separadores por letra, con la hora, el taller, la carrera del taller y el edificio de cada uno de sus
+    talleres (carta vertical). Así cada alumno se encuentra sin buscar en la tabla de talleres.
+  - Los genera Dompdf; las métricas de fuentes se guardan en `storage/cache/dompdf`.
 - `php bin/instalar-bd.php --reiniciar` borra y recrea la base (pide escribir su nombre para confirmar).
-- `php bin/migrar-bd.php` pone al día una base ya instalada con los cambios de `database/migraciones`
-  (por ejemplo, los grupos de talleres del 2026-09-30, los alumnos sin cuenta del 2026-10-10 o los
-  horarios de los alumnos del 2026-10-12).
-  Se puede ejecutar varias veces.
 - `php bin/crear-admin.php` también cambia la contraseña de un administrador o convierte en
   administrador una cuenta anterior de auditor.
 - Las pruebas de integración usan la base `auditores_talleres_test`, que se borra y recrea en cada
-  corrida con las credenciales del `.env`; si MySQL no está disponible, esas pruebas se omiten.
+  corrida con `schema.sql` y `datos.sql` y las credenciales del `.env`; antes de cada prueba se vacían
+  usuarios, alumnos, talleres y asignaciones y quedan solo los catálogos. Si MySQL no está disponible,
+  esas pruebas se omiten.
 
 En producción, la raíz web del servidor debe apuntar a `public/`; nada fuera de esa carpeta
 debe ser accesible por HTTP.
@@ -56,8 +59,8 @@ public/        front controller (index.php), .htaccess y assets
 app/Core/      App, Router, Request, Response, View, Database, Session, Csrf, Logger
 app/Controllers/, app/Models/, app/Middleware/, app/Views/
 app/Config/    app.php (configuración desde .env) y routes.php
-database/      schema.sql, seeds.sql y migraciones/ (cambios para bases ya instaladas)
-bin/           scripts de consola (instalar-bd, migrar-bd, crear-admin)
+database/      schema.sql (DDL) y datos.sql (DML con todos los datos; ver "Base de datos")
+bin/           scripts de consola (instalar-bd, crear-admin)
 storage/logs/  bitácora de errores de la aplicación
 storage/cache/ caché de fuentes del reporte PDF (se crea sola; no se versiona)
 tests/         PHPUnit
@@ -95,19 +98,25 @@ Si hay asignaciones programadas fuera del horario del alumno (hechas antes de re
 porque el taller cambió de grupo), Asignaciones las lista con un botón para quitarlas de una vez; después
 "Asignar al azar" vuelve a cubrir esos talleres con alumnos en horario.
 
-## Migración del 2026-10-12 (horario de los alumnos)
+## Base de datos
 
-`php bin/migrar-bd.php` crea el catálogo `horarios_alumno`, agrega `alumnos.horario_id` y registra el
-horario de los 34 auditores del Día OV 2026 según el reporte de asistencias: los reconoce por su nombre
-completo (los que cargó `database/nuevos.sql`) o, si vienen de una cuenta de auditor, por su matrícula.
-El turno "13:00 a 19:00 hrs." del reporte se registra como Vespertino (14:00–19:00). No pisa horarios ya
-registrados; los demás alumnos quedan sin horario hasta que se registre en su panel ("Corregir datos").
+La carpeta `database/` tiene solo dos archivos, generados el 2026-10-14 a partir de la base en uso:
 
-## Migración del 2026-10-10 (alumnos sin cuenta)
+- `schema.sql` (DDL): la estructura completa. Unifica el esquema original y las migraciones que se
+  aplicaron hasta esa fecha (edificios con nombre, grupos de talleres, alumnos sin cuenta, horarios de
+  los alumnos y Vespertino de 13:00 a 19:00).
+- `datos.sql` (DML): todos los datos: roles, administrador (sin contraseña), horarios, carreras,
+  edificios, grupos, los 120 alumnos, los 200 talleres del Día OV 2026 y sus asignaciones. No incluye la
+  bitácora de ingresos (`accesos`). Reemplaza a `seeds.sql`, `nuevos.sql` y `nuevos2.sql`.
 
-`php bin/migrar-bd.php` convierte cada cuenta de auditor en un alumno con el mismo id, así sus
-asignaciones se conservan. Esas cuentas quedan desactivadas, no se borran, porque la bitácora de estados
-guarda quién marcó cada taller. Las asignaciones existentes quedan como manuales.
+Una base instalada con estos dos archivos es idéntica, fila por fila, a la base de la que salieron.
+
+**Auditoría de alumnos.** El encabezado de `datos.sql` concilia a los alumnos con sus dos fuentes: el
+reporte de asistencias (34) y el Excel de citas (119). Son 120 distintos (33 en ambas, 1 solo en el
+reporte y 86 solo en el Excel); ninguno falta en la base y no hay alumnos sin fuente. Cada alumno lleva un
+comentario con su horario, su matrícula (la base no la guarda) y en qué fuente aparece; las marcas
+REVISAR señalan matrículas o turnos que el Excel no dejaba claros. Cada taller lleva su carrera, grupo y
+responsable, y cada asignación el alumno y el taller.
 
 ## Seguridad (SDD, sección 6)
 

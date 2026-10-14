@@ -42,8 +42,9 @@ return static function (Router $router): void {
         $r->post('/actividades/{id:\d+}/estado', [ActividadController::class, 'cambiarEstado']);
         $r->post('/actividades/{id:\d+}/desactivar', [ActividadController::class, 'desactivar']);
 
-        // Reporte en PDF de todos los talleres con sus auditores
+        // Reportes en PDF: todos los talleres con sus auditores, y el directorio de alumnos por apellido
         $r->get('/reportes/talleres.pdf', [ReporteController::class, 'talleres']);
+        $r->get('/reportes/alumnos.pdf', [ReporteController::class, 'alumnos']);
 
         // Alumnos auditores: lista con panel, alta uno por uno o por lista, edición y baja
         $r->get('/alumnos', [AlumnoController::class, 'index']);

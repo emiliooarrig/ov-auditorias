@@ -119,12 +119,43 @@ const iniciarFiltroVivo = (formulario) => {
 };
 
 /*
- * Alumnos: el servidor entrega la lista completa (y oculta lo que no coincide con los filtros de la URL);
- * aquí se filtra en vivo. Cada fila lleva data-buscar con su texto y un data-* por cada lista del
- * formulario (data-estado, data-talleres). Los filtros viajan en la URL, en los enlaces marcados con
+ * Alumnos: el servidor entrega la lista completa (y oculta lo que no coincide con los filtros de la URL
+ * o cae en otra página); aquí se filtra y pagina en vivo. Cada fila lleva data-buscar con su texto y un
+ * data-* por cada lista del formulario (data-estado, data-talleres, data-horario); la lista lleva
+ * data-por-pagina y data-pagina. Los filtros y la página viajan en la URL, en los enlaces marcados con
  * data-conserva-filtros y en los campos ocultos data-regreso de los formularios del panel.
  */
 let sincronizarFiltros = null;
+
+const icono = (nombre) => `<svg class="icon" aria-hidden="true" focusable="false"><use href="#i-${nombre}"></use></svg>`;
+
+// Mismos enlaces que partials/paginacion.php: primera, última y dos a cada lado de la actual.
+const htmlPaginacion = (pagina, paginas, enlace) => {
+  if (paginas <= 1) {
+    return '';
+  }
+  const visibles = [...new Set([1, paginas, pagina - 2, pagina - 1, pagina, pagina + 1, pagina + 2])]
+    .filter((p) => p >= 1 && p <= paginas)
+    .sort((a, b) => a - b);
+  const elementos = [];
+  if (pagina > 1) {
+    elementos.push(`<li><a href="${enlace(pagina - 1)}" rel="prev">${icono('izquierda')} Anterior</a></li>`);
+  }
+  let anterior = 0;
+  visibles.forEach((p) => {
+    if (p - anterior > 1) {
+      elementos.push('<li><span class="pagination__gap" aria-hidden="true">…</span></li>');
+    }
+    elementos.push(p === pagina
+      ? `<li><span aria-current="page">${p}</span></li>`
+      : `<li><a href="${enlace(p)}" aria-label="Página ${p}">${p}</a></li>`);
+    anterior = p;
+  });
+  if (pagina < paginas) {
+    elementos.push(`<li><a href="${enlace(pagina + 1)}" rel="next">Siguiente ${icono('derecha')}</a></li>`);
+  }
+  return `<nav aria-label="Paginación"><ul class="pagination">${elementos.join('')}</ul></nav>`;
+};
 
 const iniciarFiltroLocal = (formulario) => {
   const lista = document.querySelector(formulario.dataset.filtroLocal);
@@ -137,17 +168,23 @@ const iniciarFiltroLocal = (formulario) => {
   const listas = campos.filter((c) => c.tagName === 'SELECT');
   const conteo = document.querySelector('[data-conteo-filtro]');
   const sinCoincidencias = document.querySelector('[data-sin-coincidencias]');
+  const paginacion = document.querySelector('[data-paginacion]');
   const limpiar = formulario.querySelector('[data-limpiar]');
   const indice = new Map(filas.map((fila) => [fila, normalizar(fila.dataset.buscar ?? '')]));
   const unidad = (n) => (n === 1 ? conteo?.dataset.singular : conteo?.dataset.plural) ?? '';
+  const porPagina = Number(lista.dataset.porPagina) || filas.length || 1;
+  let pagina = Number(lista.dataset.pagina) || 1;
 
-  const conFiltros = (direccion) => {
+  // La página 1 no se escribe en la URL, igual que en el servidor.
+  const valores = () => [...campos.map((c) => [c.name, c.value]), ['pagina', pagina > 1 ? String(pagina) : '']];
+
+  const conFiltros = (direccion, valoresUrl = valores()) => {
     const url = new URL(direccion, window.location.href);
-    campos.forEach((c) => {
-      if (c.value === '') {
-        url.searchParams.delete(c.name);
+    valoresUrl.forEach(([nombre, valor]) => {
+      if (valor === '') {
+        url.searchParams.delete(nombre);
       } else {
-        url.searchParams.set(c.name, c.value);
+        url.searchParams.set(nombre, valor);
       }
     });
     return url.href;
@@ -155,8 +192,9 @@ const iniciarFiltroLocal = (formulario) => {
 
   // Enlaces y formularios (también los de un panel recién cargado) vuelven a la lista como está.
   const sincronizar = () => {
+    const actuales = new Map(valores());
     document.querySelectorAll('[data-regreso]').forEach((oculto) => {
-      oculto.value = campos.find((c) => c.name === oculto.dataset.regreso)?.value ?? '';
+      oculto.value = actuales.get(oculto.dataset.regreso) ?? '';
     });
     document.querySelectorAll('a[data-conserva-filtros]').forEach((enlace) => {
       enlace.href = conFiltros(enlace.href);
@@ -166,13 +204,13 @@ const iniciarFiltroLocal = (formulario) => {
 
   const aplicar = () => {
     const buscado = normalizar(texto?.value ?? '');
-    let visibles = 0;
-    filas.forEach((fila) => {
-      const coincide = (buscado === '' || indice.get(fila).includes(buscado))
-        && listas.every((c) => c.value === '' || fila.dataset[c.name] === c.value);
-      fila.hidden = !coincide;
-      visibles += coincide ? 1 : 0;
-    });
+    const coincidentes = filas.filter((fila) => (buscado === '' || indice.get(fila).includes(buscado))
+      && listas.every((c) => c.value === '' || fila.dataset[c.name] === c.value));
+    const visibles = coincidentes.length;
+    const paginas = Math.max(1, Math.ceil(visibles / porPagina));
+    pagina = Math.min(Math.max(1, pagina), paginas);
+    const enPagina = new Set(coincidentes.slice((pagina - 1) * porPagina, pagina * porPagina));
+    filas.forEach((fila) => { fila.hidden = !enPagina.has(fila); });
 
     const hayFiltros = campos.some((c) => c.value !== '');
     campos.forEach((c) => c.classList.toggle('is-active', c.value !== ''));
@@ -187,26 +225,49 @@ const iniciarFiltroLocal = (formulario) => {
     if (limpiar) {
       limpiar.hidden = !hayFiltros;
     }
+    if (paginacion) {
+      const ruta = window.location.href;
+      const enlace = (p) => conFiltros(ruta, [...valores().slice(0, -1), ['pagina', p > 1 ? String(p) : '']]);
+      paginacion.innerHTML = htmlPaginacion(pagina, paginas, enlace);
+    }
     sincronizar();
+  };
+
+  // Cambiar un filtro vuelve a la primera página.
+  const filtrar = () => {
+    pagina = 1;
+    aplicar();
   };
 
   const quitarFiltros = () => {
     campos.forEach((c) => { c.value = ''; });
-    aplicar();
+    filtrar();
     texto?.focus();
   };
 
   formulario.classList.add('filters--live');
-  formulario.addEventListener('input', aplicar);
+  formulario.addEventListener('input', filtrar);
   formulario.addEventListener('submit', (evento) => {
     evento.preventDefault();
-    aplicar();
+    filtrar();
   });
   [limpiar, sinCoincidencias?.querySelector('[data-limpiar]')].forEach((boton) => {
     boton?.addEventListener('click', (evento) => {
       evento.preventDefault();
       quitarFiltros();
     });
+  });
+  paginacion?.addEventListener('click', (evento) => {
+    const enlace = evento.target.closest('.pagination a');
+    if (!enlace || evento.button !== 0 || evento.metaKey || evento.ctrlKey || evento.shiftKey || evento.altKey) {
+      return;
+    }
+    evento.preventDefault();
+    pagina = Number(new URL(enlace.href).searchParams.get('pagina')) || 1;
+    aplicar();
+    // Los enlaces de la paginación se reemplazaron: el foco pasa al primer alumno de la página.
+    lista.querySelector('li:not([hidden]) a')?.focus({ preventScroll: true });
+    lista.closest('section')?.scrollIntoView({ block: 'start', behavior: sinMovimiento ? 'auto' : 'smooth' });
   });
   sincronizarFiltros = sincronizar;
 };

@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Integration;
 
-use App\Core\SchemaInstaller;
 use Tests\Support\IntegrationTestCase;
-use Tests\Support\TestDatabase;
 
 /**
- * Catálogo de edificios con su área (2026-09-30) y la migración para bases ya instaladas.
+ * Catálogo de edificios con su área (2026-09-30).
  */
 final class EdificioTest extends IntegrationTestCase
 {
@@ -50,28 +48,6 @@ final class EdificioTest extends IntegrationTestCase
         $this->assertStringContainsString('9 (Ingeniería)', $this->get("/actividades/{$id}")->body());
     }
 
-    public function testLaMigracionEsIdempotenteYRetiraLosEdificiosQueYaNoEstan(): void
-    {
-        $db = $this->app->db();
-        // Simula una base anterior: un edificio fuera del catálogo y uno del catálogo sin nombre ni activo.
-        $db->execute("INSERT INTO edificios (numero, nombre) VALUES (3, '')");
-        $db->execute("UPDATE edificios SET nombre = '', activo = 0 WHERE numero = 22");
-        $config = TestDatabase::config();
-        $instalador = new SchemaInstaller($config, dirname(__DIR__, 2) . '/database');
-
-        try {
-            $instalador->migrate((string) $config['name']);
-            $aplicadas = $instalador->migrate((string) $config['name']);
-
-            $this->assertContains('2026-09-30_edificios_con_nombre.sql', $aplicadas);
-            /** @var list<array{numero: int, nombre: string}> $activos */
-            $activos = $db->fetchAll('SELECT numero, nombre FROM edificios WHERE activo = 1 ORDER BY numero');
-            $this->assertSame(self::CATALOGO, array_column($activos, 'nombre', 'numero'));
-            $this->assertSame(0, (int) $db->fetchValue('SELECT activo FROM edificios WHERE numero = 3'));
-        } finally {
-            $db->execute('DELETE FROM edificios WHERE numero = 3');
-        }
-    }
 
     public function testLaEtiquetaDelEdificio(): void
     {

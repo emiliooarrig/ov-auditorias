@@ -100,7 +100,7 @@ abstract class IntegrationTestCase extends TestCase
 
     /**
      * Da de alta un alumno directamente en la base. Devuelve su id. $horario es el nombre del horario
-     * (Matutino, Vespertino o Todo el día, de seeds.sql); null lo deja sin horario.
+     * (Matutino, Vespertino o Todo el día, de datos.sql); null lo deja sin horario.
      */
     protected function crearAlumno(
         string $nombre = 'Ana',
@@ -126,7 +126,7 @@ abstract class IntegrationTestCase extends TestCase
     }
 
     /**
-     * Inserta un taller directamente en la base (carreras, edificios y grupos vienen de seeds.sql).
+     * Inserta un taller directamente en la base (carreras, edificios y grupos vienen de datos.sql).
      * El horario es el del grupo: 'grupo' es su número (1 a 6, Taller 1 por omisión).
      *
      * @param array<string, mixed> $datos
@@ -137,7 +137,7 @@ abstract class IntegrationTestCase extends TestCase
             'SELECT id, hora_inicio, hora_fin FROM grupos_taller WHERE numero = ?',
             [(int) ($datos['grupo'] ?? 1)]
         );
-        $this->assertNotNull($grupo, 'El grupo existe en seeds.sql');
+        $this->assertNotNull($grupo, 'El grupo existe en datos.sql');
         unset($datos['grupo']);
         $datos += [
             'nombre' => 'Taller de prueba',

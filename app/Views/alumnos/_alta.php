@@ -4,7 +4,7 @@
  * Panel de alta de alumnos: uno por uno, o pegando una lista (un alumno por renglón). Cada alumno lleva
  * su horario; los de una lista comparten el que se elija.
  *
- * @var array{texto: string, estado: string, talleres: string} $filtros
+ * @var array{texto: string, estado: string, talleres: string, horario: string, pagina: string} $filtros
  * @var int $listaMax
  * @var list<array{id: int, nombre: string, hora_inicio: string, hora_fin: string}> $horarios
  */

@@ -84,22 +84,27 @@ abstract class Controller
     }
 
     /**
-     * Filtros de la lista de alumnos: texto, estado (activos o bajas) y talleres (sin o con).
-     * Llegan por GET al ver la lista; los formularios del panel los reenvían por POST para volver
-     * a la misma vista. Los valores desconocidos se descartan.
+     * Filtros de la lista de alumnos: texto, estado (activos o bajas), talleres (sin o con), horario
+     * (id del catálogo, o "sin" para los que no tienen) y la página de la lista. Llegan por GET al ver
+     * la lista; los formularios del panel los reenvían por POST para volver a la misma vista. Los
+     * valores desconocidos se descartan; la página 1 queda vacía para no ensuciar la URL.
      *
-     * @return array{texto: string, estado: string, talleres: string}
+     * @return array{texto: string, estado: string, talleres: string, horario: string, pagina: string}
      */
     protected function filtrosAlumnos(Request $request, bool $deFormulario): array
     {
         $leer = static fn (string $clave): string => $deFormulario
             ? $request->inputString($clave)
             : $request->queryString($clave);
+        $horario = $leer('horario') === 'sin' ? 'sin' : (string) $this->idOpcional($leer('horario'));
+        $pagina = $this->idOpcional($leer('pagina'));
 
         return [
             'texto' => mb_substr(trim($leer('texto')), 0, 150),
             'estado' => in_array($leer('estado'), ['activos', 'bajas'], true) ? $leer('estado') : '',
             'talleres' => in_array($leer('talleres'), ['sin', 'con'], true) ? $leer('talleres') : '',
+            'horario' => $horario,
+            'pagina' => $pagina !== null && $pagina > 1 ? (string) $pagina : '',
         ];
     }
 

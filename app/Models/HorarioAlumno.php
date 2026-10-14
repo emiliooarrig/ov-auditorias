@@ -7,8 +7,9 @@ namespace App\Models;
 use App\Core\Database;
 
 /**
- * Horarios en los que un alumno puede auditar: Matutino (07:00–14:00), Vespertino (14:00–19:00) y
- * Todo el día (07:00–19:00). Un alumno solo audita talleres que empiezan y terminan dentro del suyo.
+ * Horarios en los que un alumno puede auditar: Matutino (07:00–14:00), Vespertino (13:00–19:00) y
+ * Todo el día (07:00–19:00). Un alumno solo audita talleres que empiezan y terminan dentro del suyo;
+ * los de 13:00 a 14:00 caben en el matutino y en el vespertino.
  *
  * @phpstan-type HorarioFila array{id: int, nombre: string, hora_inicio: string, hora_fin: string}
  */

@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Integration;
 
-use App\Core\SchemaInstaller;
 use Tests\Support\IntegrationTestCase;
-use Tests\Support\TestDatabase;
 
 /**
- * Horario de los alumnos: Matutino (07:00–14:00), Vespertino (14:00–19:00) o Todo el día. Un alumno solo
+ * Horario de los alumnos: Matutino (07:00–14:00), Vespertino (13:00–19:00) o Todo el día. Un alumno solo
  * audita talleres que caben en su horario, ni a mano ni al azar; sin horario no recibe talleres.
- * Grupos de seeds.sql: Taller 1 a 4 de 10:00 a 14:00, Taller 5 de 15:00 a 16:00 y Taller 6 de 16:00 a 17:00.
+ * Grupos de datos.sql: Taller 1 a 4 de 10:00 a 14:00, Taller 5 de 15:00 a 16:00 y Taller 6 de 16:00 a 17:00.
  */
 final class HorarioAlumnoTest extends IntegrationTestCase
 {
@@ -29,7 +27,8 @@ final class HorarioAlumnoTest extends IntegrationTestCase
         $admin = $this->entrarComoAdministrador();
         $ana = $this->crearAlumno('Ana', 'López', true, 'Matutino');
         $luis = $this->crearAlumno('Luis', 'Pérez', true, 'Vespertino');
-        $manana = $this->crearActividad($admin, ['nombre' => 'Robótica', 'grupo' => 4]);   // 13:00–14:00
+        $manana = $this->crearActividad($admin, ['nombre' => 'Robótica', 'grupo' => 3]);   // 12:00–13:00
+        $comun = $this->crearActividad($admin, ['nombre' => 'Oratoria', 'grupo' => 4]);    // 13:00–14:00
         $tarde = $this->crearActividad($admin, ['nombre' => 'Pintura', 'grupo' => 6]);     // 16:00–17:00
 
         $this->post('/asignaciones', ['alumno_id' => (string) $ana, 'actividad_id' => (string) $tarde, 'volver' => 'alumno']);
@@ -42,11 +41,19 @@ final class HorarioAlumnoTest extends IntegrationTestCase
         $this->assertStringContainsString('Luis Pérez tiene horario Vespertino', $this->get("/actividades/{$manana}")->body());
         $this->assertSame([], $this->asignaciones());
 
-        // Dentro del horario sí; el límite (13:00–14:00 para el matutino) cuenta como dentro.
+        // Dentro del horario sí; los límites cuentan como dentro: el taller de 13:00 a 14:00 cabe en el
+        // matutino (termina a las 14:00) y en el vespertino (empieza a las 13:00).
         $this->post('/asignaciones', ['alumno_id' => (string) $ana, 'actividad_id' => (string) $manana]);
         $this->post('/asignaciones', ['alumno_id' => (string) $luis, 'actividad_id' => (string) $tarde]);
+        $this->post('/asignaciones', ['alumno_id' => (string) $ana, 'actividad_id' => (string) $comun]);
+        $this->post('/asignaciones', ['alumno_id' => (string) $luis, 'actividad_id' => (string) $comun]);
         $this->assertSame(
-            [['alumno_id' => $ana, 'actividad_id' => $manana], ['alumno_id' => $luis, 'actividad_id' => $tarde]],
+            [
+                ['alumno_id' => $ana, 'actividad_id' => $manana],
+                ['alumno_id' => $luis, 'actividad_id' => $tarde],
+                ['alumno_id' => $ana, 'actividad_id' => $comun],
+                ['alumno_id' => $luis, 'actividad_id' => $comun],
+            ],
             $this->asignaciones()
         );
     }
@@ -200,61 +207,5 @@ final class HorarioAlumnoTest extends IntegrationTestCase
         $this->post("/alumnos/{$ana}", $datos + ['horario_id' => (string) $this->horarioId('Vespertino')]);
         $this->assertStringContainsString('Datos actualizados.', $this->get("/alumnos/{$ana}")->body());
         $this->assertSame($this->horarioId('Vespertino'), $this->contar('SELECT horario_id FROM alumnos'));
-    }
-
-    public function testLaMigracionRegistraElHorarioDeLosAuditoresDelReporteYEsIdempotente(): void
-    {
-        $db = $this->app->db();
-        $config = TestDatabase::config();
-        $admin = $this->crearAdministrador();
-
-        try {
-            // Esquema anterior: alumnos sin horario y sin catálogo de horarios.
-            $db->execute('ALTER TABLE alumnos DROP FOREIGN KEY fk_alumnos_horario');
-            $db->execute('ALTER TABLE alumnos DROP INDEX idx_alumnos_horario, DROP COLUMN horario_id');
-            $db->execute('DROP TABLE horarios_alumno');
-            // Uno que viene de una cuenta de auditor (mismo id; se reconoce por la matrícula, aunque su nombre
-            // no coincida) y los cargados por nuevos.sql (se reconocen por el nombre).
-            $cuenta = $this->crearCuentaDeAuditor('brenda@anahuac.mx');
-            $db->execute("UPDATE usuarios SET matricula = '00480840' WHERE id = ?", [$cuenta]);
-            $db->execute("INSERT INTO alumnos (id, nombre, apellidos) VALUES (?, 'Brenda', 'Leon')", [$cuenta]);
-            $db->execute(
-                "INSERT INTO alumnos (nombre, apellidos, creado_por) VALUES
-                 ('Emilio', 'Arriaga Guzman', :a1), ('Eduardo', 'Abreu', :a2), ('Ivanna', 'Sánchez Bellan', :a3),
-                 ('Alguien', 'Más', :a4)",
-                ['a1' => $admin, 'a2' => $admin, 'a3' => $admin, 'a4' => $admin]
-            );
-
-            $instalador = new SchemaInstaller($config, dirname(__DIR__, 2) . '/database');
-            $instalador->migrate((string) $config['name']);
-            $db->execute(
-                "UPDATE alumnos SET horario_id = (SELECT id FROM horarios_alumno WHERE nombre = 'Todo el día')
-                 WHERE nombre = 'Eduardo'"
-            );
-            $aplicadas = $instalador->migrate((string) $config['name']);
-
-            $this->assertContains('2026-10-12_horarios_alumnos.sql', $aplicadas);
-            $this->assertSame(
-                [
-                    'Alguien' => null,
-                    'Brenda' => 'Matutino',
-                    'Eduardo' => 'Todo el día',   // la segunda corrida no pisa lo que se cambió
-                    'Emilio' => 'Matutino',
-                    'Ivanna' => 'Todo el día',
-                ],
-                array_column($db->fetchAll(
-                    'SELECT al.nombre, h.nombre AS horario FROM alumnos al
-                     LEFT JOIN horarios_alumno h ON h.id = al.horario_id ORDER BY al.nombre'
-                ), 'horario', 'nombre')
-            );
-            $this->assertSame(
-                [['nombre' => 'Matutino', 'hora_inicio' => '07:00:00', 'hora_fin' => '14:00:00'],
-                 ['nombre' => 'Todo el día', 'hora_inicio' => '07:00:00', 'hora_fin' => '19:00:00'],
-                 ['nombre' => 'Vespertino', 'hora_inicio' => '14:00:00', 'hora_fin' => '19:00:00']],
-                $db->fetchAll('SELECT nombre, hora_inicio, hora_fin FROM horarios_alumno ORDER BY nombre')
-            );
-        } finally {
-            TestDatabase::reinstalar();
-        }
     }
 }

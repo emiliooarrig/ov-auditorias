@@ -1,42 +1,58 @@
 <?php
 
 /**
- * Lista de alumnos con búsqueda por nombre y filtros de estado y talleres. El servidor entrega a todos
- * y oculta los que no coinciden con los filtros de la URL, así funciona sin JavaScript; con él,
- * app.js filtra en vivo y mantiene los filtros en los enlaces y formularios.
+ * Lista de alumnos con búsqueda por nombre y filtros de estado, talleres y horario, de $porPagina en
+ * $porPagina. El servidor entrega a todos y oculta los que no coinciden con los filtros de la URL o
+ * caen en otra página, así funciona sin JavaScript; con él, app.js filtra y pagina en vivo y mantiene
+ * los filtros y la página en los enlaces y formularios.
  *
  * @phpstan-import-type AlumnoListado from \App\Models\Alumno
  * @var list<AlumnoListado> $alumnos
- * @var array{texto: string, estado: string, talleres: string} $filtros
+ * @var array{texto: string, estado: string, talleres: string, horario: string, pagina: string} $filtros
  * @var int|null $seleccionadoId
+ * @var list<array{id: int, nombre: string, hora_inicio: string, hora_fin: string}> $horarios
+ * @var int $porPagina
  */
 
 $buscado = texto_busqueda($filtros['texto']);
-$hayFiltros = $filtros['texto'] !== '' || $filtros['estado'] !== '' || $filtros['talleres'] !== '';
+$hayFiltros = $filtros['texto'] !== '' || $filtros['estado'] !== '' || $filtros['talleres'] !== ''
+    || $filtros['horario'] !== '';
 $visibles = 0;
 $filas = [];
 foreach ($alumnos as $al) {
     $estado = (int) $al['activo'] === 1 ? 'activos' : 'bajas';
     $conTalleres = (int) $al['talleres'] > 0 ? 'con' : 'sin';
+    $horario = $al['horario_id'] === null ? 'sin' : (string) $al['horario_id'];
     $nombre = $al['nombre'] . ' ' . $al['apellidos'];
     $coincide = ($buscado === '' || str_contains(texto_busqueda($nombre), $buscado))
         && ($filtros['estado'] === '' || $filtros['estado'] === $estado)
-        && ($filtros['talleres'] === '' || $filtros['talleres'] === $conTalleres);
-    $visibles += $coincide ? 1 : 0;
+        && ($filtros['talleres'] === '' || $filtros['talleres'] === $conTalleres)
+        && ($filtros['horario'] === '' || $filtros['horario'] === $horario);
     $filas[] = $al + [
         'estado' => $estado,
         'conTalleres' => $conTalleres,
+        'claveHorario' => $horario,
         'busqueda' => $nombre,
-        'visible' => $coincide,
+        // Lugar entre los que coinciden, para saber en qué página cae.
+        'lugar' => $coincide ? $visibles++ : null,
     ];
 }
+$paginas = max(1, (int) ceil($visibles / $porPagina));
+$pagina = min($paginas, max(1, (int) $filtros['pagina']));
+$desde = ($pagina - 1) * $porPagina;
 $total = cantidad(count($alumnos), 'alumno', 'alumnos');
 $opcionesEstado = ['' => 'Todos', 'activos' => 'Activos', 'bajas' => 'Dados de baja'];
 $opcionesTalleres = ['' => 'Todos', 'sin' => 'Sin taller', 'con' => 'Con taller'];
+$opcionesHorario = ['' => 'Todos'];
+foreach ($horarios as $h) {
+    $opcionesHorario[(string) $h['id']] = $h['nombre'];
+}
+$opcionesHorario['sin'] = 'Sin horario';
 $ruta = $seleccionadoId === null ? '/alumnos' : '/alumnos/' . $seleccionadoId;
 $opciones = static fn (array $valores, string $actual): string => implode('', array_map(
-    static fn (string $valor, string $texto): string => '<option value="' . e($valor) . '"'
-        . ($valor === $actual ? ' selected' : '') . '>' . e($texto) . '</option>',
+    // Las claves numéricas (ids de horario) llegan como enteros.
+    static fn (int|string $valor, string $texto): string => '<option value="' . e($valor) . '"'
+        . ((string) $valor === $actual ? ' selected' : '') . '>' . e($texto) . '</option>',
     array_keys($valores),
     $valores
 ));
@@ -62,6 +78,12 @@ $opciones = static fn (array $valores, string $actual): string => implode('', ar
                 <?= $opciones($opcionesTalleres, $filtros['talleres']) ?>
             </select>
         </div>
+        <div class="field field--ancho">
+            <label for="a-horario"><?= icono('reloj') ?> Horario</label>
+            <select id="a-horario" name="horario" class="<?= $filtros['horario'] !== '' ? 'is-active' : '' ?>">
+                <?= $opciones($opcionesHorario, $filtros['horario']) ?>
+            </select>
+        </div>
         <div class="filters__actions">
             <button type="submit" class="btn btn--primary filters__submit"><?= icono('buscar') ?> Filtrar</button>
             <a class="btn btn--secondary" href="<?= e(url($ruta)) ?>" data-limpiar<?= $hayFiltros ? '' : ' hidden' ?>>
@@ -82,14 +104,17 @@ $opciones = static fn (array $valores, string $actual): string => implode('', ar
         <a class="btn btn--secondary" href="<?= e(url($ruta)) ?>" data-limpiar><?= icono('cerrar') ?> Quitar filtros</a>
     </section>
 
-    <ul class="roster" id="lista-alumnos"<?= $visibles === 0 ? ' hidden' : '' ?>>
+    <ul class="roster" id="lista-alumnos" data-por-pagina="<?= e($porPagina) ?>"
+        data-pagina="<?= e($pagina) ?>"<?= $visibles === 0 ? ' hidden' : '' ?>>
         <?php foreach ($filas as $al) : ?>
             <?php
             $activo = $al['estado'] === 'activos';
             $actual = $al['id'] === $seleccionadoId ? ' aria-current="true"' : '';
+            $visible = $al['lugar'] !== null && $al['lugar'] >= $desde && $al['lugar'] < $desde + $porPagina;
             ?>
             <li data-buscar="<?= e($al['busqueda']) ?>" data-estado="<?= e($al['estado']) ?>"
-                data-talleres="<?= e($al['conTalleres']) ?>"<?= $al['visible'] ? '' : ' hidden' ?>>
+                data-talleres="<?= e($al['conTalleres']) ?>"
+                data-horario="<?= e($al['claveHorario']) ?>"<?= $visible ? '' : ' hidden' ?>>
                 <a class="roster__item" href="<?= e(url('/alumnos/' . $al['id'], $filtros)) ?>"
                    data-panel-enlace data-conserva-filtros<?= $actual ?>>
                     <span class="roster__name"><?= e($al['apellidos'] . ', ' . $al['nombre']) ?></span>
@@ -115,6 +140,15 @@ $opciones = static fn (array $valores, string $actual): string => implode('', ar
             </li>
         <?php endforeach; ?>
     </ul>
+
+    <div data-paginacion>
+        <?= app()->view()->partial('partials/paginacion', [
+            'ruta' => $ruta,
+            'query' => array_diff_key($filtros, ['pagina' => '']),
+            'pagina' => $pagina,
+            'paginas' => $paginas,
+        ]) ?>
+    </div>
 <?php else : ?>
     <section class="empty">
         <span class="icon-bubble"><?= icono('usuarios') ?></span>

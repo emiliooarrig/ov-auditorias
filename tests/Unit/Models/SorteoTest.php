@@ -16,7 +16,7 @@ use Random\Randomizer;
 final class SorteoTest extends TestCase
 {
     private const MATUTINO = ['07:00:00', '14:00:00'];
-    private const VESPERTINO = ['14:00:00', '19:00:00'];
+    private const VESPERTINO = ['13:00:00', '19:00:00'];
     private const TODO_EL_DIA = ['07:00:00', '19:00:00'];
 
     /**
@@ -260,19 +260,27 @@ final class SorteoTest extends TestCase
 
     public function testElHorarioIncluyeSusLimites(): void
     {
-        // Un taller de 13:00 a 14:00 es matutino; uno de 14:00 a 15:00, vespertino.
+        // El matutino termina a las 14:00 y el vespertino empieza a las 13:00: el taller de 13:00 a 14:00
+        // cabe en los dos; el de 14:00 a 15:00 ya no es matutino y el de 12:00 a 13:00 no es vespertino.
         $talleres = [
-            ['id' => 1, 'franja' => 'a', 'inicio' => '13:00:00', 'fin' => '14:00:00'],
-            ['id' => 2, 'franja' => 'b', 'inicio' => '14:00:00', 'fin' => '15:00:00'],
+            ['id' => 1, 'franja' => 'a', 'inicio' => '12:00:00', 'fin' => '13:00:00'],
+            ['id' => 2, 'franja' => 'b', 'inicio' => '13:00:00', 'fin' => '14:00:00'],
+            ['id' => 3, 'franja' => 'c', 'inicio' => '14:00:00', 'fin' => '15:00:00'],
         ];
-        $alumnos = array_merge(self::alumnos([1], self::MATUTINO), self::alumnos([2], self::VESPERTINO));
 
-        $r = Sorteo::repartir($talleres, $alumnos, [], new Randomizer(new Mt19937(1)));
-
+        $matutino = Sorteo::repartir($talleres, self::alumnos([1], self::MATUTINO), [], new Randomizer(new Mt19937(1)), 1);
         $this->assertEqualsCanonicalizing(
-            [['alumno_id' => 1, 'actividad_id' => 1], ['alumno_id' => 2, 'actividad_id' => 2]],
-            $r['nuevas']
+            [['alumno_id' => 1, 'actividad_id' => 1], ['alumno_id' => 1, 'actividad_id' => 2]],
+            $matutino['nuevas']
         );
+        $this->assertSame([3], $matutino['talleresSinCubrir']);
+
+        $vespertino = Sorteo::repartir($talleres, self::alumnos([2], self::VESPERTINO), [], new Randomizer(new Mt19937(1)), 1);
+        $this->assertEqualsCanonicalizing(
+            [['alumno_id' => 2, 'actividad_id' => 2], ['alumno_id' => 2, 'actividad_id' => 3]],
+            $vespertino['nuevas']
+        );
+        $this->assertSame([1], $vespertino['talleresSinCubrir']);
     }
 
     public function testConHorariosAlAzarCubreTodoLoQueSePuede(): void

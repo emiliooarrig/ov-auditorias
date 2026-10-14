@@ -478,9 +478,10 @@ input[type="checkbox"]:disabled, input[type="radio"]:disabled { cursor: not-allo
 .filters__actions { display: flex; gap: var(--esp-2); }
 /* Con JavaScript filtran solos: el botón de enviar sobra. */
 .filters--live .filters__submit { display: none; }
-/* Variante para una columna angosta (lista de alumnos): búsqueda arriba, dos listas debajo. */
+/* Variante para una columna angosta (lista de alumnos): búsqueda arriba, dos listas debajo y una a lo ancho. */
 .filters--compact { grid-template-columns: 1fr 1fr; }
-.filters--compact .field:first-child, .filters--compact .filters__actions { grid-column: 1 / -1; }
+.filters--compact .field:first-child, .filters--compact .field--ancho,
+.filters--compact .filters__actions { grid-column: 1 / -1; }
 .filters--compact .filters__actions:not(:has(> :not([hidden], .filters__submit))) { display: none; }
 .filters--compact:not(.filters--live) .filters__actions { display: flex; }
 

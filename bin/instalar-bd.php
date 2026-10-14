@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 /*
- * Crea la base de datos configurada en .env e instala el esquema y los catálogos.
+ * Crea la base de datos configurada en .env con database/schema.sql (estructura) y database/datos.sql
+ * (catálogos, administrador, alumnos, talleres y asignaciones).
  *
  *   php bin/instalar-bd.php                 crea la base (falla si ya existe)
  *   php bin/instalar-bd.php --reiniciar     BORRA la base existente y la vuelve a crear (pide confirmación)
- *   php bin/instalar-bd.php --sin-semillas  no carga carreras ni edificios
  *   php bin/instalar-bd.php --bd=otra_base  usa otro nombre de base
  */
 
@@ -23,7 +23,7 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 
 $app = App::boot(dirname(__DIR__));
 $consola = new Console();
-$opciones = getopt('', ['reiniciar', 'sin-semillas', 'bd:', 'si']);
+$opciones = getopt('', ['reiniciar', 'bd:', 'si']);
 
 /** @var array<string, mixed> $db */
 $db = (array) $app->config('db', []);
@@ -42,9 +42,10 @@ try {
         }
     }
 
-    $instalador->install($nombre, $reiniciar, !isset($opciones['sin-semillas']));
+    $instalador->install($nombre, $reiniciar);
     $consola->line("Base '{$nombre}' instalada.");
-    $consola->line('Siguiente paso: php bin/crear-admin.php');
+    // datos.sql trae a los administradores sin contraseña: nunca se guarda en un archivo.
+    $consola->line('Siguiente paso: php bin/crear-admin.php para asignar la contraseña del administrador.');
 } catch (Throwable $e) {
     $consola->error($e->getMessage());
     exit(1);

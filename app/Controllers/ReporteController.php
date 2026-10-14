@@ -8,14 +8,15 @@ use App\Core\Pdf;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\Actividad;
-use DateTimeImmutable;
+use App\Models\Alumno;
 
 /**
- * Reportes descargables.
+ * Reportes descargables. Se reparten a los alumnos, así que no dicen quién los generó ni cuándo.
  */
 final class ReporteController extends Controller
 {
-    private const TITULO = 'Reporte de talleres y auditores';
+    private const TITULO_TALLERES = 'Reporte de talleres y auditores';
+    private const TITULO_ALUMNOS = 'Directorio de alumnos auditores';
 
     /**
      * PDF con todos los talleres activos, toda su información y los alumnos que los auditan, en una tabla
@@ -23,30 +24,47 @@ final class ReporteController extends Controller
      */
     public function talleres(Request $request): Response
     {
-        $ahora = new DateTimeImmutable();
-        $generado = fecha_corta($ahora->format('Y-m-d')) . ', ' . $ahora->format('H:i');
-        $usuario = $this->app->auth()->user();
-        $generadoPor = trim(($usuario['nombre'] ?? '') . ' ' . ($usuario['apellidos'] ?? ''));
-
         $html = $this->app->view()->render('reportes/talleres', [
             'talleres' => (new Actividad($this->db()))->reporte(),
-            'titulo' => self::TITULO,
-            'generado' => $generado,
-            'generadoPor' => $generadoPor,
+            'titulo' => self::TITULO_TALLERES,
         ], null);
+        $this->app->logger()->info('Reporte de talleres descargado', ['por' => $this->adminId()]);
+
+        return $this->pdf($html, self::TITULO_TALLERES, 'reporte-talleres.pdf', 'landscape');
+    }
+
+    /**
+     * PDF para imprimir: los alumnos por apellido, cada uno en un renglón con sus talleres (hora, taller,
+     * carrera y edificio), para que cada alumno se encuentre sin buscar en la tabla de talleres. Carta vertical.
+     */
+    public function alumnos(Request $request): Response
+    {
+        $html = $this->app->view()->render('reportes/alumnos', [
+            'alumnos' => (new Alumno($this->db()))->directorio(),
+            'titulo' => self::TITULO_ALUMNOS,
+        ], null);
+        $this->app->logger()->info('Directorio de alumnos descargado', ['por' => $this->adminId()]);
+
+        return $this->pdf($html, self::TITULO_ALUMNOS, 'directorio-alumnos.pdf', 'portrait');
+    }
+
+    /**
+     * @param 'landscape'|'portrait' $orientacion
+     */
+    private function pdf(string $html, string $titulo, string $archivo, string $orientacion): Response
+    {
         $pdf = Pdf::desdeHtml(
             $html,
-            self::TITULO,
+            $titulo,
             (string) $this->app->config('name', 'Auditores de Talleres'),
-            self::TITULO . ' · Generado el ' . $generado,
-            $this->app->basePath('storage/cache/dompdf')
+            $titulo,
+            $this->app->basePath('storage/cache/dompdf'),
+            $orientacion
         );
-
-        $this->app->logger()->info('Reporte de talleres descargado', ['por' => $this->adminId()]);
 
         return new Response($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="reporte-talleres-' . $ahora->format('Y-m-d') . '.pdf"',
+            'Content-Disposition' => 'attachment; filename="' . $archivo . '"',
             'Content-Length' => (string) strlen($pdf),
         ]);
     }

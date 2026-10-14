@@ -23,7 +23,11 @@ $vista = app()->view();
     <div class="page-header__actions">
         <a class="btn btn--secondary" href="<?= e(url('/reportes/talleres.pdf')) ?>" download
            title="Todos los talleres con su información y sus auditores, en PDF">
-            <?= icono('descargar') ?> Descargar reporte PDF
+            <?= icono('descargar') ?> Reporte de talleres PDF
+        </a>
+        <a class="btn btn--secondary" href="<?= e(url('/reportes/alumnos.pdf')) ?>" download
+           title="Cada alumno por apellido con la hora, el taller, la carrera y el edificio, para imprimir">
+            <?= icono('descargar') ?> Directorio de alumnos PDF
         </a>
         <a class="btn btn--primary" href="<?= e(url('/actividades/nueva')) ?>"><?= icono('mas') ?> Nuevo taller</a>
     </div>

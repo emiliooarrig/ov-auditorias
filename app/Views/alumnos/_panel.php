@@ -11,7 +11,7 @@
  *     estado: string, origen: string, asignado_en: string, asignado_por: string, en_horario: ?int}> $talleres
  * @var list<array{id: int, nombre: string, fecha: string, hora_inicio: string, hora_fin: string,
  *     grupo_nombre: string, edificio: int, edificio_nombre: string, auditores: int}> $disponibles
- * @var array{texto: string, estado: string, talleres: string} $filtros
+ * @var array{texto: string, estado: string, talleres: string, horario: string, pagina: string} $filtros
  * @var list<array{id: int, nombre: string, hora_inicio: string, hora_fin: string}> $horarios
  */
 

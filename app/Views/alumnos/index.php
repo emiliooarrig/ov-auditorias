@@ -8,11 +8,12 @@
  * @phpstan-import-type AlumnoListado from \App\Models\Alumno
  * @phpstan-import-type AlumnoFila from \App\Models\Alumno
  * @var list<AlumnoListado> $alumnos
- * @var array{texto: string, estado: string, talleres: string} $filtros
+ * @var array{texto: string, estado: string, talleres: string, horario: string, pagina: string} $filtros
  * @var AlumnoFila|null $seleccionado
  * @var list<array<string, mixed>>|null $talleres
  * @var list<array<string, mixed>>|null $disponibles
  * @var int $listaMax
+ * @var int $porPagina
  * @var list<array{id: int, nombre: string, hora_inicio: string, hora_fin: string}> $horarios
  */
 
@@ -36,7 +37,10 @@ $seleccionadoId = $seleccionado['id'] ?? null;
 <div class="layout-roster<?= $seleccionado !== null ? ' layout-roster--selected' : '' ?>" data-roster>
     <section class="layout-roster__list" aria-labelledby="t-lista">
         <h2 class="sr-only" id="t-lista">Lista de alumnos</h2>
-        <?= $vista->partial('alumnos/_lista', compact('alumnos', 'filtros', 'seleccionadoId')) ?>
+        <?= $vista->partial(
+            'alumnos/_lista',
+            compact('alumnos', 'filtros', 'seleccionadoId', 'horarios', 'porPagina')
+        ) ?>
     </section>
     <div class="layout-roster__panel" data-panel>
         <?php if ($seleccionado === null) : ?>

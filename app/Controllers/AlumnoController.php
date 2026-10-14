@@ -202,6 +202,7 @@ final class AlumnoController extends Controller
             'filtros' => $this->filtrosAlumnos($request, false),
             'seleccionado' => $alumno,
             'listaMax' => Alumno::LISTA_MAX,
+            'porPagina' => Alumno::POR_PAGINA,
             'horarios' => (new HorarioAlumno($this->db()))->todos(),
         ];
         if ($alumno !== null) {

@@ -197,7 +197,7 @@ final class AlumnoTest extends IntegrationTestCase
 
         $html = $this->get('/alumnos', ['texto' => 'gonzalez'])->body();
         $this->assertStringContainsString('1 de 3 alumnos', $html);
-        $this->assertMatchesRegularExpression('#<li data-buscar="Ana González"[^>]*data-talleres="sin">#', $html);
+        $this->assertMatchesRegularExpression('#<li data-buscar="Ana González"[^>]*data-talleres="sin"\s+data-horario="\d+">#', $html);
         $this->assertMatchesRegularExpression('#<li data-buscar="Luis Pérez"[^>]*hidden>#', $html);
 
         $sinTaller = $this->get('/alumnos', ['talleres' => 'sin', 'estado' => 'activos'])->body();
@@ -205,6 +205,66 @@ final class AlumnoTest extends IntegrationTestCase
         $this->assertStringContainsString('<option value="sin" selected>', $sinTaller);
         // Los enlaces de la lista conservan los filtros.
         $this->assertStringContainsString(e("/alumnos/{$luis}?estado=activos&talleres=sin"), $sinTaller);
+    }
+
+    public function testLaListaSeFiltraPorHorario(): void
+    {
+        $this->entrarComoAdministrador();
+        $this->crearAlumno('Ana', 'González', true, 'Matutino');
+        $this->crearAlumno('Luis', 'Pérez', true, 'Vespertino');
+        $this->crearAlumno('Eva', 'Soto', true, null);
+        $matutino = (string) $this->horarioId('Matutino');
+
+        $html = $this->get('/alumnos', ['horario' => $matutino])->body();
+        $this->assertStringContainsString('1 de 3 alumnos', $html);
+        $this->assertStringContainsString('<option value="' . $matutino . '" selected>Matutino</option>', $html);
+        $this->assertMatchesRegularExpression('#<li data-buscar="Ana González"[^>]*data-horario="' . $matutino . '">#', $html);
+        $this->assertMatchesRegularExpression('#<li data-buscar="Luis Pérez"[^>]*hidden>#', $html);
+
+        $sinHorario = $this->get('/alumnos', ['horario' => 'sin'])->body();
+        $this->assertStringContainsString('1 de 3 alumnos', $sinHorario);
+        $this->assertMatchesRegularExpression('#<li data-buscar="Eva Soto"[^>]*data-horario="sin">#', $sinHorario);
+
+        // Un valor desconocido se descarta.
+        $this->assertStringNotContainsString(' de 3 alumnos', $this->get('/alumnos', ['horario' => 'x'])->body());
+    }
+
+    public function testLaListaSePaginaDeDiezEnDiez(): void
+    {
+        $this->entrarComoAdministrador();
+        $ids = [];
+        for ($i = 1; $i <= 23; $i++) {
+            $ids[$i] = $this->crearAlumno('Alumno', sprintf('Apellido%02d', $i));
+        }
+        $visible = static fn (int $i): string => '#<li data-buscar="Alumno ' . sprintf('Apellido%02d', $i) . '"[^>]*"\d+">#';
+        $oculto = static fn (int $i): string => '#<li data-buscar="Alumno ' . sprintf('Apellido%02d', $i) . '"[^>]*hidden>#';
+
+        $html = $this->get('/alumnos')->body();
+        $this->assertMatchesRegularExpression($visible(1), $html);
+        $this->assertMatchesRegularExpression($visible(10), $html);
+        $this->assertMatchesRegularExpression($oculto(11), $html);
+        $this->assertStringContainsString('data-pagina="1"', $html);
+        $this->assertStringContainsString('href="' . e(url('/alumnos', ['pagina' => 3])) . '"', $html);
+
+        $tercera = $this->get('/alumnos', ['pagina' => '3'])->body();
+        $this->assertMatchesRegularExpression($oculto(20), $tercera);
+        $this->assertMatchesRegularExpression($visible(21), $tercera);
+        $this->assertMatchesRegularExpression($visible(23), $tercera);
+        $this->assertStringContainsString('<span aria-current="page">3</span>', $tercera);
+        // Los enlaces de la lista conservan la página.
+        $this->assertStringContainsString(e("/alumnos/{$ids[21]}?pagina=3"), $tercera);
+
+        // Una página que ya no existe muestra la última; al filtrar, la paginación se calcula sobre lo que coincide.
+        $this->assertMatchesRegularExpression($visible(23), $this->get('/alumnos', ['pagina' => '99'])->body());
+        $filtrada = $this->get('/alumnos', ['texto' => 'apellido2', 'pagina' => '2'])->body();
+        $this->assertMatchesRegularExpression($visible(20), $filtrada);
+        $this->assertStringNotContainsString('class="pagination"', $filtrada);
+
+        // Al guardar desde el panel se vuelve a la misma página.
+        $horario = (string) $this->horarioId('Todo el día');
+        $this->assertRedirige("/alumnos/{$ids[12]}?pagina=2", $this->post("/alumnos/{$ids[12]}", [
+            'nombre' => 'Alumno', 'apellidos' => 'Apellido12', 'horario_id' => $horario, 'pagina' => '2',
+        ]));
     }
 
     public function testCorregirElNombre(): void

@@ -33,7 +33,9 @@ final class TestDatabase
     }
 
     /**
-     * Deja la base lista y vacía. Devuelve un mensaje si MySQL no está disponible.
+     * Deja la base lista y vacía. Se instala con schema.sql y datos.sql (así cada corrida comprueba que el
+     * DML carga) y antes de cada prueba se vacían usuarios, alumnos, talleres y asignaciones: solo quedan
+     * los catálogos. Devuelve un mensaje si MySQL no está disponible.
      */
     public static function preparar(): ?string
     {

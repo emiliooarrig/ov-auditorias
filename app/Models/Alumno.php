@@ -21,6 +21,13 @@ use DomainException;
  *     id: int, nombre: string, apellidos: string, activo: int, horario_id: ?int, horario: ?string,
  *     talleres: int, programados: int
  * }
+ * @phpstan-type TallerDelDirectorio array{
+ *     nombre: string, carrera: string, fecha: string, hora_inicio: string, hora_fin: string,
+ *     grupo_nombre: string, edificio: int, edificio_nombre: string
+ * }
+ * @phpstan-type DirectorioFila array{
+ *     id: int, nombre: string, apellidos: string, talleres: list<TallerDelDirectorio>
+ * }
  */
 final class Alumno
 {
@@ -28,6 +35,8 @@ final class Alumno
     public const APELLIDOS_MAX = 120;
     /** Renglones que se aceptan de una sola vez al pegar una lista. */
     public const LISTA_MAX = 500;
+    /** Alumnos por página en la lista. */
+    public const POR_PAGINA = 10;
 
     /** Código de la excepción cuando el error es del horario (y no del nombre). */
     public const ERROR_HORARIO = 1;
@@ -75,6 +84,52 @@ final class Alumno
              LEFT JOIN actividades a ON a.id = s.actividad_id AND a.activo = 1
              GROUP BY al.id, al.nombre, al.apellidos, al.activo, al.horario_id, h.nombre
              ORDER BY al.apellidos, al.nombre, al.id"
+        );
+    }
+
+    /**
+     * Directorio para imprimir: los alumnos activos por apellido, cada uno con sus talleres activos en
+     * orden de fecha y hora (con su carrera y el edificio al que debe ir). Incluye a los que no tienen taller.
+     *
+     * @return list<DirectorioFila>
+     */
+    public function directorio(): array
+    {
+        $talleres = [];
+        foreach (
+            $this->db->fetchAll(
+                'SELECT s.alumno_id, a.nombre, c.nombre AS carrera, a.fecha, a.hora_inicio, a.hora_fin,
+                        g.nombre AS grupo_nombre, e.numero AS edificio, e.nombre AS edificio_nombre
+                 FROM asignaciones s
+                 JOIN actividades a ON a.id = s.actividad_id AND a.activo = 1
+                 JOIN carreras c ON c.id = a.carrera_id
+                 JOIN grupos_taller g ON g.id = a.grupo_id
+                 JOIN edificios e ON e.id = a.edificio_id
+                 ORDER BY a.fecha, a.hora_inicio, a.nombre, a.id'
+            ) as $fila
+        ) {
+            $talleres[(int) $fila['alumno_id']][] = [
+                'nombre' => (string) $fila['nombre'],
+                'carrera' => (string) $fila['carrera'],
+                'fecha' => (string) $fila['fecha'],
+                'hora_inicio' => (string) $fila['hora_inicio'],
+                'hora_fin' => (string) $fila['hora_fin'],
+                'grupo_nombre' => (string) $fila['grupo_nombre'],
+                'edificio' => (int) $fila['edificio'],
+                'edificio_nombre' => (string) $fila['edificio_nombre'],
+            ];
+        }
+
+        return array_map(
+            static fn (array $al): array => [
+                'id' => (int) $al['id'],
+                'nombre' => (string) $al['nombre'],
+                'apellidos' => (string) $al['apellidos'],
+                'talleres' => $talleres[(int) $al['id']] ?? [],
+            ],
+            $this->db->fetchAll(
+                'SELECT id, nombre, apellidos FROM alumnos WHERE activo = 1 ORDER BY apellidos, nombre, id'
+            )
         );
     }
 

@@ -7,30 +7,13 @@
  * los estilos van aquí y solo usan la paleta institucional (SDD 7.1), sin sombras.
  *
  * @phpstan-import-type ReporteFila from \App\Models\Actividad
+ * Se reparte a los alumnos: no lleva métricas, conteos por franja ni quién o cuándo lo generó.
+ *
  * @var list<ReporteFila> $talleres
  * @var string $titulo
- * @var string $generado Fecha y hora de generación ("lun 12 oct 2026, 11:45").
- * @var string $generadoPor Administrador que lo descargó.
  */
 
 $estados = ['programado' => 'Programado', 'realizado' => 'Realizado', 'no_realizado' => 'No realizado'];
-$conAuditor = count(array_filter($talleres, static fn (array $t): bool => $t['auditores'] !== []));
-$porEstado = array_count_values(array_column($talleres, 'estado'));
-$alumnos = [];
-foreach ($talleres as $t) {
-    foreach ($t['auditores'] as $a) {
-        $alumnos[$a['apellidos'] . '|' . $a['nombre']] = true;
-    }
-}
-$resumen = [
-    ['Talleres', count($talleres), ''],
-    ['Con auditor', $conAuditor, ''],
-    ['Sin auditor', count($talleres) - $conAuditor, count($talleres) > $conAuditor ? 'alerta' : ''],
-    ['Programados', $porEstado['programado'] ?? 0, ''],
-    ['Realizados', $porEstado['realizado'] ?? 0, ''],
-    ['No realizados', $porEstado['no_realizado'] ?? 0, ''],
-    ['Auditores', count($alumnos), ''],
-];
 
 // Franjas: talleres de la misma fecha y el mismo grupo (a la misma hora), en el orden del reporte.
 $franjas = [];
@@ -60,23 +43,7 @@ $numero = 0;
         .encabezado .c-logo { width: 13mm; }
         .encabezado .titulo { padding-left: 4mm; }
         h1 { margin: 0; font-size: 16pt; line-height: 1.15; color: #6B3F23; }
-        .subtitulo { margin: 1mm 0 0; color: #5C524B; font-size: 8.5pt; }
-        .generado { text-align: right; color: #5C524B; font-size: 7.5pt; line-height: 1.5; }
-        .generado strong { color: #2B211A; }
-        .acento { height: 1.2mm; background: #FF8300; margin-bottom: 4mm; }
-
-        /* Resumen */
-        .resumen { width: 100%; border-collapse: separate; border-spacing: 2mm 0; margin: 0 -2mm 5mm; }
-        .resumen td {
-            width: 14.28%; padding: 2mm 3mm; vertical-align: top; background: #F7F4F1;
-            border: 0.6pt solid #D9D2CB; border-radius: 2mm;
-        }
-        .resumen .valor { display: block; font-size: 15pt; font-weight: bold; color: #6B3F23; line-height: 1.1; }
-        .resumen .etiqueta {
-            display: block; color: #5C524B; font-size: 7pt; text-transform: uppercase; letter-spacing: 0.3pt;
-        }
-        .resumen .alerta { background: #FFF3E6; border-color: #FF8300; }
-        .resumen .alerta .valor { color: #B3261E; }
+        .acento { height: 1.2mm; background: #FF8300; margin-bottom: 5mm; }
 
         /* Tabla */
         table.talleres { width: 100%; border-collapse: collapse; table-layout: fixed; }
@@ -92,7 +59,6 @@ $numero = 0;
             background: #FFF3E6; color: #4F2E19; font-weight: bold; font-size: 8pt; padding: 1.8mm 2mm;
             border-top: 0.8pt solid #FF8300; border-bottom: 0.8pt solid #FF8300;
         }
-        .franja .cuenta { color: #5C524B; font-weight: normal; }
         .num { color: #5C524B; text-align: right; }
         .nombre { font-weight: bold; }
         .secundario { display: block; color: #5C524B; font-size: 7pt; margin-top: 0.5mm; }
@@ -120,28 +86,10 @@ $numero = 0;
     <table class="encabezado">
         <tr>
             <td class="c-logo"><div class="logo">OV</div></td>
-            <td class="titulo">
-                <h1><?= e($titulo) ?></h1>
-                <p class="subtitulo">Todos los talleres activos con su información completa y sus alumnos auditores.</p>
-            </td>
-            <td class="generado">
-                Generado el <strong><?= e($generado) ?></strong><br>
-                por <strong><?= e($generadoPor) ?></strong>
-            </td>
+            <td class="titulo"><h1><?= e($titulo) ?></h1></td>
         </tr>
     </table>
     <div class="acento"></div>
-
-    <table class="resumen">
-        <tr>
-            <?php foreach ($resumen as [$etiqueta, $valor, $clase]) : ?>
-                <td class="<?= e($clase) ?>">
-                    <span class="valor"><?= e($valor) ?></span>
-                    <span class="etiqueta"><?= e($etiqueta) ?></span>
-                </td>
-            <?php endforeach; ?>
-        </tr>
-    </table>
 
     <?php if ($talleres === []) : ?>
         <p class="vacio">Todavía no hay talleres activos.</p>
@@ -163,21 +111,11 @@ $numero = 0;
                 <?php foreach ($franjas as $franja) : ?>
                     <?php
                     $m = $franja['muestra'];
-                    $total = count($franja['talleres']);
-                    $cubiertos = count(array_filter(
-                        $franja['talleres'],
-                        static fn (array $t): bool => $t['auditores'] !== []
-                    ));
                     $etiqueta = fecha_corta($m['fecha']) . ' · '
                         . grupo_etiqueta($m['grupo_nombre'], $m['hora_inicio'], $m['hora_fin']);
                     ?>
                     <tr class="franja">
-                        <td colspan="8">
-                            <?= e($etiqueta) ?>
-                            <span class="cuenta">
-                                — <?= e(cantidad($total, 'taller', 'talleres')) ?>, <?= e($cubiertos) ?> con auditor
-                            </span>
-                        </td>
+                        <td colspan="8"><?= e($etiqueta) ?></td>
                     </tr>
                     <?php foreach ($franja['talleres'] as $i => $t) : ?>
                         <?php $numero++; ?>

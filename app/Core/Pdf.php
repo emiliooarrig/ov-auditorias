@@ -22,9 +22,16 @@ final class Pdf
 
     /**
      * @param string $pie Texto a la izquierda del pie de cada página; a la derecha va "Página N de M".
+     * @param 'landscape'|'portrait' $orientacion Hoja carta horizontal o vertical (debe coincidir con @page).
      */
-    public static function desdeHtml(string $html, string $titulo, string $autor, string $pie, string $cache): string
-    {
+    public static function desdeHtml(
+        string $html,
+        string $titulo,
+        string $autor,
+        string $pie,
+        string $cache,
+        string $orientacion = 'landscape'
+    ): string {
         if (!is_dir($cache) && !mkdir($cache, 0775, true) && !is_dir($cache)) {
             throw new RuntimeException('No se pudo crear la carpeta ' . $cache);
         }
@@ -37,7 +44,7 @@ final class Pdf
 
         $dompdf = new Dompdf($opciones);
         $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->setPaper('letter', 'landscape');
+        $dompdf->setPaper('letter', $orientacion);
         $dompdf->addInfo('Title', $titulo);
         $dompdf->addInfo('Author', $autor);
         $dompdf->render();

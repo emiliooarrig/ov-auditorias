@@ -1,11 +1,13 @@
--- Esquema de la base de datos (SDD, sección 4.3).
+-- DDL: estructura completa de la base de datos (SDD, sección 4.3). Los datos van en datos.sql.
+-- Unifica el esquema original y todas las migraciones aplicadas hasta el 2026-10-14: es idéntico, tabla
+-- por tabla, a la base en uso.
 -- Compatible con MySQL 8.0.16+ y MariaDB 10.6+ (aplican las restricciones CHECK).
 --
--- Instalación recomendada:  php bin/instalar-bd.php
+-- Instalación recomendada:  php bin/instalar-bd.php   (ejecuta este archivo y después datos.sql)
 -- Instalación manual:
 --   mysql -u root -e "CREATE DATABASE auditores_talleres CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
---   mysql -u root auditores_talleres < database/schema.sql
---   mysql -u root auditores_talleres < database/seeds.sql
+--   mysql -u root --default-character-set=utf8mb4 auditores_talleres < database/schema.sql
+--   mysql -u root --default-character-set=utf8mb4 auditores_talleres < database/datos.sql
 --
 -- La creación de la base se separa del esquema para poder instalarlo también en la base de pruebas.
 -- Todas las llaves foráneas usan RESTRICT (valor por defecto) para impedir borrar registros ligados.
@@ -167,5 +169,3 @@ CREATE TABLE accesos (
   KEY idx_accesos_ip      (ip, creado_en),   -- conteo de fallos por IP (bloqueo temporal)
   CONSTRAINT fk_accesos_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-INSERT INTO roles (nombre) VALUES ('administrador');

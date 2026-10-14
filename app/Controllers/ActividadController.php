@@ -6,7 +6,6 @@ namespace App\Controllers;
 
 use App\Core\Request;
 use App\Core\Response;
-use App\Core\HttpException;
 use App\Models\Actividad;
 use App\Models\Asignacion;
 use App\Models\Bitacora;
@@ -16,53 +15,48 @@ use App\Models\GrupoTaller;
 use DomainException;
 
 /**
- * Talleres: detalle, cambio de estado, alta, edición y desactivación (RF-06, RF-07, RF-09).
- *
- * El detalle y el cambio de estado están abiertos al auditor, pero solo para talleres que tiene
- * asignados; para cualquier otro responden 404, como si no existieran.
+ * Talleres: detalle con sus alumnos auditores, cambio de estado, alta, edición y desactivación
+ * (RF-06, RF-07, RF-09).
  *
  * @phpstan-import-type TallerFila from Actividad
  * @phpstan-import-type DatosTaller from Actividad
  */
 final class ActividadController extends Controller
 {
+    /**
+     * Detalle del taller: quiénes lo auditan, quién los asignó y, mientras está programado,
+     * los alumnos libres a esa hora para agregar uno.
+     */
     public function ver(Request $request): Response
     {
-        $actividad = $this->buscarAccesible($request->intParam('id'));
-        $esAdministrador = $this->app->auth()->esAdministrador();
+        $actividad = $this->buscarActiva($request->intParam('id'));
+        $asignaciones = new Asignacion($this->db());
+        $programado = $actividad['estado'] === Actividad::PROGRAMADO;
 
         return $this->view('actividades/ver', [
             'titulo' => $actividad['nombre'],
             'actividad' => $actividad,
-            'auditores' => (new Asignacion($this->db()))->auditoresDe($actividad['id']),
+            'auditores' => $asignaciones->auditoresDe($actividad['id']),
+            'disponibles' => $programado ? $asignaciones->alumnosDisponiblesPara($actividad['id']) : [],
             'historial' => (new Bitacora($this->db()))->historial($actividad['id']),
-            'esAdministrador' => $esAdministrador,
-            'puedeMarcarNoRealizado' => $esAdministrador || $actividad['estado'] === Actividad::PROGRAMADO,
         ]);
     }
 
     /**
-     * CU-02. El administrador puede pasar a cualquier estado; el auditor asignado solo puede
-     * marcar como no realizado un taller que sigue programado (regla 8).
+     * CU-02: el administrador pasa el taller a cualquier otro estado; no realizado exige motivo.
      */
     public function cambiarEstado(Request $request): Response
     {
-        $actividad = $this->buscarAccesible($request->intParam('id'));
+        $actividad = $this->buscarActiva($request->intParam('id'));
         $nuevo = $request->inputString('estado');
         $motivo = $request->inputString('motivo');
-        $esAdministrador = $this->app->auth()->esAdministrador();
-
-        if (!$esAdministrador && $nuevo !== Actividad::NO_REALIZADO) {
-            throw new HttpException(403, 'Solo el administrador puede marcar un taller como realizado o programado.');
-        }
 
         try {
             (new Actividad($this->db()))->cambiarEstado(
                 $actividad['id'],
                 $nuevo,
                 $motivo === '' ? null : $motivo,
-                (int) $this->app->auth()->id(),
-                $esAdministrador ? null : Actividad::PROGRAMADO
+                (int) $this->app->auth()->id()
             );
         } catch (DomainException $e) {
             $this->session()->flashInput($request->allInput());
@@ -174,23 +168,6 @@ final class ActividadController extends Controller
     {
         $actividad = (new Actividad($this->db()))->buscarPorId($id);
         if ($actividad === null || (int) $actividad['activo'] !== 1) {
-            $this->notFound();
-        }
-
-        return $actividad;
-    }
-
-    /**
-     * El administrador accede a cualquier taller activo; el auditor solo a los que tiene asignados.
-     * El id del auditor sale de la sesión, nunca de la petición.
-     *
-     * @return TallerFila
-     */
-    private function buscarAccesible(int $id): array
-    {
-        $actividad = $this->buscarActiva($id);
-        $auth = $this->app->auth();
-        if (!$auth->esAdministrador() && !(new Asignacion($this->db()))->estaAsignado($id, (int) $auth->id())) {
             $this->notFound();
         }
 

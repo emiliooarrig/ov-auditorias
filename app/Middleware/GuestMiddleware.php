@@ -10,7 +10,7 @@ use App\Core\Request;
 use App\Core\Response;
 
 /**
- * Pantallas de ingreso y registro: quien ya tiene sesión va directo a su inicio.
+ * Pantalla de ingreso: quien ya tiene sesión va directo al panel central.
  */
 final class GuestMiddleware implements Middleware
 {
@@ -20,9 +20,8 @@ final class GuestMiddleware implements Middleware
 
     public function process(Request $request, callable $next): Response
     {
-        $auth = $this->app->auth();
-        if ($auth->check()) {
-            return Response::redirect($this->app->url($auth->inicio()));
+        if ($this->app->auth()->check()) {
+            return Response::redirect($this->app->url('/'));
         }
 
         return $next($request);

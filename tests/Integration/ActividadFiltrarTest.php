@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace Tests\Integration;
 
 use App\Models\Actividad;
-use App\Models\Usuario;
 use Tests\Support\IntegrationTestCase;
 
 /**
- * Actividad::filtrar con cada combinación de filtros, restricción del auditor y paginación (SDD 8.2).
+ * Actividad::filtrar con cada combinación de filtros, los alumnos auditores de cada taller y paginación (SDD 8.2).
  */
 final class ActividadFiltrarTest extends IntegrationTestCase
 {
@@ -20,16 +19,16 @@ final class ActividadFiltrarTest extends IntegrationTestCase
     {
         parent::setUp();
         $this->actividades = new Actividad($this->app->db());
-        $this->admin = $this->crearUsuario(Usuario::ADMINISTRADOR, 'admin@anahuac.mx', 'Clave-segura-2026');
+        $this->admin = $this->crearAdministrador();
     }
 
     /**
      * @param array{nombre?: string, carrera_id?: int|null, edificio_id?: int|null} $filtros
      * @return list<string>
      */
-    private function nombres(array $filtros, ?int $usuario = null): array
+    private function nombres(array $filtros): array
     {
-        return array_column($this->actividades->filtrar($filtros, $usuario)['filas'], 'nombre');
+        return array_column($this->actividades->filtrar($filtros)['filas'], 'nombre');
     }
 
     private function crearCatalogo(): void
@@ -75,29 +74,22 @@ final class ActividadFiltrarTest extends IntegrationTestCase
         $this->assertSame([], $this->nombres(['nombre' => "' OR 1=1 --"]));
     }
 
-    public function testElAuditorSoloVeSusTalleresPeroConTodosSusAuditores(): void
+    public function testCadaTallerListaASusAlumnosAuditores(): void
     {
-        $ana = $this->crearUsuario(Usuario::AUDITOR, 'ana@anahuac.mx');
-        $luis = $this->crearUsuario(Usuario::AUDITOR, 'luis@anahuac.mx');
-        $this->app->db()->execute("UPDATE usuarios SET nombre = 'Ana', apellidos = 'Álvarez' WHERE id = ?", [$ana]);
-        $this->app->db()->execute("UPDATE usuarios SET nombre = 'Luis', apellidos = 'Beltrán' WHERE id = ?", [$luis]);
-
-        $compartido = $this->crearActividad($this->admin, ['nombre' => 'Compartido']);
-        $soloLuis = $this->crearActividad($this->admin, ['nombre' => 'Solo de Luis']);
-        $this->crearActividad($this->admin, ['nombre' => 'Sin asignar']);
-        $this->asignar($compartido, $ana, $this->admin);
+        $ana = $this->crearAlumno('Ana', 'Álvarez');
+        $luis = $this->crearAlumno('Luis', 'Beltrán');
+        $compartido = $this->crearActividad($this->admin, ['nombre' => 'Compartido', 'fecha' => '2026-10-01']);
+        $soloLuis = $this->crearActividad($this->admin, ['nombre' => 'Solo de Luis', 'fecha' => '2026-10-02']);
+        $this->crearActividad($this->admin, ['nombre' => 'Sin asignar', 'fecha' => '2026-10-03']);
         $this->asignar($compartido, $luis, $this->admin);
+        $this->asignar($compartido, $ana, $this->admin);
         $this->asignar($soloLuis, $luis, $this->admin);
 
-        $deAna = $this->actividades->filtrar([], $ana)['filas'];
-        $this->assertSame(['Compartido'], array_column($deAna, 'nombre'));
-        $this->assertSame('Ana Álvarez, Luis Beltrán', $deAna[0]['auditores']);
+        $filas = $this->actividades->filtrar([])['filas'];
 
-        $this->assertSame(['Compartido', 'Solo de Luis'], $this->nombres([], $luis));
-        $this->assertSame(['Solo de Luis'], $this->nombres(['nombre' => 'Luis'], $luis));
-
-        $todos = $this->actividades->filtrar([], null)['filas'];
-        $this->assertNull($todos[2]['auditores']);
+        $this->assertSame(['Compartido', 'Solo de Luis', 'Sin asignar'], array_column($filas, 'nombre'));
+        $this->assertSame(['Ana Álvarez, Luis Beltrán', 'Luis Beltrán', null], array_column($filas, 'auditores'));
+        $this->assertSame(['Solo de Luis'], $this->nombres(['nombre' => 'Luis']));
     }
 
     public function testPaginaDeVeinteEnVeinte(): void
@@ -106,9 +98,9 @@ final class ActividadFiltrarTest extends IntegrationTestCase
             $this->crearActividad($this->admin, ['nombre' => sprintf('Taller %02d', $i), 'fecha' => sprintf('2026-11-%02d', $i)]);
         }
 
-        $primera = $this->actividades->filtrar([], null, 1, 20);
-        $segunda = $this->actividades->filtrar([], null, 2, 20);
-        $fueraDeRango = $this->actividades->filtrar([], null, 99, 20);
+        $primera = $this->actividades->filtrar([], 1, 20);
+        $segunda = $this->actividades->filtrar([], 2, 20);
+        $fueraDeRango = $this->actividades->filtrar([], 99, 20);
 
         $this->assertSame(25, $primera['total']);
         $this->assertSame(2, $primera['paginas']);

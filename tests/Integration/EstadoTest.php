@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Tests\Integration;
 
 use App\Models\Actividad;
-use App\Models\Usuario;
 use PDOException;
 use Tests\Support\IntegrationTestCase;
 
 /**
- * Cambio de estado de un taller y bitácora (RF-07, RF-09; CU-02; reglas 3, 5 y 8).
+ * Cambio de estado de un taller y bitácora (RF-07, RF-09; CU-02; reglas 3 y 5). Solo el administrador.
  */
 final class EstadoTest extends IntegrationTestCase
 {
@@ -94,62 +93,9 @@ final class EstadoTest extends IntegrationTestCase
         $this->assertSame([], $this->bitacora($id));
     }
 
-    public function testElAuditorAsignadoMarcaSuTallerComoNoRealizado(): void
-    {
-        $admin = $this->crearUsuario(Usuario::ADMINISTRADOR, 'admin@anahuac.mx', 'Clave-segura-2026');
-        $id = $this->crearActividad($admin);
-        $auditor = $this->entrarComoAuditor();
-        $this->asignar($id, $auditor, $admin);
-
-        $detalle = $this->get("/actividades/{$id}")->body();
-        $this->assertStringContainsString('Marcar como no realizado', $detalle);
-        $this->assertStringNotContainsString('Editar</a>', $detalle);
-        $this->assertStringNotContainsString('Desactivar taller', $detalle);
-        $this->assertStringNotContainsString('/quitar', $detalle);
-
-        $this->post("/actividades/{$id}/estado", ['estado' => 'no_realizado', 'motivo' => 'No llegó el ponente']);
-
-        $this->assertSame('no_realizado', $this->taller($id)['estado']);
-        $this->assertSame($auditor, $this->bitacora($id)[0]['usuario_id']);
-        $this->assertStringContainsString('No llegó el ponente', $this->get('/mis-talleres')->body());
-    }
-
-    public function testElAuditorNoPuedeMarcarRealizadoNiRevertirNiRepetir(): void
-    {
-        $admin = $this->crearUsuario(Usuario::ADMINISTRADOR, 'admin@anahuac.mx', 'Clave-segura-2026');
-        $programado = $this->crearActividad($admin);
-        $noRealizado = $this->crearActividad($admin, ['estado' => 'no_realizado', 'motivo_no_realizado' => 'Lluvia']);
-        $auditor = $this->entrarComoAuditor();
-        $this->asignar($programado, $auditor, $admin);
-        $this->asignar($noRealizado, $auditor, $admin);
-
-        $this->assertSame(403, $this->post("/actividades/{$programado}/estado", ['estado' => 'realizado'])->status());
-        $this->assertSame(403, $this->post("/actividades/{$noRealizado}/estado", ['estado' => 'programado'])->status());
-        $this->post("/actividades/{$noRealizado}/estado", ['estado' => 'no_realizado', 'motivo' => 'Otro motivo']);
-
-        $this->assertSame('programado', $this->taller($programado)['estado']);
-        $this->assertSame('Lluvia', $this->taller($noRealizado)['motivo_no_realizado']);
-        $this->assertStringNotContainsString('Marcar como no realizado', $this->get("/actividades/{$noRealizado}")->body());
-    }
-
-    public function testUnAuditorNoAsignadoRecibe404AunqueConozcaElId(): void
-    {
-        $admin = $this->crearUsuario(Usuario::ADMINISTRADOR, 'admin@anahuac.mx', 'Clave-segura-2026');
-        $otro = $this->crearUsuario(Usuario::AUDITOR, 'otro@anahuac.mx');
-        $id = $this->crearActividad($admin, ['nombre' => 'Taller ajeno']);
-        $this->asignar($id, $otro, $admin);
-        $this->entrarComoAuditor();
-
-        $this->assertSame(404, $this->get("/actividades/{$id}")->status());
-        $this->assertSame(404, $this->post("/actividades/{$id}/estado", ['estado' => 'no_realizado', 'motivo' => 'x'])->status());
-        $this->assertSame('programado', $this->taller($id)['estado']);
-        $this->assertStringNotContainsString('Taller ajeno', $this->get('/mis-talleres')->body());
-        $this->assertRedirige('/mis-talleres', $this->get('/'));
-    }
-
     public function testElCambioDeEstadoYLaBitacoraSonUnaSolaTransaccion(): void
     {
-        $admin = $this->crearUsuario(Usuario::ADMINISTRADOR, 'admin@anahuac.mx', 'Clave-segura-2026');
+        $admin = $this->crearAdministrador();
         $id = $this->crearActividad($admin);
 
         try {

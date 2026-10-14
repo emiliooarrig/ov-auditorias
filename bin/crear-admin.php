@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 /*
- * Crea un administrador, o convierte en administrador a un usuario existente,
- * pidiendo su contraseña. Solo se guarda el hash; la contraseña nunca queda en archivos.
+ * Crea un administrador (los únicos usuarios con cuenta), o convierte en administrador una cuenta
+ * anterior de auditor, pidiendo su contraseña. Solo se guarda el hash; la contraseña nunca queda en archivos.
  *
  *   php bin/crear-admin.php
  *   php bin/crear-admin.php --correo=nombre.apellido@anahuac.mx --nombre="Nombre" --apellidos="Apellidos"
@@ -52,7 +52,7 @@ try {
         ));
         $accion = $existente['rol'] === Usuario::ADMINISTRADOR
             ? '¿Cambiar su contraseña?'
-            : '¿Convertirlo en administrador y asignarle contraseña?';
+            : '¿Convertir esta cuenta anterior en administrador y asignarle contraseña?';
         if (!$consola->confirm($accion)) {
             $consola->line('Cancelado. No se modificó nada.');
             exit(1);
@@ -82,7 +82,7 @@ try {
         $usuarios->convertirEnAdministrador($existente['id'], $hash);
         $consola->line("Listo: {$correo} es administrador con la nueva contraseña.");
     } else {
-        $usuarios->crear(Usuario::ADMINISTRADOR, $nombre, $apellidos, $correo, $hash);
+        $usuarios->crear($nombre, $apellidos, $correo, $hash);
         $consola->line("Listo: administrador {$correo} creado.");
     }
 } catch (Throwable $e) {

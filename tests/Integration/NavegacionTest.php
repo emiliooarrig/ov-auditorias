@@ -13,12 +13,34 @@ final class NavegacionTest extends IntegrationTestCase
 {
     public function testConSesionHayBotonDeMenuQueControlaElPanel(): void
     {
-        $this->entrarComoAuditor();
-        $html = $this->get('/mis-talleres')->body();
+        $this->entrarComoAdministrador();
+        $html = $this->get('/')->body();
 
         $this->assertStringContainsString('aria-controls="menu-principal" aria-expanded="false"', $html);
         $this->assertStringContainsString('id="menu-principal"', $html);
         $this->assertStringContainsString('class="session__logout"', $html);
+    }
+
+    public function testElMenuTieneLasCuatroSeccionesYMarcaLaActualEnSusSubpaginas(): void
+    {
+        $admin = $this->entrarComoAdministrador();
+        $ana = $this->crearAlumno();
+        $taller = $this->crearActividad($admin);
+
+        $html = $this->get('/')->body();
+        foreach (['Panel central', 'Alumnos', 'Asignaciones', 'Administradores'] as $seccion) {
+            $this->assertStringContainsString($seccion, $html);
+        }
+        $this->assertStringNotContainsString('Mis talleres', $html);
+
+        $actual = static fn (string $html): string => (string) preg_replace(
+            '#.*<a class="nav__link" href="([^"]+)" aria-current="page">.*#s',
+            '$1',
+            $html
+        );
+        $this->assertSame('/alumnos', $actual($this->get("/alumnos/{$ana}")->body()));
+        $this->assertSame('/', $actual($this->get("/actividades/{$taller}")->body()));
+        $this->assertSame('/administradores', $actual($this->get('/administradores')->body()));
     }
 
     public function testLaMarcaEsElLogoOvConNombreAccesible(): void

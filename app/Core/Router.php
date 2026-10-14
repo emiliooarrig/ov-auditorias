@@ -14,8 +14,8 @@ use function FastRoute\simpleDispatcher;
  * Enrutador sobre nikic/fast-route con middleware globales, por grupo y por ruta.
  *
  * Un middleware se declara como nombre de clase (App\Middleware\AuthMiddleware::class)
- * o como [clase, ...argumentos] (p. ej. [RoleMiddleware::class, 'administrador']).
- * Se instancia con la App como primer argumento del constructor.
+ * o como [clase, ...argumentos], que se pasan a su constructor después de la App.
+ * La App siempre es el primer argumento del constructor.
  *
  * @phpstan-type MiddlewareSpec class-string<Middleware>|array{0: class-string<Middleware>, 1?: mixed, 2?: mixed}
  * @phpstan-type Handler array{0: class-string, 1: string}

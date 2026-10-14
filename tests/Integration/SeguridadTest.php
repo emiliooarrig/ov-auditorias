@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Integration;
 
 use App\Core\Request;
-use App\Models\Usuario;
 use Tests\Support\IntegrationTestCase;
 use Tests\Support\TestApp;
 use Tests\Support\TestDatabase;
@@ -17,13 +16,12 @@ final class SeguridadTest extends IntegrationTestCase
 {
     public function testLaSesionSeCierraPorInactividad(): void
     {
-        $this->crearUsuario(Usuario::AUDITOR, 'ana@anahuac.mx');
-        $this->post('/login', ['correo' => 'ana@anahuac.mx']);
-        $this->assertSame(200, $this->get('/mis-talleres')->status());
+        $this->entrarComoAdministrador();
+        $this->assertSame(200, $this->get('/')->status());
 
         $_SESSION['_ultima_actividad'] = time() - 31 * 60;
 
-        $this->assertRedirige('/login', $this->get('/mis-talleres'));
+        $this->assertRedirige('/login', $this->get('/'));
         $this->assertNull($this->usuarioEnSesion());
         $this->assertStringContainsString('Tu sesión se cerró por inactividad', $this->get('/login')->body());
     }
@@ -47,6 +45,7 @@ final class SeguridadTest extends IntegrationTestCase
 
         $response = $app->handle(new Request('POST', '/login', [], [
             'correo' => 'ana@anahuac.mx',
+            'password' => 'Clave-segura-2026',
             '_csrf' => $app->csrf()->token(),
         ], ['REMOTE_ADDR' => '10.0.0.1']));
 
@@ -77,7 +76,7 @@ final class SeguridadTest extends IntegrationTestCase
 
     public function testLoginDeUnaIpConDemasiadosFallosSeBloqueaParaCualquierCorreo(): void
     {
-        $this->crearUsuario(Usuario::AUDITOR, 'ana@anahuac.mx');
+        $this->crearAdministrador('ana@anahuac.mx');
         for ($i = 0; $i < 20; $i++) {
             $this->app->db()->execute(
                 "INSERT INTO accesos (correo, evento, ip) VALUES (:c, 'login_fallido', '10.0.0.1')",
@@ -85,7 +84,7 @@ final class SeguridadTest extends IntegrationTestCase
             );
         }
 
-        $this->post('/login', ['correo' => 'ana@anahuac.mx']);
+        $this->post('/login', ['correo' => 'ana@anahuac.mx', 'password' => self::CLAVE]);
 
         $this->assertNull($this->usuarioEnSesion());
         $this->assertStringContainsString('Demasiados intentos fallidos', $this->get('/login')->body());

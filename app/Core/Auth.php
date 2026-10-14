@@ -8,8 +8,8 @@ use App\Models\Acceso;
 use App\Models\Usuario;
 
 /**
- * Usuario en sesión. Se recarga de la base en cada petición, así un cambio de rol
- * o una desactivación aplican de inmediato.
+ * Administrador en sesión. Solo los administradores ingresan; el usuario se recarga de la base en
+ * cada petición, así una desactivación aplica de inmediato.
  *
  * @phpstan-import-type UsuarioFila from Usuario
  */
@@ -35,10 +35,11 @@ final class Auth
             $id = $this->app->session()->get(self::USUARIO_ID);
             if (is_int($id)) {
                 $usuario = (new Usuario($this->app->db()))->buscarPorId($id);
-                if ($usuario !== null && (int) $usuario['activo'] === 1) {
+                if (self::puedeIngresar($usuario)) {
                     $this->usuario = $usuario;
                 } else {
-                    // Cuenta desactivada o eliminada: la sesión deja de ser válida.
+                    // Cuenta desactivada, eliminada o que ya no es de administrador (p. ej. un auditor
+                    // con sesión abierta antes del 2026-10-10): la sesión deja de ser válida.
                     $this->app->session()->clear();
                 }
             }
@@ -57,22 +58,14 @@ final class Auth
         return $this->user()['id'] ?? null;
     }
 
-    public function rol(): ?string
-    {
-        return $this->user()['rol'] ?? null;
-    }
-
-    public function esAdministrador(): bool
-    {
-        return $this->rol() === Usuario::ADMINISTRADOR;
-    }
-
     /**
-     * Pantalla de inicio según el rol: panel central o "Mis talleres".
+     * Solo una cuenta de administrador activa puede tener sesión.
+     *
+     * @param UsuarioFila|null $usuario
      */
-    public function inicio(): string
+    public static function puedeIngresar(?array $usuario): bool
     {
-        return $this->esAdministrador() ? '/' : '/mis-talleres';
+        return $usuario !== null && (int) $usuario['activo'] === 1 && $usuario['rol'] === Usuario::ADMINISTRADOR;
     }
 
     /**
@@ -111,7 +104,7 @@ final class Auth
 
     /**
      * Bloqueo temporal por fuerza bruta: demasiados fallos recientes para el correo o la IP.
-     * El límite por IP es más amplio porque en el campus muchos usuarios comparten IP.
+     * El límite por IP es más amplio porque en el campus muchos equipos comparten IP.
      */
     public function bloqueado(string $correo, Request $request): bool
     {

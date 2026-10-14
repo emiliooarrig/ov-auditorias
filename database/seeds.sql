@@ -1,4 +1,4 @@
--- Catálogos iniciales de carreras y edificios. Ajusta la lista a la oferta real del campus
+-- Catálogos iniciales de carreras, grupos, horarios y edificios. Ajusta la lista a la oferta real del campus
 -- antes de instalar en producción. Es idempotente: se puede ejecutar varias veces.
 --
 -- El administrador inicial NO se siembra aquí: se crea con  php bin/crear-admin.php
@@ -33,6 +33,12 @@ INSERT IGNORE INTO grupos_taller (numero, nombre, hora_inicio, hora_fin) VALUES
   (4, 'Taller 4', '13:00:00', '14:00:00'),
   (5, 'Taller 5', '15:00:00', '16:00:00'),
   (6, 'Taller 6', '16:00:00', '17:00:00');
+
+-- Horarios en los que los alumnos pueden auditar: un alumno solo audita talleres dentro del suyo.
+INSERT IGNORE INTO horarios_alumno (nombre, hora_inicio, hora_fin) VALUES
+  ('Matutino', '07:00:00', '14:00:00'),
+  ('Vespertino', '14:00:00', '19:00:00'),
+  ('Todo el día', '07:00:00', '19:00:00');
 
 -- Edificios donde se imparten talleres, con el área que ocupa cada uno.
 INSERT IGNORE INTO edificios (numero, nombre) VALUES

@@ -50,10 +50,17 @@ abstract class IntegrationTestCase extends TestCase
         return $this->app->handle(new Request('POST', $path, [], $data, $this->server()));
     }
 
-    protected function crearUsuario(string $rol, string $correo, ?string $password = null, bool $activo = true): int
-    {
-        $usuarios = new Usuario($this->app->db());
-        $id = $usuarios->crear($rol, 'Prueba', 'Usuario', $correo, $password === null ? null : Password::hash($password));
+    protected const CLAVE = 'Clave-segura-2026';
+
+    /**
+     * Crea un administrador (los únicos usuarios con cuenta). Devuelve su id.
+     */
+    protected function crearAdministrador(
+        string $correo = 'admin@anahuac.mx',
+        string $password = self::CLAVE,
+        bool $activo = true,
+    ): int {
+        $id = (new Usuario($this->app->db()))->crear('Prueba', 'Usuario', $correo, Password::hash($password));
         if (!$activo) {
             $this->app->db()->execute('UPDATE usuarios SET activo = 0 WHERE id = :id', ['id' => $id]);
         }
@@ -62,31 +69,60 @@ abstract class IntegrationTestCase extends TestCase
     }
 
     /**
-     * Crea un administrador e inicia su sesión. Devuelve su id.
+     * Cuenta de auditor como las de antes del 2026-10-10 (los auditores entraban sin contraseña).
+     */
+    protected function crearCuentaDeAuditor(string $correo, bool $activo = true): int
+    {
+        $db = $this->app->db();
+        $db->execute("INSERT IGNORE INTO roles (nombre) VALUES ('auditor')");
+        $db->execute(
+            "INSERT INTO usuarios (rol_id, nombre, apellidos, correo, activo)
+             VALUES ((SELECT id FROM roles WHERE nombre = 'auditor'), 'Antes', 'Auditor', :correo, :activo)",
+            ['correo' => $correo, 'activo' => $activo]
+        );
+
+        return $db->lastInsertId();
+    }
+
+    /**
+     * Crea un administrador (si no existe) e inicia su sesión. Devuelve su id.
      */
     protected function entrarComoAdministrador(string $correo = 'admin@anahuac.mx'): int
     {
-        $id = $this->crearUsuario(Usuario::ADMINISTRADOR, $correo, 'Clave-segura-2026');
+        $existente = (new Usuario($this->app->db()))->buscarPorCorreo($correo);
+        $id = $existente['id'] ?? $this->crearAdministrador($correo);
         $this->post('/logout');
-        $this->post('/login', ['correo' => $correo]);
-        $this->post('/login', ['password' => 'Clave-segura-2026']);
+        $this->post('/login', ['correo' => $correo, 'password' => self::CLAVE]);
         $this->assertSame($id, $this->usuarioEnSesion());
 
         return $id;
     }
 
     /**
-     * Crea (si no existe) un auditor e inicia su sesión. Devuelve su id.
+     * Da de alta un alumno directamente en la base. Devuelve su id. $horario es el nombre del horario
+     * (Matutino, Vespertino o Todo el día, de seeds.sql); null lo deja sin horario.
      */
-    protected function entrarComoAuditor(string $correo = 'auditor@anahuac.mx'): int
-    {
-        $existente = (new Usuario($this->app->db()))->buscarPorCorreo($correo);
-        $id = $existente['id'] ?? $this->crearUsuario(Usuario::AUDITOR, $correo);
-        $this->post('/logout');
-        $this->post('/login', ['correo' => $correo]);
-        $this->assertSame($id, $this->usuarioEnSesion());
+    protected function crearAlumno(
+        string $nombre = 'Ana',
+        string $apellidos = 'López Ruiz',
+        bool $activo = true,
+        ?string $horario = 'Todo el día',
+    ): int {
+        $this->app->db()->execute(
+            'INSERT INTO alumnos (nombre, apellidos, activo, horario_id)
+             VALUES (:nombre, :apellidos, :activo, (SELECT id FROM horarios_alumno WHERE nombre = :horario))',
+            ['nombre' => $nombre, 'apellidos' => $apellidos, 'activo' => $activo, 'horario' => $horario]
+        );
 
-        return $id;
+        return $this->app->db()->lastInsertId();
+    }
+
+    /**
+     * Id de un horario de alumno por su nombre (Matutino, Vespertino o Todo el día).
+     */
+    protected function horarioId(string $nombre): int
+    {
+        return $this->contar('SELECT id FROM horarios_alumno WHERE nombre = ?', [$nombre]);
     }
 
     /**
@@ -126,12 +162,22 @@ abstract class IntegrationTestCase extends TestCase
         return $this->app->db()->lastInsertId();
     }
 
-    protected function asignar(int $actividadId, int $usuarioId, int $asignadoPor): void
+    protected function asignar(int $actividadId, int $alumnoId, int $asignadoPor, string $origen = 'manual'): int
     {
         $this->app->db()->execute(
-            'INSERT INTO asignaciones (actividad_id, usuario_id, asignado_por) VALUES (:a, :u, :p)',
-            ['a' => $actividadId, 'u' => $usuarioId, 'p' => $asignadoPor]
+            'INSERT INTO asignaciones (actividad_id, alumno_id, origen, asignado_por) VALUES (:a, :al, :o, :p)',
+            ['a' => $actividadId, 'al' => $alumnoId, 'o' => $origen, 'p' => $asignadoPor]
         );
+
+        return $this->app->db()->lastInsertId();
+    }
+
+    /**
+     * @param array<int|string, mixed> $params
+     */
+    protected function contar(string $sql, array $params = []): int
+    {
+        return (int) $this->app->db()->fetchValue($sql, $params);
     }
 
     protected function usuarioEnSesion(): ?int

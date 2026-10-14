@@ -10,6 +10,7 @@
  * @var list<array{id: int, nombre: string}> $carreras
  * @var list<array{id: int, numero: int, nombre: string}> $edificios
  * @var list<array{id: int, numero: int, nombre: string, hora_inicio: string, hora_fin: string}> $grupos
+ * @var int $sinAuditor Talleres programados sin ningún alumno auditor.
  */
 
 $vista = app()->view();
@@ -19,8 +20,31 @@ $vista = app()->view();
         <h1>Panel central</h1>
         <p>Todos los talleres activos. Filtra por nombre, carrera, edificio o grupo y abre uno para ver su detalle.</p>
     </div>
-    <a class="btn btn--primary" href="<?= e(url('/actividades/nueva')) ?>"><?= icono('mas') ?> Nuevo taller</a>
+    <div class="page-header__actions">
+        <a class="btn btn--secondary" href="<?= e(url('/reportes/talleres.pdf')) ?>" download
+           title="Todos los talleres con su información y sus auditores, en PDF">
+            <?= icono('descargar') ?> Descargar reporte PDF
+        </a>
+        <a class="btn btn--primary" href="<?= e(url('/actividades/nueva')) ?>"><?= icono('mas') ?> Nuevo taller</a>
+    </div>
 </div>
+
+<?php if ($sinAuditor > 0) : ?>
+    <div class="alert alert--aviso alert--action">
+        <?= icono('alerta') ?>
+        <p>
+            <strong>
+                <?= $sinAuditor === 1
+                    ? '1 taller programado no tiene auditor.'
+                    : e($sinAuditor) . ' talleres programados no tienen auditor.' ?>
+            </strong>
+            Asígnales alumnos al azar o ábrelos para elegir a mano.
+        </p>
+        <a class="btn btn--secondary btn--small" href="<?= e(url('/asignaciones')) ?>">
+            <?= icono('aleatorio') ?> Ir a asignaciones
+        </a>
+    </div>
+<?php endif; ?>
 
 <?= $vista->partial(
     'actividades/_filtros',
@@ -51,7 +75,7 @@ $vista = app()->view();
             </a>
         <?php else : ?>
             <span class="icon-bubble"><?= icono('calendario') ?></span>
-            <p><strong>Todavía no hay talleres.</strong>Crea el primero para poder asignarle auditores.</p>
+            <p><strong>Todavía no hay talleres.</strong>Crea el primero para poder asignarle alumnos auditores.</p>
             <a class="btn btn--primary" href="<?= e(url('/actividades/nueva')) ?>"><?= icono('mas') ?> Crear taller</a>
         <?php endif; ?>
     </section>

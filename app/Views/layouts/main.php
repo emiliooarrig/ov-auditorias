@@ -12,16 +12,16 @@ $mensajes = app()->session()->pullFlash();
 $usuario = app()->auth()->user();
 $rutaActual = app()->request()?->path ?? '';
 
-$enlaces = [];
-if ($usuario !== null) {
-    $enlaces = app()->auth()->esAdministrador()
-        ? [
-            '/' => ['Panel central', 'panel'],
-            '/asignaciones' => ['Asignaciones', 'asignar'],
-            '/usuarios' => ['Usuarios', 'usuarios'],
-        ]
-        : ['/mis-talleres' => ['Mis talleres', 'mis-talleres']];
-}
+$enlaces = $usuario === null ? [] : [
+    '/' => ['Panel central', 'panel'],
+    '/alumnos' => ['Alumnos', 'usuarios'],
+    '/asignaciones' => ['Asignaciones', 'asignar'],
+    '/administradores' => ['Administradores', 'escudo'],
+];
+// Una sección queda marcada también en sus subpáginas (/alumnos/12); el panel, en las de talleres.
+$esActual = static fn (string $ruta): bool => $ruta === '/'
+    ? $rutaActual === '/' || str_starts_with($rutaActual, '/actividades/')
+    : $rutaActual === $ruta || str_starts_with($rutaActual, $ruta . '/');
 $iconoAviso = ['exito' => 'check-circulo', 'error' => 'x-circulo', 'aviso' => 'alerta'];
 ?>
 <!doctype html>
@@ -56,7 +56,7 @@ $iconoAviso = ['exito' => 'check-circulo', 'error' => 'x-circulo', 'aviso' => 'a
                         <ul class="nav__list">
                             <?php foreach ($enlaces as $ruta => [$etiqueta, $iconoEnlace]) : ?>
                                 <li>
-                                    <?php $actual = $rutaActual === $ruta ? ' aria-current="page"' : ''; ?>
+                                    <?php $actual = $esActual($ruta) ? ' aria-current="page"' : ''; ?>
                                     <a class="nav__link" href="<?= e(url($ruta)) ?>"<?= $actual ?>>
                                         <?= icono($iconoEnlace) ?> <?= e($etiqueta) ?>
                                     </a>
@@ -66,17 +66,12 @@ $iconoAviso = ['exito' => 'check-circulo', 'error' => 'x-circulo', 'aviso' => 'a
                     </nav>
                     <div class="session">
                         <span class="session__user" title="<?= e($usuario['correo']) ?>">
-                            <span class="session__name">
-                                <?= icono(app()->auth()->esAdministrador() ? 'escudo' : 'usuario') ?>
-                                <?= e($usuario['nombre']) ?>
-                            </span>
-                            <span class="session__role">
-                                <?= app()->auth()->esAdministrador() ? 'Administrador' : 'Auditor' ?>
-                            </span>
+                            <span class="session__name"><?= icono('escudo') ?> <?= e($usuario['nombre']) ?></span>
+                            <span class="session__role">Administrador</span>
                         </span>
                         <form class="session__logout" method="post" action="<?= e(url('/logout')) ?>"
                               data-confirmar="¿Cerrar sesión?"
-                              data-confirmar-texto="Tendrás que ingresar de nuevo con tu correo institucional."
+                              data-confirmar-texto="Tendrás que ingresar de nuevo con tu correo y tu contraseña."
                               data-confirmar-boton="Cerrar sesión">
                             <?= csrf_field() ?>
                             <button type="submit" class="btn btn--ghost btn--small">
@@ -103,7 +98,7 @@ $iconoAviso = ['exito' => 'check-circulo', 'error' => 'x-circulo', 'aviso' => 'a
     </main>
 
     <footer class="site-footer">
-        <div class="container">Registro de auditores de talleres de la Universidad Anáhuac</div>
+        <div class="container">Control interno de auditorías de talleres de la Universidad Anáhuac</div>
     </footer>
 </body>
 </html>

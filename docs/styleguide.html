@@ -48,6 +48,8 @@
             <symbol id="i-sin-resultados" viewBox="0 0 24 24"><path d="m13.5 8.5-5 5"/><path d="m8.5 8.5 5 5"/><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
             <symbol id="i-bandeja" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
             <symbol id="i-mas" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+            <symbol id="i-aleatorio" viewBox="0 0 24 24"><path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-7.6a4 4 0 0 1 3.3-1.7H22"/><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2"/><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"/></symbol>
+            <symbol id="i-lista" viewBox="0 0 24 24"><path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="M18 9v6"/><path d="M21 12h-6"/></symbol>
             <symbol id="i-cerrar" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
             <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
             <symbol id="i-check-circulo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
@@ -61,6 +63,7 @@
             <symbol id="i-flecha-derecha" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
             <symbol id="i-editar" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></symbol>
             <symbol id="i-guardar" viewBox="0 0 24 24"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></symbol>
+            <symbol id="i-descargar" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></symbol>
             <symbol id="i-historial" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></symbol>
             <symbol id="i-correo" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
             <symbol id="i-candado" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
@@ -89,8 +92,9 @@
             <nav aria-label="Principal">
                 <ul class="nav__list">
                     <li><a class="nav__link" href="#" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#i-panel"></use></svg> Panel central</a></li>
-                    <li><a class="nav__link sg-hover" href="#"><svg class="icon" aria-hidden="true"><use href="#i-asignar"></use></svg> Asignaciones (hover)</a></li>
-                    <li><a class="nav__link sg-focus" href="#"><svg class="icon" aria-hidden="true"><use href="#i-usuarios"></use></svg> Usuarios (foco)</a></li>
+                    <li><a class="nav__link sg-hover" href="#"><svg class="icon" aria-hidden="true"><use href="#i-usuarios"></use></svg> Alumnos (hover)</a></li>
+                    <li><a class="nav__link sg-focus" href="#"><svg class="icon" aria-hidden="true"><use href="#i-asignar"></use></svg> Asignaciones (foco)</a></li>
+                    <li><a class="nav__link" href="#"><svg class="icon" aria-hidden="true"><use href="#i-escudo"></use></svg> Administradores</a></li>
                 </ul>
             </nav>
             <div class="session">
@@ -117,6 +121,7 @@
             <a href="#tokens">Tokens</a> <a href="#botones">Botones</a> <a href="#formularios">Formularios</a>
             <a href="#filtros">Filtros</a> <a href="#tabla">Tabla</a> <a href="#insignias">Insignias</a>
             <a href="#avisos">Avisos</a> <a href="#paginacion">Paginación</a> <a href="#vacio">Vacíos</a>
+            <a href="#alumnos">Alumnos</a> <a href="#cobertura">Cobertura</a>
             <a href="#detalle">Detalle</a> <a href="#ingreso">Ingreso</a>
         </div>
     </nav>
@@ -155,6 +160,14 @@
             <div class="sg-state"><small>Deshabilitado</small><button class="btn btn--secondary" type="button" disabled><svg class="icon" aria-hidden="true"><use href="#i-cerrar"></use></svg> Limpiar</button></div>
         </div>
         <div class="sg-row">
+            <div class="sg-state"><small>Acciones del encabezado (.page-header__actions)</small>
+                <div class="page-header__actions">
+                    <a class="btn btn--secondary" href="#botones"><svg class="icon" aria-hidden="true"><use href="#i-descargar"></use></svg> Descargar reporte PDF</a>
+                    <a class="btn btn--primary" href="#botones"><svg class="icon" aria-hidden="true"><use href="#i-mas"></use></svg> Nuevo taller</a>
+                </div>
+            </div>
+        </div>
+        <div class="sg-row">
             <div class="sg-state"><small>Peligro</small><button class="btn btn--danger" type="button"><svg class="icon" aria-hidden="true"><use href="#i-prohibido"></use></svg> Desactivar</button></div>
             <div class="sg-state"><small>Hover</small><button class="btn btn--danger sg-hover" type="button"><svg class="icon" aria-hidden="true"><use href="#i-prohibido"></use></svg> Desactivar</button></div>
             <div class="sg-state"><small>Presionado</small><button class="btn btn--danger sg-pressed" type="button"><svg class="icon" aria-hidden="true"><use href="#i-prohibido"></use></svg> Desactivar</button></div>
@@ -163,9 +176,9 @@
         </div>
         <div class="sg-row">
             <div class="sg-state"><small>Acento (texto #2B211A)</small><button class="btn btn--accent" type="button"><svg class="icon" aria-hidden="true"><use href="#i-asignar"></use></svg> Asignar</button></div>
-            <div class="sg-state"><small>Enlace</small><button class="btn btn--link" type="button"><svg class="icon" aria-hidden="true"><use href="#i-usuario"></use></svg> Cambiar a auditor</button></div>
+            <div class="sg-state"><small>Enlace</small><button class="btn btn--link" type="button"><svg class="icon" aria-hidden="true"><use href="#i-editar"></use></svg> Corregir nombre</button></div>
             <div class="sg-state"><small>Enlace peligro</small><button class="btn btn--link btn--link-danger" type="button"><svg class="icon" aria-hidden="true"><use href="#i-usuario-menos"></use></svg> Quitar</button></div>
-            <div class="sg-state"><small>Chico</small><button class="btn btn--secondary btn--small" type="button"><svg class="icon" aria-hidden="true"><use href="#i-usuario-mas"></use></svg> Asignar auditores</button></div>
+            <div class="sg-state"><small>Chico</small><button class="btn btn--secondary btn--small" type="button"><svg class="icon" aria-hidden="true"><use href="#i-aleatorio"></use></svg> Ir a asignaciones</button></div>
         </div>
     </section>
 
@@ -194,6 +207,11 @@
                 <select id="sg-5"><option>Todas</option><option>Derecho</option></select>
             </div>
             <div class="field">
+                <label for="sg-num"><svg class="icon" aria-hidden="true"><use href="#i-usuarios"></use></svg> Número</label>
+                <input type="number" id="sg-num" value="2" min="1" max="10" step="1" inputmode="numeric" aria-describedby="sg-num-a">
+                <span class="field__hint" id="sg-num-a"><svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg> De 1 a 10.</span>
+            </div>
+            <div class="field">
                 <label for="sg-6"><svg class="icon" aria-hidden="true"><use href="#i-edificio"></use></svg> Deshabilitado</label>
                 <input type="text" id="sg-6" value="No editable" disabled>
             </div>
@@ -211,6 +229,14 @@
             <div class="field">
                 <label for="sg-8"><svg class="icon" aria-hidden="true"><use href="#i-calendario"></use></svg> Fecha</label>
                 <input type="date" id="sg-8" value="2026-10-05">
+            </div>
+        </div>
+        <div class="field field--error">
+            <label for="sg-10">Lista con renglones por corregir</label>
+            <textarea id="sg-10" rows="3" aria-invalid="true" aria-describedby="sg-10-e">Luis Pérez Gil</textarea>
+            <div class="field__error-group" id="sg-10-e">
+                <span class="field__error"><svg class="icon" aria-hidden="true"><use href="#i-alerta"></use></svg> Corrige este renglón:</span>
+                <ul class="error-list"><li>«Luis Pérez Gil»: Separa el nombre de los apellidos con una coma o en dos columnas.</li></ul>
             </div>
         </div>
         <div class="field">
@@ -260,29 +286,25 @@
         <div class="card table-wrap">
             <table class="table table--stack">
                 <thead>
-                    <tr><th scope="col" class="col-check"><span class="sr-only">Asignar</span></th><th scope="col">Taller</th><th scope="col" class="col-date">Fecha</th><th scope="col">Edificio</th><th scope="col">Estado</th></tr>
+                    <tr><th scope="col">Taller</th><th scope="col" class="col-date">Fecha</th><th scope="col">Edificio</th><th scope="col">Estado</th><th scope="col">Auditores</th></tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="cell-check"><label class="check-target"><input type="checkbox" checked><span class="sr-only">Liderazgo</span></label></td>
                         <td class="cell-title"><span class="table__title"><a href="#tabla">Liderazgo y comunicación</a></span><span class="table__sub"><svg class="icon" aria-hidden="true"><use href="#i-carrera"></use></svg> Administración</span></td>
                         <td data-label="Fecha"><span class="when"><time class="when__day"><svg class="icon" aria-hidden="true"><use href="#i-calendario"></use></svg> lun 5 oct 2026</time><span class="when__time"><svg class="icon" aria-hidden="true"><use href="#i-reloj"></use></svg> Taller 1, 10:00–11:00</span></span></td>
                         <td data-label="Edificio"><span class="building"><svg class="icon" aria-hidden="true"><use href="#i-edificio"></use></svg> Edificio 3</span></td>
                         <td data-label="Estado"><span class="badge badge--programado"><svg class="icon" aria-hidden="true"><use href="#i-reloj"></use></svg> Programado</span></td>
+                        <td data-label="Auditores"><span class="with-icon"><svg class="icon" aria-hidden="true"><use href="#i-usuarios"></use></svg> Ana López Ruiz, Luis Pérez Gil</span></td>
                     </tr>
                     <tr>
-                        <td class="cell-check"><span class="already"><svg class="icon" aria-hidden="true"><use href="#i-check"></use></svg> Ya asignado</span></td>
                         <td class="cell-title"><span class="table__title"><a href="#tabla">Robótica aplicada</a></span><span class="table__sub"><svg class="icon" aria-hidden="true"><use href="#i-carrera"></use></svg> Ingeniería</span></td>
                         <td data-label="Fecha"><span class="when"><time class="when__day"><svg class="icon" aria-hidden="true"><use href="#i-calendario"></use></svg> mar 6 oct 2026</time><span class="when__time"><svg class="icon" aria-hidden="true"><use href="#i-reloj"></use></svg> Taller 6, 16:00–17:00</span></span></td>
                         <td data-label="Edificio"><span class="building"><svg class="icon" aria-hidden="true"><use href="#i-edificio"></use></svg> Edificio 11</span></td>
                         <td data-label="Estado"><span class="badge badge--no-realizado"><svg class="icon" aria-hidden="true"><use href="#i-x-circulo"></use></svg> No realizado</span><div class="reason">Se canceló por lluvia.</div></td>
+                        <td data-label="Auditores"><span class="muted with-icon"><svg class="icon" aria-hidden="true"><use href="#i-usuario-menos"></use></svg> Sin asignar</span></td>
                     </tr>
                 </tbody>
             </table>
-        </div>
-        <div class="action-bar">
-            <span class="action-bar__count">1 taller marcado</span>
-            <button type="button" class="btn btn--primary"><svg class="icon" aria-hidden="true"><use href="#i-asignar"></use></svg> Asignar talleres seleccionados</button>
         </div>
     </section>
 
@@ -293,17 +315,26 @@
             <span class="badge badge--realizado"><svg class="icon" aria-hidden="true"><use href="#i-check-circulo"></use></svg> Realizado</span>
             <span class="badge badge--no-realizado"><svg class="icon" aria-hidden="true"><use href="#i-x-circulo"></use></svg> No realizado</span>
             <span class="badge badge--admin"><svg class="icon" aria-hidden="true"><use href="#i-escudo"></use></svg> Administrador</span>
-            <span class="badge badge--role"><svg class="icon" aria-hidden="true"><use href="#i-usuario"></use></svg> Auditor</span>
+            <span class="badge badge--role"><svg class="icon" aria-hidden="true"><use href="#i-calendario"></use></svg> 2 talleres</span>
+            <span class="badge badge--warning"><svg class="icon" aria-hidden="true"><use href="#i-alerta"></use></svg> Sin taller</span>
+            <span class="badge badge--role"><svg class="icon" aria-hidden="true"><use href="#i-reloj"></use></svg> Matutino (07:00–14:00)</span>
+            <span class="badge badge--warning"><svg class="icon" aria-hidden="true"><use href="#i-alerta"></use></svg> Sin horario</span>
+            <span class="badge badge--warning"><svg class="icon" aria-hidden="true"><use href="#i-alerta"></use></svg> Fuera de su horario</span>
             <span class="badge badge--active"><svg class="icon" aria-hidden="true"><use href="#i-check-circulo"></use></svg> Activo</span>
-            <span class="badge badge--inactive"><svg class="icon" aria-hidden="true"><use href="#i-prohibido"></use></svg> Desactivado</span>
+            <span class="badge badge--inactive"><svg class="icon" aria-hidden="true"><use href="#i-prohibido"></use></svg> Dado de baja</span>
         </div>
     </section>
 
     <section id="avisos" aria-labelledby="t-avisos">
         <h2 id="t-avisos">Mensajes flash y errores</h2>
-        <div class="alert alert--exito" role="status"><svg class="icon" aria-hidden="true"><use href="#i-check-circulo"></use></svg><span>Se asignaron 2 talleres: Liderazgo, Robótica.</span></div>
-        <div class="alert alert--error" role="status"><svg class="icon" aria-hidden="true"><use href="#i-x-circulo"></use></svg><span>No puedes cambiar tu propio rol.</span></div>
+        <div class="alert alert--exito" role="status"><svg class="icon" aria-hidden="true"><use href="#i-check-circulo"></use></svg><span>Se crearon 10 asignaciones al azar. 8 talleres recibieron su primer auditor.</span></div>
+        <div class="alert alert--error" role="status"><svg class="icon" aria-hidden="true"><use href="#i-x-circulo"></use></svg><span>Ana López ya tiene otro taller a esa hora: Robótica.</span></div>
         <div class="alert alert--aviso" role="status"><svg class="icon" aria-hidden="true"><use href="#i-alerta"></use></svg><span>Tu sesión está por vencer.</span></div>
+        <div class="alert alert--aviso alert--action">
+            <svg class="icon" aria-hidden="true"><use href="#i-alerta"></use></svg>
+            <p><strong>3 talleres programados no tienen auditor.</strong> Asígnales alumnos al azar o ábrelos para elegir a mano.</p>
+            <a class="btn btn--secondary btn--small" href="#avisos"><svg class="icon" aria-hidden="true"><use href="#i-aleatorio"></use></svg> Ir a asignaciones</a>
+        </div>
     </section>
 
     <section class="card" id="paginacion" aria-labelledby="t-pag">
@@ -330,6 +361,106 @@
         </div>
     </section>
 
+    <section id="alumnos" aria-labelledby="t-alumnos">
+        <h2 id="t-alumnos">Alumnos: lista y panel</h2>
+        <p class="muted">Lista de enlaces a la izquierda y panel a la derecha. Hasta 1023 px el panel del alumno elegido va arriba.</p>
+        <div class="layout-roster layout-roster--selected">
+            <div class="layout-roster__list">
+                <p class="summary"><strong>3 alumnos</strong></p>
+                <ul class="roster">
+                    <li><a class="roster__item" href="#alumnos"><span class="roster__name">Cruz Romero, Santiago</span><span class="roster__meta"><span class="badge badge--warning"><svg class="icon" aria-hidden="true"><use href="#i-alerta"></use></svg> Sin taller</span></span></a></li>
+                    <li><a class="roster__item" href="#alumnos" aria-current="true"><span class="roster__name">López Ruiz, Ana</span><span class="roster__meta"><span class="with-icon nums"><svg class="icon" aria-hidden="true"><use href="#i-calendario"></use></svg> 2 talleres</span></span></a></li>
+                    <li><a class="roster__item sg-focus" href="#alumnos"><span class="roster__name">Ortiz Herrera, Emiliano (foco)</span><span class="roster__meta"><span class="badge badge--inactive"><svg class="icon" aria-hidden="true"><use href="#i-prohibido"></use></svg> Baja</span></span></a></li>
+                </ul>
+            </div>
+            <div class="layout-roster__panel">
+                <section class="card panel" aria-labelledby="t-sg-panel">
+                    <header class="panel__header">
+                        <h3 class="panel__title" id="t-sg-panel"><svg class="icon" aria-hidden="true"><use href="#i-usuario"></use></svg> Ana López Ruiz</h3>
+                        <div class="panel__badges">
+                            <span class="badge badge--active"><svg class="icon" aria-hidden="true"><use href="#i-check-circulo"></use></svg> Activo</span>
+                            <span class="badge badge--role nums"><svg class="icon" aria-hidden="true"><use href="#i-calendario"></use></svg> 2 talleres</span>
+                        </div>
+                        <p class="person__meta"><svg class="icon" aria-hidden="true"><use href="#i-historial"></use></svg> Lo registró Emilio Arriaga el sáb 10 oct 2026, 09:30.</p>
+                    </header>
+                    <section class="panel__section" aria-labelledby="t-sg-sus">
+                        <h4 class="panel__subtitle" id="t-sg-sus"><svg class="icon" aria-hidden="true"><use href="#i-mis-talleres"></use></svg> Talleres que audita</h4>
+                        <ul class="people">
+                            <li>
+                                <div class="person">
+                                    <a href="#alumnos"><strong>Robótica básica</strong></a>
+                                    <span class="person__meta nums"><svg class="icon" aria-hidden="true"><use href="#i-calendario"></use></svg> mar 20 oct 2026, Taller 1 (10:00–11:00)</span>
+                                    <span class="person__meta"><svg class="icon" aria-hidden="true"><use href="#i-aleatorio"></use></svg> Al azar, por Emilio Arriaga el sáb 10 oct 2026, 09:31</span>
+                                    <span><span class="badge badge--programado"><svg class="icon" aria-hidden="true"><use href="#i-reloj"></use></svg> Programado</span></span>
+                                </div>
+                                <button type="button" class="btn btn--link btn--link-danger"><svg class="icon" aria-hidden="true"><use href="#i-usuario-menos"></use></svg> Quitar</button>
+                            </li>
+                        </ul>
+                        <form class="inline-form" action="#alumnos">
+                            <div class="inline-form__row">
+                                <div class="field">
+                                    <label for="sg-asignar"><svg class="icon" aria-hidden="true"><use href="#i-asignar"></use></svg> Asignar un taller</label>
+                                    <select id="sg-asignar" aria-describedby="sg-asignar-h"><option>Elige un taller</option><optgroup label="mié 21 oct 2026 · Taller 4 (13:00–14:00)"><option>Primeros auxilios — Edificio 8 (Medicina) — sin auditor</option></optgroup></select>
+                                </div>
+                                <button type="button" class="btn btn--primary"><svg class="icon" aria-hidden="true"><use href="#i-asignar"></use></svg> Asignar</button>
+                            </div>
+                            <span class="field__hint" id="sg-asignar-h"><svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg> Solo aparecen talleres programados en horarios que tiene libres.</span>
+                        </form>
+                    </section>
+                    <div class="panel__actions row-actions">
+                        <details class="disclosure"><summary><svg class="icon" aria-hidden="true"><use href="#i-editar"></use></svg> Corregir nombre</summary><p class="muted">Formulario de nombre y apellidos.</p></details>
+                        <button type="button" class="btn btn--link btn--link-danger"><svg class="icon" aria-hidden="true"><use href="#i-prohibido"></use></svg> Dar de baja</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </section>
+
+    <section id="cobertura" aria-labelledby="t-cobertura">
+        <h2 id="t-cobertura">Cobertura y asignación al azar</h2>
+        <ul class="stats" aria-label="Cobertura de ejemplo">
+            <li class="stat"><span class="stat__label"><svg class="icon" aria-hidden="true"><use href="#i-usuarios"></use></svg> Alumnos activos</span><span class="stat__value nums">15</span></li>
+            <li class="stat stat--ok"><span class="stat__label"><svg class="icon" aria-hidden="true"><use href="#i-check-circulo"></use></svg> Alumnos sin taller</span><span class="stat__value nums">0</span></li>
+            <li class="stat"><span class="stat__label"><svg class="icon" aria-hidden="true"><use href="#i-calendario"></use></svg> Talleres programados</span><span class="stat__value nums">11</span></li>
+            <li class="stat stat--attention"><span class="stat__label"><svg class="icon" aria-hidden="true"><use href="#i-alerta"></use></svg> Talleres sin auditor</span><span class="stat__value nums">2</span></li>
+        </ul>
+        <section class="card" aria-labelledby="t-sg-reparto">
+            <h3 class="card__title" id="t-sg-reparto"><svg class="icon" aria-hidden="true"><use href="#i-panel"></use></svg> Reparto actual</h3>
+            <section class="panel__section" aria-labelledby="t-sg-reparto-t">
+                <h4 class="panel__subtitle" id="t-sg-reparto-t">Auditores por taller programado</h4>
+                <dl class="facts">
+                    <div><dt><svg class="icon" aria-hidden="true"><use href="#i-usuarios"></use></svg> Sin auditor</dt><dd class="nums">1 taller</dd></div>
+                    <div><dt><svg class="icon" aria-hidden="true"><use href="#i-usuarios"></use></svg> 1 auditor</dt><dd class="nums">36 talleres</dd></div>
+                    <div><dt><svg class="icon" aria-hidden="true"><use href="#i-usuarios"></use></svg> 2 auditores</dt><dd class="nums">163 talleres</dd></div>
+                </dl>
+            </section>
+            <p class="muted with-icon"><svg class="icon" aria-hidden="true"><use href="#i-info"></use></svg> 37 talleres tienen menos de 2 auditores. La asignación al azar los completa si hay alumnos libres en su horario.</p>
+        </section>
+        <div class="layout-detail">
+            <section class="card" aria-labelledby="t-sg-sin">
+                <h3 class="card__title" id="t-sg-sin"><svg class="icon" aria-hidden="true"><use href="#i-usuario-menos"></use></svg> Alumnos sin taller <span class="count-pill nums">3</span></h3>
+                <ul class="tag-list">
+                    <li><a class="tag" href="#cobertura"><svg class="icon" aria-hidden="true"><use href="#i-usuario"></use></svg> Cruz Romero, Santiago</a></li>
+                    <li><a class="tag sg-focus" href="#cobertura"><svg class="icon" aria-hidden="true"><use href="#i-usuario"></use></svg> Flores Aguilar, Mateo (foco)</a></li>
+                    <li><a class="tag" href="#cobertura"><svg class="icon" aria-hidden="true"><use href="#i-usuario"></use></svg> Reyes Salazar, Ximena</a></li>
+                </ul>
+            </section>
+            <section class="card card--warm" aria-labelledby="t-sg-azar">
+                <h3 class="card__title" id="t-sg-azar"><svg class="icon" aria-hidden="true"><use href="#i-aleatorio"></use></svg> Asignación al azar</h3>
+                <ol class="rule-list">
+                    <li>Cada taller recibe auditores hasta tener los que indiques.</li>
+                    <li>Cada lugar va al alumno con menos talleres.</li>
+                    <li>Nadie queda en dos talleres a la misma hora.</li>
+                </ol>
+                <div class="field">
+                    <label for="sg-azar-n"><svg class="icon" aria-hidden="true"><use href="#i-usuarios"></use></svg> Auditores por taller</label>
+                    <input type="number" id="sg-azar-n" value="2" min="1" max="10" step="1" inputmode="numeric">
+                </div>
+                <button type="button" class="btn btn--primary btn--block"><svg class="icon" aria-hidden="true"><use href="#i-aleatorio"></use></svg> Asignar al azar</button>
+            </section>
+        </div>
+    </section>
+
     <section class="card" id="detalle" aria-labelledby="t-detalle">
         <div class="hero">
             <div>
@@ -342,10 +473,10 @@
             </div>
             <a class="btn btn--secondary" href="#detalle"><svg class="icon" aria-hidden="true"><use href="#i-editar"></use></svg> Editar</a>
         </div>
-        <h3 class="mt-0"><svg class="icon" aria-hidden="true"><use href="#i-usuarios"></use></svg> Auditores asignados</h3>
+        <h3 class="mt-0"><svg class="icon" aria-hidden="true"><use href="#i-usuarios"></use></svg> Alumnos auditores <span class="count-pill nums">1</span></h3>
         <ul class="people">
             <li>
-                <div class="person"><strong>Ana López</strong><span class="person__meta"><svg class="icon" aria-hidden="true"><use href="#i-correo"></use></svg> ana.lopez@anahuac.mx</span></div>
+                <div class="person"><a href="#detalle"><strong>Ana López Ruiz</strong></a><span class="person__meta"><svg class="icon" aria-hidden="true"><use href="#i-asignar"></use></svg> A mano, por Emilio Arriaga el sáb 10 oct 2026, 09:30</span></div>
                 <button type="button" class="btn btn--link btn--link-danger"><svg class="icon" aria-hidden="true"><use href="#i-usuario-menos"></use></svg> Quitar</button>
             </li>
         </ul>
@@ -355,18 +486,22 @@
         <h2 id="t-ingreso">Pantalla de ingreso</h2>
         <div class="auth">
             <div class="auth__intro">
-                <span class="icon-bubble"><svg class="icon" aria-hidden="true"><use href="#i-mis-talleres"></use></svg></span>
-                <p class="auth__tagline">Tus talleres, dónde y cuándo.</p>
-                <p>Consulta los talleres que te asignaron y registra si alguno no se realizó.</p>
+                <span class="icon-bubble"><svg class="icon" aria-hidden="true"><use href="#i-escudo"></use></svg></span>
+                <p class="auth__tagline">Quién audita qué taller.</p>
+                <p>Control interno de las auditorías: alumnos, talleres y asignaciones. Solo para administradores.</p>
             </div>
             <div class="auth__form">
                 <h3><svg class="icon" aria-hidden="true"><use href="#i-entrar"></use></svg> Ingresar</h3>
-                <p class="muted">Escribe tu correo institucional.</p>
+                <p class="muted">Usa tu correo institucional y tu contraseña de administrador.</p>
                 <div class="field">
                     <label for="sg-login"><svg class="icon" aria-hidden="true"><use href="#i-correo"></use></svg> Correo institucional</label>
                     <input type="email" id="sg-login" placeholder="nombre.apellido@anahuac.mx">
                 </div>
-                <button type="button" class="btn btn--primary btn--block">Continuar <svg class="icon" aria-hidden="true"><use href="#i-flecha-derecha"></use></svg></button>
+                <div class="field">
+                    <label for="sg-login-pw"><svg class="icon" aria-hidden="true"><use href="#i-candado"></use></svg> Contraseña</label>
+                    <input type="password" id="sg-login-pw">
+                </div>
+                <button type="button" class="btn btn--primary btn--block"><svg class="icon" aria-hidden="true"><use href="#i-entrar"></use></svg> Ingresar</button>
             </div>
         </div>
     </section>

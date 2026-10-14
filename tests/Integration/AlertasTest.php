@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Integration;
 
-use App\Models\Usuario;
 use Tests\Support\IntegrationTestCase;
 
 /**
@@ -15,8 +14,8 @@ final class AlertasTest extends IntegrationTestCase
 {
     public function testIniciarYCerrarSesionDejanUnMensajeParaAlerta(): void
     {
-        $this->entrarComoAuditor('ana.lopez@anahuac.mx');
-        $inicio = $this->get('/mis-talleres')->body();
+        $this->entrarComoAdministrador();
+        $inicio = $this->get('/')->body();
         $this->assertStringContainsString('data-alerta', $inicio);
         $this->assertStringContainsString('Hola, Prueba. Iniciaste sesión.', $inicio);
 
@@ -26,46 +25,47 @@ final class AlertasTest extends IntegrationTestCase
         $this->assertStringContainsString('Cerraste sesión.', $login);
     }
 
-    public function testElAdministradorTambienRecibeLaBienvenida(): void
-    {
-        $this->entrarComoAdministrador();
-
-        $this->assertStringContainsString('Iniciaste sesión.', $this->get('/')->body());
-    }
-
     public function testCerrarSesionPideConfirmacion(): void
     {
-        $this->entrarComoAuditor();
+        $this->entrarComoAdministrador();
 
-        $this->assertStringContainsString('data-confirmar="¿Cerrar sesión?"', $this->get('/mis-talleres')->body());
+        $this->assertStringContainsString('data-confirmar="¿Cerrar sesión?"', $this->get('/')->body());
     }
 
-    public function testActivarDesactivarYCambiarAAuditorPidenConfirmacion(): void
+    public function testActivarYDesactivarAdministradoresPidenConfirmacion(): void
     {
         $this->entrarComoAdministrador();
-        $this->crearUsuario(Usuario::AUDITOR, 'ana.lopez@anahuac.mx');
-        $this->crearUsuario(Usuario::AUDITOR, 'luis.perez@anahuac.mx', null, false);
-        $this->crearUsuario(Usuario::ADMINISTRADOR, 'otra.admin@anahuac.mx', 'Clave-segura-2026');
+        $this->crearAdministrador('ana.lopez@anahuac.mx');
+        $this->crearAdministrador('luis.perez@anahuac.mx', self::CLAVE, false);
 
-        $html = $this->get('/usuarios')->body();
+        $html = $this->get('/administradores')->body();
 
         $this->assertStringContainsString('data-confirmar="¿Desactivar a Prueba Usuario?"', $html);
         $this->assertStringContainsString('data-confirmar="¿Activar a Prueba Usuario?"', $html);
-        $this->assertStringContainsString('data-confirmar="¿Cambiar a Prueba Usuario a auditor?"', $html);
-        // Hacer administrador no se confirma con alerta: ya pide la contraseña en el mismo formulario.
-        $this->assertSame(1, substr_count($html, 'a auditor?"'));
+        // La cuenta propia no se puede desactivar: no tiene ese botón.
+        $this->assertSame(1, substr_count($html, 'data-confirmar="¿Desactivar a'));
+        $this->assertSame(1, substr_count($html, 'data-confirmar="¿Activar a'));
     }
 
-    public function testElResultadoDeActivarODesactivarSeMuestraComoAlerta(): void
+    public function testElResultadoDeUnaAccionSeMuestraComoAlerta(): void
     {
         $this->entrarComoAdministrador();
-        $auditor = $this->crearUsuario(Usuario::AUDITOR, 'ana.lopez@anahuac.mx');
+        $otro = $this->crearAdministrador('ana.lopez@anahuac.mx');
 
-        $this->post("/usuarios/{$auditor}/estado", ['activo' => '0']);
-        $html = $this->get('/usuarios')->body();
+        $this->post("/administradores/{$otro}/estado", ['activo' => '0']);
+        $html = $this->get('/administradores')->body();
 
         $this->assertStringContainsString('data-alerta', $html);
         $this->assertStringContainsString('Cuenta desactivada.', $html);
+    }
+
+    public function testDarDeBajaYAsignarAlAzarPidenConfirmacion(): void
+    {
+        $this->entrarComoAdministrador();
+        $ana = $this->crearAlumno('Ana', 'López');
+
+        $this->assertStringContainsString('data-confirmar="¿Dar de baja a Ana López?"', $this->get("/alumnos/{$ana}")->body());
+        $this->assertStringContainsString('data-confirmar="¿Asignar al azar?"', $this->get('/asignaciones')->body());
     }
 
     public function testDesactivarUnTallerPideConfirmacionYConservaLaCasillaSinJavaScript(): void

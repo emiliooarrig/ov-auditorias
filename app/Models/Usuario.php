@@ -8,7 +8,8 @@ use App\Core\Database;
 use DomainException;
 
 /**
- * Usuarios del sistema (auditores y administradores).
+ * Cuentas del sistema. Solo los administradores ingresan; los alumnos auditores no tienen cuenta
+ * (ver Alumno). Las cuentas de auditor de antes del 2026-10-10 quedan desactivadas por la migración.
  *
  * @phpstan-type UsuarioFila array{
  *     id: int, rol_id: int, rol: string, matricula: ?string, nombre: string, apellidos: string,
@@ -19,7 +20,6 @@ use DomainException;
 final class Usuario
 {
     public const ADMINISTRADOR = 'administrador';
-    public const AUDITOR = 'auditor';
 
     private const SELECT = 'SELECT u.*, r.nombre AS rol FROM usuarios u JOIN roles r ON r.id = u.rol_id';
 
@@ -46,91 +46,45 @@ final class Usuario
     }
 
     /**
-     * Crea un usuario y devuelve su id. Los auditores se crean sin contraseña.
+     * Crea un administrador y devuelve su id.
      */
-    public function crear(string $rol, string $nombre, string $apellidos, string $correo, ?string $hash = null): int
+    public function crear(string $nombre, string $apellidos, string $correo, string $hash): int
     {
         $this->db->execute(
             'INSERT INTO usuarios (rol_id, nombre, apellidos, correo, password_hash)
              VALUES ((SELECT id FROM roles WHERE nombre = :rol), :nombre, :apellidos, :correo, :hash)',
-            ['rol' => $rol, 'nombre' => $nombre, 'apellidos' => $apellidos, 'correo' => $correo, 'hash' => $hash]
+            [
+                'rol' => self::ADMINISTRADOR,
+                'nombre' => $nombre,
+                'apellidos' => $apellidos,
+                'correo' => $correo,
+                'hash' => $hash,
+            ]
         );
 
         return $this->db->lastInsertId();
     }
 
     /**
-     * Auditores activos, a quienes se pueden asignar talleres.
+     * Administradores para su gestión, activos primero.
      *
-     * @return list<array{id: int, nombre: string, apellidos: string, correo: string}>
+     * @return list<array{id: int, nombre: string, apellidos: string, correo: string, activo: int,
+     *     ultimo_acceso: ?string, creado_en: string}>
      */
-    public function auditoresActivos(): array
+    public function administradores(): array
     {
-        /** @var list<array{id: int, nombre: string, apellidos: string, correo: string}> */
+        /** @var list<array{id: int, nombre: string, apellidos: string, correo: string, activo: int, ultimo_acceso: ?string, creado_en: string}> */
         return $this->db->fetchAll(
-            'SELECT u.id, u.nombre, u.apellidos, u.correo
+            'SELECT u.id, u.nombre, u.apellidos, u.correo, u.activo, u.ultimo_acceso, u.creado_en
              FROM usuarios u JOIN roles r ON r.id = u.rol_id
-             WHERE r.nombre = :rol AND u.activo = 1
-             ORDER BY u.apellidos, u.nombre',
-            ['rol' => self::AUDITOR]
+             WHERE r.nombre = :rol
+             ORDER BY u.activo DESC, u.apellidos, u.nombre, u.id',
+            ['rol' => self::ADMINISTRADOR]
         );
     }
 
     /**
-     * Todos los usuarios para la gestión (RF-10), con cuántos talleres activos tiene asignados cada uno.
-     * La búsqueda y los filtros de rol y estado se hacen en el navegador.
-     *
-     * @return list<array{id: int, nombre: string, apellidos: string, correo: string, rol: string, activo: int,
-     *     ultimo_acceso: ?string, creado_en: string, talleres: int}>
-     */
-    public function todos(): array
-    {
-        /** @var list<array{id: int, nombre: string, apellidos: string, correo: string, rol: string, activo: int, ultimo_acceso: ?string, creado_en: string, talleres: int}> $filas */
-        $filas = $this->db->fetchAll(
-            "SELECT u.id, u.nombre, u.apellidos, u.correo, r.nombre AS rol, u.activo, u.ultimo_acceso, u.creado_en,
-                    (SELECT COUNT(*) FROM asignaciones s JOIN actividades a ON a.id = s.actividad_id
-                     WHERE s.usuario_id = u.id AND a.activo = 1) AS talleres
-             FROM usuarios u JOIN roles r ON r.id = u.rol_id
-             ORDER BY u.apellidos, u.nombre, u.id"
-        );
-
-        return $filas;
-    }
-
-    /**
-     * Cambia el rol de un usuario (RF-10). Al promover a administrador exige el hash de su nueva
-     * contraseña; al pasar a auditor se borra la contraseña, que el auditor no usa.
-     */
-    public function cambiarRol(int $id, string $rol, ?string $hash, int $actorId): void
-    {
-        if (!in_array($rol, [self::ADMINISTRADOR, self::AUDITOR], true)) {
-            throw new DomainException('Rol no válido.');
-        }
-        if ($id === $actorId) {
-            throw new DomainException('No puedes cambiar tu propio rol.');
-        }
-        if ($rol === self::ADMINISTRADOR && ($hash === null || $hash === '')) {
-            throw new DomainException('Para hacerlo administrador asígnale una contraseña.');
-        }
-
-        $this->db->transaction(function (Database $db) use ($id, $rol, $hash): void {
-            $actual = $this->bloquear($db, $id);
-            if ($actual['rol'] === $rol) {
-                throw new DomainException('El usuario ya tiene ese rol.');
-            }
-            if ($actual['rol'] === self::ADMINISTRADOR && (int) $actual['activo'] === 1) {
-                $this->exigirOtroAdministradorActivo($db, $id);
-            }
-            $db->execute(
-                'UPDATE usuarios SET rol_id = (SELECT id FROM roles WHERE nombre = :rol), password_hash = :hash
-                 WHERE id = :id',
-                ['rol' => $rol, 'hash' => $rol === self::ADMINISTRADOR ? $hash : null, 'id' => $id]
-            );
-        });
-    }
-
-    /**
-     * Activa o desactiva una cuenta (regla 4: los usuarios no se borran). Una cuenta desactivada
+     * Activa o desactiva un administrador (regla 4: las cuentas no se borran). Una cuenta desactivada
      * pierde su sesión en la siguiente petición y no puede volver a ingresar.
      */
     public function cambiarActivo(int $id, bool $activo, int $actorId): void
@@ -144,7 +98,7 @@ final class Usuario
             if ((int) $actual['activo'] === (int) $activo) {
                 throw new DomainException($activo ? 'La cuenta ya está activa.' : 'La cuenta ya está desactivada.');
             }
-            if (!$activo && $actual['rol'] === self::ADMINISTRADOR) {
+            if (!$activo) {
                 $this->exigirOtroAdministradorActivo($db, $id);
             }
             $db->execute('UPDATE usuarios SET activo = :activo WHERE id = :id', ['activo' => $activo, 'id' => $id]);
@@ -152,20 +106,22 @@ final class Usuario
     }
 
     /**
-     * @return array{rol: string, activo: int}
+     * Bloquea la fila del administrador hasta el fin de la transacción.
+     *
+     * @return array{activo: int}
      */
     private function bloquear(Database $db, int $id): array
     {
         $fila = $db->fetchOne(
-            'SELECT r.nombre AS rol, u.activo FROM usuarios u JOIN roles r ON r.id = u.rol_id
-             WHERE u.id = :id FOR UPDATE',
-            ['id' => $id]
+            'SELECT u.activo FROM usuarios u JOIN roles r ON r.id = u.rol_id
+             WHERE u.id = :id AND r.nombre = :rol FOR UPDATE',
+            ['id' => $id, 'rol' => self::ADMINISTRADOR]
         );
         if ($fila === null) {
-            throw new DomainException('El usuario no existe.');
+            throw new DomainException('El administrador no existe.');
         }
 
-        /** @var array{rol: string, activo: int} $fila */
+        /** @var array{activo: int} $fila */
         return $fila;
     }
 
@@ -195,15 +151,20 @@ final class Usuario
     }
 
     /**
-     * Promueve a administrador asignándole contraseña (un administrador sin contraseña no podría entrar).
+     * Convierte una cuenta anterior (de auditor) en administrador activo con contraseña y nombre nuevos.
      */
-    public function convertirEnAdministrador(int $id, string $hash): void
-    {
+    public function convertirEnAdministrador(
+        int $id,
+        string $hash,
+        ?string $nombre = null,
+        ?string $apellidos = null,
+    ): void {
         $this->db->execute(
             'UPDATE usuarios
-             SET rol_id = (SELECT id FROM roles WHERE nombre = :rol), password_hash = :hash, activo = 1
+             SET rol_id = (SELECT id FROM roles WHERE nombre = :rol), password_hash = :hash, activo = 1,
+                 nombre = COALESCE(:nombre, nombre), apellidos = COALESCE(:apellidos, apellidos)
              WHERE id = :id',
-            ['rol' => self::ADMINISTRADOR, 'hash' => $hash, 'id' => $id]
+            ['rol' => self::ADMINISTRADOR, 'hash' => $hash, 'nombre' => $nombre, 'apellidos' => $apellidos, 'id' => $id]
         );
     }
 

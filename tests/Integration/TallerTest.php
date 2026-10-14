@@ -7,7 +7,7 @@ namespace Tests\Integration;
 use Tests\Support\IntegrationTestCase;
 
 /**
- * Alta, edición y desactivación de talleres, panel central y "Mis talleres" (RF-03, RF-06, RF-08, RF-11).
+ * Alta, edición y desactivación de talleres y panel central (RF-03, RF-06, RF-08).
  */
 final class TallerTest extends IntegrationTestCase
 {
@@ -109,17 +109,16 @@ final class TallerTest extends IntegrationTestCase
         $this->assertSame(404, $this->get("/actividades/{$id}/editar")->status());
     }
 
-    public function testElAuditorNoAccedeALaGestionDeTalleres(): void
+    public function testSinSesionNoSeGestionanTalleres(): void
     {
-        $admin = $this->crearUsuario('administrador', 'admin@anahuac.mx', 'Clave-segura-2026');
+        $admin = $this->crearAdministrador();
         $id = $this->crearActividad($admin);
-        $this->entrarComoAuditor();
 
-        $this->assertSame(403, $this->get('/actividades/nueva')->status());
-        $this->assertSame(403, $this->post('/actividades', $this->formulario())->status());
-        $this->assertSame(403, $this->get("/actividades/{$id}/editar")->status());
-        $this->assertSame(403, $this->post("/actividades/{$id}", $this->formulario())->status());
-        $this->assertSame(403, $this->post("/actividades/{$id}/desactivar", ['confirmar' => '1'])->status());
+        $this->assertRedirige('/login', $this->get('/actividades/nueva'));
+        $this->assertRedirige('/login', $this->post('/actividades', $this->formulario()));
+        $this->assertRedirige('/login', $this->get("/actividades/{$id}"));
+        $this->assertRedirige('/login', $this->post("/actividades/{$id}", $this->formulario()));
+        $this->assertRedirige('/login', $this->post("/actividades/{$id}/desactivar", ['confirmar' => '1']));
         $this->assertSame(1, (int) $this->app->db()->fetchValue('SELECT COUNT(*) FROM actividades WHERE activo = 1'));
     }
 
@@ -167,20 +166,4 @@ final class TallerTest extends IntegrationTestCase
         $this->assertStringContainsString('Taller de prueba', $response->body());
     }
 
-    public function testMisTalleresSoloMuestraLosAsignadosAlAuditor(): void
-    {
-        $admin = $this->crearUsuario('administrador', 'admin@anahuac.mx', 'Clave-segura-2026');
-        $mio = $this->crearActividad($admin, ['nombre' => 'Asignado a mí']);
-        $this->crearActividad($admin, ['nombre' => 'De otra persona']);
-        $auditor = $this->entrarComoAuditor();
-
-        $this->assertStringContainsString('Todavía no tienes talleres asignados', $this->get('/mis-talleres')->body());
-
-        $this->asignar($mio, $auditor, $admin);
-        $html = $this->get('/mis-talleres')->body();
-
-        $this->assertStringContainsString('Asignado a mí', $html);
-        $this->assertStringNotContainsString('De otra persona', $html);
-        $this->assertStringContainsString('1 taller asignado', $html);
-    }
 }

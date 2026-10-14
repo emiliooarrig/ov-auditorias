@@ -17,6 +17,7 @@ CREATE TABLE roles (
   UNIQUE KEY uq_roles_nombre (nombre)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Solo los administradores tienen cuenta; los alumnos auditores no ingresan (tabla alumnos).
 CREATE TABLE usuarios (
   id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
   rol_id         TINYINT UNSIGNED NOT NULL,
@@ -24,7 +25,7 @@ CREATE TABLE usuarios (
   nombre         VARCHAR(80)  NOT NULL,
   apellidos      VARCHAR(120) NOT NULL,
   correo         VARCHAR(150) NOT NULL,
-  password_hash  VARCHAR(255) NULL,      -- solo administradores
+  password_hash  VARCHAR(255) NULL,
   activo         TINYINT(1)   NOT NULL DEFAULT 1,
   ultimo_acceso  DATETIME     NULL,
   creado_en      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -34,6 +35,35 @@ CREATE TABLE usuarios (
   UNIQUE KEY uq_usuarios_matricula (matricula),
   KEY idx_usuarios_rol (rol_id),
   CONSTRAINT fk_usuarios_rol FOREIGN KEY (rol_id) REFERENCES roles (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Horarios en los que un alumno puede auditar (matutino, vespertino o todo el día). Un alumno solo
+-- audita talleres que empiezan y terminan dentro de su horario.
+CREATE TABLE horarios_alumno (
+  id          TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nombre      VARCHAR(30) NOT NULL,              -- 'Matutino', 'Vespertino', 'Todo el día'
+  hora_inicio TIME NOT NULL,
+  hora_fin    TIME NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_horarios_alumno_nombre (nombre),
+  CONSTRAINT ck_horarios_alumno_horario CHECK (hora_fin > hora_inicio)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Alumnos que auditan talleres. No tienen cuenta ni correo: el administrador los da de alta.
+CREATE TABLE alumnos (
+  id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nombre         VARCHAR(80)  NOT NULL,
+  apellidos      VARCHAR(120) NOT NULL,
+  horario_id     TINYINT UNSIGNED NULL,  -- NULL: horario sin registrar (no se le asignan talleres)
+  activo         TINYINT(1)   NOT NULL DEFAULT 1,
+  creado_por     INT UNSIGNED NULL,      -- administrador que lo dio de alta (NULL: migrado de un auditor)
+  creado_en      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_alumnos_nombre (apellidos, nombre),
+  KEY idx_alumnos_horario (horario_id),
+  CONSTRAINT fk_alumnos_creador FOREIGN KEY (creado_por) REFERENCES usuarios (id),
+  CONSTRAINT fk_alumnos_horario FOREIGN KEY (horario_id) REFERENCES horarios_alumno (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE carreras (
@@ -97,14 +127,15 @@ CREATE TABLE actividades (
 CREATE TABLE asignaciones (
   id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
   actividad_id INT UNSIGNED NOT NULL,
-  usuario_id   INT UNSIGNED NOT NULL,
+  alumno_id    INT UNSIGNED NOT NULL,
+  origen       ENUM('manual','aleatoria') NOT NULL DEFAULT 'manual',
   asignado_por INT UNSIGNED NOT NULL,
   asignado_en  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_asignacion (actividad_id, usuario_id),
-  KEY idx_asignaciones_usuario (usuario_id),
+  UNIQUE KEY uq_asignacion (actividad_id, alumno_id),
+  KEY idx_asignaciones_alumno (alumno_id),
   CONSTRAINT fk_asignaciones_actividad FOREIGN KEY (actividad_id) REFERENCES actividades (id),
-  CONSTRAINT fk_asignaciones_usuario   FOREIGN KEY (usuario_id)   REFERENCES usuarios (id),
+  CONSTRAINT fk_asignaciones_alumno    FOREIGN KEY (alumno_id)    REFERENCES alumnos (id),
   CONSTRAINT fk_asignaciones_admin     FOREIGN KEY (asignado_por) REFERENCES usuarios (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -137,4 +168,4 @@ CREATE TABLE accesos (
   CONSTRAINT fk_accesos_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO roles (nombre) VALUES ('administrador'), ('auditor');
+INSERT INTO roles (nombre) VALUES ('administrador');

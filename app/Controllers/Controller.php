@@ -42,7 +42,6 @@ abstract class Controller
 
     /**
      * Listado de talleres con los filtros GET nombre, carrera, edificio, grupo y pagina (CU-03).
-     * Con $usuarioSesion se limita a los talleres asignados a ese usuario.
      *
      * @return array{
      *     filtros: array{nombre: string, carrera: ?int, edificio: ?int, grupo: ?int},
@@ -53,7 +52,7 @@ abstract class Controller
      *     grupos: list<array{id: int, numero: int, nombre: string, hora_inicio: string, hora_fin: string}>
      * }
      */
-    protected function listadoTalleres(Request $request, ?int $usuarioSesion): array
+    protected function listadoTalleres(Request $request): array
     {
         $filtros = [
             'nombre' => mb_substr($request->queryString('nombre'), 0, 150),
@@ -69,7 +68,6 @@ abstract class Controller
                 'edificio_id' => $filtros['edificio'],
                 'grupo_id' => $filtros['grupo'],
             ],
-            $usuarioSesion,
             $this->idOpcional($request->queryString('pagina')) ?? 1,
             (int) $this->app->config('pagination.per_page', 20)
         );
@@ -86,11 +84,39 @@ abstract class Controller
     }
 
     /**
+     * Filtros de la lista de alumnos: texto, estado (activos o bajas) y talleres (sin o con).
+     * Llegan por GET al ver la lista; los formularios del panel los reenvían por POST para volver
+     * a la misma vista. Los valores desconocidos se descartan.
+     *
+     * @return array{texto: string, estado: string, talleres: string}
+     */
+    protected function filtrosAlumnos(Request $request, bool $deFormulario): array
+    {
+        $leer = static fn (string $clave): string => $deFormulario
+            ? $request->inputString($clave)
+            : $request->queryString($clave);
+
+        return [
+            'texto' => mb_substr(trim($leer('texto')), 0, 150),
+            'estado' => in_array($leer('estado'), ['activos', 'bajas'], true) ? $leer('estado') : '',
+            'talleres' => in_array($leer('talleres'), ['sin', 'con'], true) ? $leer('talleres') : '',
+        ];
+    }
+
+    /**
      * Entero positivo a partir de texto; null si no lo es.
      */
     protected function idOpcional(string $valor): ?int
     {
         return ctype_digit($valor) && (int) $valor > 0 ? (int) $valor : null;
+    }
+
+    /**
+     * Id del administrador en sesión (las rutas que lo usan exigen sesión).
+     */
+    protected function adminId(): int
+    {
+        return (int) $this->app->auth()->id();
     }
 
     protected function notFound(): never

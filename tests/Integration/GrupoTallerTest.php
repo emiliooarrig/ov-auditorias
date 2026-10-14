@@ -130,35 +130,22 @@ final class GrupoTallerTest extends IntegrationTestCase
         $this->assertStringContainsString('Oratoria mediodía', $invalido);
     }
 
-    public function testElAuditorFiltraPorGrupoSoloEntreSusTalleres(): void
+    public function testLaMismaFranjaEsLaMismaFechaYElMismoGrupo(): void
     {
         $admin = $this->entrarComoAdministrador();
-        $suyo = $this->crearActividad($admin, ['nombre' => 'Suyo en Taller 2', 'grupo' => 2]);
-        $this->crearActividad($admin, ['nombre' => 'Ajeno en Taller 2', 'grupo' => 2]);
-        $auditor = $this->crearUsuario('auditor', 'ana.lopez@anahuac.mx');
-        $this->asignar($suyo, $auditor, $admin);
+        $ana = $this->crearAlumno('Ana', 'López');
+        $temprano = $this->crearActividad($admin, ['nombre' => 'Temprano', 'grupo' => 1, 'fecha' => '2026-10-15']);
+        $mismaHora = $this->crearActividad($admin, ['nombre' => 'Misma hora', 'grupo' => 1, 'fecha' => '2026-10-15']);
+        $otroGrupo = $this->crearActividad($admin, ['nombre' => 'Otro grupo', 'grupo' => 2, 'fecha' => '2026-10-15']);
+        $this->asignar($temprano, $ana, $admin);
 
-        $this->entrarComoAuditor('ana.lopez@anahuac.mx');
-        $html = $this->get('/mis-talleres', ['grupo' => (string) $this->idDelGrupo(2)])->body();
+        $html = $this->get("/alumnos/{$ana}")->body();
+        $this->assertSame(1, preg_match('#<select id="asignar-taller".*?</select>#s', $html, $select));
 
-        $this->assertStringContainsString('Suyo en Taller 2', $html);
-        $this->assertStringNotContainsString('Ajeno en Taller 2', $html);
-    }
-
-    public function testAsignacionesVuelveConElFiltroDeGrupo(): void
-    {
-        $admin = $this->entrarComoAdministrador();
-        $taller = $this->crearActividad($admin, ['grupo' => 4]);
-        $auditor = $this->crearUsuario('auditor', 'ana.lopez@anahuac.mx');
-        $grupo4 = (string) $this->idDelGrupo(4);
-
-        $response = $this->post('/asignaciones', [
-            'usuario_id' => (string) $auditor,
-            'actividades' => [(string) $taller],
-            'grupo' => $grupo4,
-        ]);
-
-        $this->assertRedirige("/asignaciones?grupo={$grupo4}&usuario={$auditor}", $response);
+        // Al asignar a mano solo se ofrece el taller de otro grupo; el del mismo grupo y día choca.
+        $this->assertStringContainsString('<option value="' . $otroGrupo . '">', $select[0]);
+        $this->assertStringNotContainsString('<option value="' . $mismaHora . '">', $select[0]);
+        $this->assertStringContainsString('<optgroup label="jue 15 oct 2026 · Taller 2 (11:00–12:00)">', $html);
     }
 
     public function testLaBaseNoAceptaUnTallerSinGrupo(): void

@@ -22,6 +22,11 @@ use DomainException;
  *     hora_fin: string, estado: string, motivo_no_realizado: ?string, activo: int, creado_por: int,
  *     creado_en: string, actualizado_en: string
  * }
+ * @phpstan-type ReporteFila array{
+ *     id: int, nombre: string, carrera: string, edificio: int, edificio_nombre: string, grupo_nombre: string,
+ *     fecha: string, hora_inicio: string, hora_fin: string, estado: string, motivo_no_realizado: ?string,
+ *     registrado_por: ?string, auditores: list<array{nombre: string, apellidos: string, activo: int}>
+ * }
  * @phpstan-type PanelFila array{
  *     id: int, nombre: string, carrera: string, edificio: int, edificio_nombre: string, grupo_nombre: string,
  *     fecha: string, hora_inicio: string, hora_fin: string, estado: string, motivo_no_realizado: ?string,
@@ -42,16 +47,15 @@ final class Actividad
     }
 
     /**
-     * Consulta del panel (SDD 4.4). Cada filtro se agrega solo si llegó; con $usuarioSesion
-     * (rol auditor) se limita a los talleres asignados a ese usuario, pero se muestran todos
-     * sus auditores.
+     * Consulta del panel (SDD 4.4). Cada filtro se agrega solo si llegó. La columna de auditores
+     * lista a los alumnos asignados.
      *
      * @param Filtros $filtros
      * @return array{filas: list<PanelFila>, total: int, pagina: int, paginas: int}
      */
-    public function filtrar(array $filtros, ?int $usuarioSesion, int $pagina = 1, int $porPagina = 20): array
+    public function filtrar(array $filtros, int $pagina = 1, int $porPagina = 20): array
     {
-        [$where, $params] = $this->condiciones($filtros, $usuarioSesion);
+        [$where, $params] = $this->condiciones($filtros);
 
         $total = (int) $this->db->fetchValue("SELECT COUNT(*) FROM actividades a WHERE {$where}", $params);
         $paginas = max(1, (int) ceil($total / $porPagina));
@@ -64,14 +68,14 @@ final class Actividad
                     (SELECT CONCAT(ub.nombre, ' ', ub.apellidos)
                      FROM bitacora_estados b JOIN usuarios ub ON ub.id = b.usuario_id
                      WHERE b.actividad_id = a.id ORDER BY b.id DESC LIMIT 1) AS registrado_por,
-                    GROUP_CONCAT(CONCAT(u.nombre, ' ', u.apellidos)
-                                 ORDER BY u.apellidos, u.nombre SEPARATOR ', ') AS auditores
+                    GROUP_CONCAT(CONCAT(al.nombre, ' ', al.apellidos)
+                                 ORDER BY al.apellidos, al.nombre SEPARATOR ', ') AS auditores
              FROM actividades a
              JOIN carreras  c ON c.id = a.carrera_id
              JOIN edificios e ON e.id = a.edificio_id
              JOIN grupos_taller g ON g.id = a.grupo_id
              LEFT JOIN asignaciones s ON s.actividad_id = a.id
-             LEFT JOIN usuarios     u ON u.id = s.usuario_id
+             LEFT JOIN alumnos     al ON al.id = s.alumno_id
              WHERE {$where}
              GROUP BY a.id, c.nombre, e.numero, e.nombre, g.nombre
              ORDER BY a.fecha, a.hora_inicio, a.id
@@ -83,10 +87,58 @@ final class Actividad
     }
 
     /**
+     * Reporte completo: todos los talleres activos con sus datos y la lista de sus alumnos auditores,
+     * ordenados por fecha, horario, carrera y nombre. Los auditores se leen aparte para no depender del
+     * límite de GROUP_CONCAT.
+     *
+     * @return list<ReporteFila>
+     */
+    public function reporte(): array
+    {
+        /** @var list<array<string, mixed>> $talleres */
+        $talleres = $this->db->fetchAll(
+            "SELECT a.id, a.nombre, c.nombre AS carrera, e.numero AS edificio, e.nombre AS edificio_nombre,
+                    g.nombre AS grupo_nombre, a.fecha, a.hora_inicio, a.hora_fin, a.estado, a.motivo_no_realizado,
+                    (SELECT CONCAT(ub.nombre, ' ', ub.apellidos)
+                     FROM bitacora_estados b JOIN usuarios ub ON ub.id = b.usuario_id
+                     WHERE b.actividad_id = a.id ORDER BY b.id DESC LIMIT 1) AS registrado_por
+             FROM actividades a
+             JOIN carreras  c ON c.id = a.carrera_id
+             JOIN edificios e ON e.id = a.edificio_id
+             JOIN grupos_taller g ON g.id = a.grupo_id
+             WHERE a.activo = 1
+             ORDER BY a.fecha, a.hora_inicio, c.nombre, a.nombre, a.id"
+        );
+        $auditores = [];
+        foreach (
+            $this->db->fetchAll(
+                'SELECT s.actividad_id, al.nombre, al.apellidos, al.activo
+                 FROM asignaciones s
+                 JOIN actividades a ON a.id = s.actividad_id
+                 JOIN alumnos al ON al.id = s.alumno_id
+                 WHERE a.activo = 1
+                 ORDER BY al.apellidos, al.nombre, al.id'
+            ) as $fila
+        ) {
+            $auditores[(int) $fila['actividad_id']][] = [
+                'nombre' => (string) $fila['nombre'],
+                'apellidos' => (string) $fila['apellidos'],
+                'activo' => (int) $fila['activo'],
+            ];
+        }
+
+        /** @var list<ReporteFila> */
+        return array_map(
+            static fn (array $t): array => $t + ['auditores' => $auditores[(int) $t['id']] ?? []],
+            $talleres
+        );
+    }
+
+    /**
      * @param Filtros $filtros
      * @return array{0: string, 1: array<string, int|string>}
      */
-    private function condiciones(array $filtros, ?int $usuarioSesion): array
+    private function condiciones(array $filtros): array
     {
         $where = ['a.activo = 1'];
         $params = [];
@@ -108,11 +160,6 @@ final class Actividad
         if (($filtros['grupo_id'] ?? null) !== null) {
             $where[] = 'a.grupo_id = :grupo_id';
             $params['grupo_id'] = $filtros['grupo_id'];
-        }
-        if ($usuarioSesion !== null) {
-            $where[] = 'EXISTS (SELECT 1 FROM asignaciones m
-                                WHERE m.actividad_id = a.id AND m.usuario_id = :usuario_sesion)';
-            $params['usuario_sesion'] = $usuarioSesion;
         }
 
         return [implode(' AND ', $where), $params];
@@ -177,17 +224,10 @@ final class Actividad
      * El motivo solo se guarda en el taller mientras está no realizado; al salir de ese estado
      * se limpia y queda únicamente en la bitácora.
      *
-     * @param string|null $exigirActual Si se indica, el cambio solo procede si el estado actual es ese
-     *                                  (el auditor solo puede marcar talleres programados).
      * @return string Estado anterior.
      */
-    public function cambiarEstado(
-        int $id,
-        string $nuevo,
-        ?string $motivo,
-        int $usuarioId,
-        ?string $exigirActual = null,
-    ): string {
+    public function cambiarEstado(int $id, string $nuevo, ?string $motivo, int $usuarioId): string
+    {
         if (!in_array($nuevo, self::ESTADOS, true)) {
             throw new DomainException('Estado no válido.');
         }
@@ -200,16 +240,13 @@ final class Actividad
         }
         $motivo = $nuevo === self::NO_REALIZADO ? $motivo : null;
 
-        return $this->db->transaction(function (Database $db) use ($id, $nuevo, $motivo, $usuarioId, $exigirActual) {
+        return $this->db->transaction(function (Database $db) use ($id, $nuevo, $motivo, $usuarioId) {
             $actual = $db->fetchValue(
                 'SELECT estado FROM actividades WHERE id = :id AND activo = 1 FOR UPDATE',
                 ['id' => $id]
             );
             if (!is_string($actual)) {
                 throw new DomainException('El taller no existe.');
-            }
-            if ($exigirActual !== null && $actual !== $exigirActual) {
-                throw new DomainException('El taller ya no está programado; solo el administrador puede cambiarlo.');
             }
             if ($actual === $nuevo) {
                 throw new DomainException('El taller ya está en ese estado.');

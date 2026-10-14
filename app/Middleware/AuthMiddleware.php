@@ -10,7 +10,7 @@ use App\Core\Request;
 use App\Core\Response;
 
 /**
- * Exige sesión activa; sin ella redirige a /login.
+ * Exige sesión de administrador; sin ella redirige a /login.
  */
 final class AuthMiddleware implements Middleware
 {
@@ -21,7 +21,7 @@ final class AuthMiddleware implements Middleware
     public function process(Request $request, callable $next): Response
     {
         if (!$this->app->auth()->check()) {
-            $this->app->session()->flash('aviso', 'Ingresa con tu correo institucional para continuar.');
+            $this->app->session()->flash('aviso', 'Ingresa con tu correo y tu contraseña para continuar.');
 
             return Response::redirect($this->app->url('/login'));
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Core\App;
 use App\Core\Csrf;
+use App\Models\HorarioAlumno;
 
 /**
  * Funciones globales de apoyo para configuración y vistas.
@@ -136,6 +137,16 @@ function grupo_etiqueta(string $nombre, string $inicio, string $fin): string
 }
 
 /**
+ * Horario de un alumno: "Matutino (07:00–14:00)", o "Sin horario" si no se ha registrado.
+ */
+function horario_alumno(?string $nombre, ?string $inicio, ?string $fin): string
+{
+    return $nombre === null || $inicio === null || $fin === null
+        ? 'Sin horario'
+        : HorarioAlumno::etiqueta($nombre, $inicio, $fin);
+}
+
+/**
  * Clase CSS de un estado ("no_realizado" → "no-realizado").
  */
 function estado_clase(string $estado): string
@@ -175,4 +186,25 @@ function old(string $key, string $default = ''): string
     $value = app()->session()->old($key);
 
     return is_scalar($value) ? (string) $value : $default;
+}
+
+/**
+ * Texto para buscar sin distinguir mayúsculas ni acentos: "González" y "gonzalez" coinciden.
+ * Hace lo mismo que normalizar() en app.js, para que el filtro sin JavaScript dé el mismo resultado.
+ */
+function texto_busqueda(string $texto): string
+{
+    return trim(strtr(mb_strtolower($texto), [
+        'á' => 'a', 'à' => 'a', 'ä' => 'a', 'â' => 'a', 'é' => 'e', 'è' => 'e', 'ë' => 'e', 'ê' => 'e',
+        'í' => 'i', 'ì' => 'i', 'ï' => 'i', 'î' => 'i', 'ó' => 'o', 'ò' => 'o', 'ö' => 'o', 'ô' => 'o',
+        'ú' => 'u', 'ù' => 'u', 'ü' => 'u', 'û' => 'u', 'ñ' => 'n', 'ç' => 'c',
+    ]));
+}
+
+/**
+ * "1 taller", "3 talleres": cantidad con su palabra en singular o plural.
+ */
+function cantidad(int $n, string $singular, string $plural): string
+{
+    return $n . ' ' . ($n === 1 ? $singular : $plural);
 }

@@ -4,181 +4,71 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Core\Auth;
 use App\Core\Password;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\Acceso;
 use App\Models\Usuario;
-use PDOException;
 
 /**
- * Ingreso por correo institucional, registro de auditores y cierre de sesión (RF-01, RF-02, CU-04).
- *
- * Paso 1: POST /login con el correo.
- *   - Auditor registrado: abre la sesión sin contraseña.
- *   - Administrador: pasa al paso 2 (contraseña); el correo queda guardado en la sesión.
- *   - Correo nuevo del dominio permitido: va a /registro para completar nombre y apellidos.
- * Paso 2: POST /login con la contraseña, solo si hay un administrador pendiente en la sesión.
+ * Ingreso y cierre de sesión de los administradores, los únicos usuarios del sistema (RF-01, CU-04).
+ * Los alumnos auditores no ingresan.
  */
 final class AuthController extends Controller
 {
-    private const ADMIN_PENDIENTE = 'login_admin_correo';
-    private const REGISTRO_CORREO = 'registro_correo';
-
     public function mostrarLogin(Request $request): Response
     {
-        if ($request->query('cambiar') !== null) {
-            $this->session()->forget(self::ADMIN_PENDIENTE);
-
-            return $this->redirect('/login');
-        }
-
-        $pendiente = $this->session()->get(self::ADMIN_PENDIENTE);
-
         return $this->view('auth/login', [
             'titulo' => 'Ingresar',
-            'correoAdministrador' => is_string($pendiente) ? $pendiente : null,
             'dominios' => $this->dominios(),
         ]);
     }
 
+    /**
+     * Correo institucional y contraseña en un solo paso. Ante un fallo no se dice si el correo existe:
+     * el mensaje es el mismo para correo desconocido y contraseña incorrecta.
+     */
     public function login(Request $request): Response
     {
-        $pendiente = $this->session()->get(self::ADMIN_PENDIENTE);
-        if (is_string($pendiente) && $request->input('password') !== null) {
-            return $this->loginAdministrador($pendiente, $request);
-        }
-        $this->session()->forget(self::ADMIN_PENDIENTE);
-
         $auth = $this->app->auth();
         $correo = Usuario::normalizarCorreo($request->inputString('correo'));
+        $password = $request->input('password');
+        $password = is_string($password) ? $password : '';
 
         if (!Usuario::correoPermitido($correo, $this->dominios())) {
-            return $this->volverConError('/login', ['correo' => $this->mensajeDominio()], $request);
+            return $this->volverConError($correo, ['correo' => $this->mensajeDominio()]);
         }
         if ($auth->bloqueado($correo, $request)) {
-            return $this->volverConError('/login', ['correo' => $this->mensajeBloqueo()], $request);
+            return $this->volverConError($correo, ['password' => $this->mensajeBloqueo()]);
         }
 
         $usuarios = new Usuario($this->db());
         $usuario = $usuarios->buscarPorCorreo($correo);
+        $esAdministrador = $usuario !== null && $usuario['rol'] === Usuario::ADMINISTRADOR;
 
-        if ($usuario === null) {
-            $this->session()->set(self::REGISTRO_CORREO, $correo);
-
-            return $this->redirect('/registro');
-        }
-        if ((int) $usuario['activo'] !== 1) {
-            $auth->registrarEvento(Acceso::LOGIN_FALLIDO, $correo, $usuario['id'], $request);
-
-            return $this->volverConError('/login', [
-                'correo' => 'Tu cuenta está desactivada. Contacta al administrador.',
-            ], $request);
-        }
-        if ($usuario['rol'] === Usuario::ADMINISTRADOR) {
-            $this->session()->set(self::ADMIN_PENDIENTE, $correo);
-
-            return $this->redirect('/login');
-        }
-
-        $auth->iniciarSesion($usuario, $request);
-        $this->bienvenida($usuario['nombre']);
-
-        return $this->redirect($auth->inicio());
-    }
-
-    /**
-     * Paso 2 del administrador. El correo sale de la sesión, nunca del formulario.
-     */
-    private function loginAdministrador(string $correo, Request $request): Response
-    {
-        $auth = $this->app->auth();
-        if ($auth->bloqueado($correo, $request)) {
-            return $this->volverConError('/login', ['password' => $this->mensajeBloqueo()]);
-        }
-
-        $password = $request->input('password');
-        $usuarios = new Usuario($this->db());
-        $usuario = $usuarios->buscarPorCorreo($correo);
-
-        if (
-            !is_string($password)
-            || $usuario === null
-            || (int) $usuario['activo'] !== 1
-            || $usuario['rol'] !== Usuario::ADMINISTRADOR
-            || !Password::verify($password, $usuario['password_hash'])
-        ) {
+        if (!$esAdministrador || !Password::verify($password, $usuario['password_hash'])) {
             $auth->registrarEvento(Acceso::LOGIN_FALLIDO, $correo, $usuario['id'] ?? null, $request);
 
-            return $this->volverConError('/login', ['password' => 'La contraseña no es correcta.']);
+            return $this->volverConError($correo, ['password' => 'El correo o la contraseña no son correctos.']);
+        }
+        // Solo con la contraseña correcta se revela que la cuenta está desactivada.
+        if (!Auth::puedeIngresar($usuario)) {
+            $auth->registrarEvento(Acceso::LOGIN_FALLIDO, $correo, $usuario['id'], $request);
+
+            return $this->volverConError($correo, [
+                'password' => 'Tu cuenta está desactivada. Pide a otro administrador que la reactive.',
+            ]);
         }
 
         if (Password::needsRehash((string) $usuario['password_hash'])) {
             $usuarios->actualizarPassword($usuario['id'], Password::hash($password));
         }
 
-        $this->session()->forget(self::ADMIN_PENDIENTE);
         $auth->iniciarSesion($usuario, $request);
-        $this->bienvenida($usuario['nombre']);
+        $this->session()->flash('exito', 'Hola, ' . $usuario['nombre'] . '. Iniciaste sesión.', true);
 
-        return $this->redirect($auth->inicio());
-    }
-
-    public function mostrarRegistro(Request $request): Response
-    {
-        $correo = $this->session()->get(self::REGISTRO_CORREO);
-        if (!is_string($correo)) {
-            return $this->redirect('/login');
-        }
-
-        return $this->view('auth/registro', ['titulo' => 'Registro', 'correo' => $correo]);
-    }
-
-    public function registrar(Request $request): Response
-    {
-        $correo = $this->session()->get(self::REGISTRO_CORREO);
-        if (!is_string($correo) || !Usuario::correoPermitido($correo, $this->dominios())) {
-            $this->session()->forget(self::REGISTRO_CORREO);
-
-            return $this->redirect('/login');
-        }
-
-        $nombre = Usuario::normalizarNombre($request->inputString('nombre'));
-        $apellidos = Usuario::normalizarNombre($request->inputString('apellidos'));
-        $errores = array_filter([
-            'nombre' => Usuario::validarNombre($nombre, 80),
-            'apellidos' => Usuario::validarNombre($apellidos, 120),
-        ]);
-        if ($errores !== []) {
-            return $this->volverConError('/registro', $errores, $request);
-        }
-
-        $usuarios = new Usuario($this->db());
-        try {
-            $id = $usuarios->crear(Usuario::AUDITOR, $nombre, $apellidos, $correo);
-        } catch (PDOException $e) {
-            // Correo duplicado: alguien lo registró entre el paso 1 y este envío.
-            if ($e->getCode() !== '23000') {
-                throw $e;
-            }
-            $this->session()->forget(self::REGISTRO_CORREO);
-            $this->session()->flash('aviso', 'Ese correo ya está registrado. Ingresa con él.');
-
-            return $this->redirect('/login');
-        }
-
-        $auth = $this->app->auth();
-        $auth->registrarEvento(Acceso::REGISTRO, $correo, $id, $request);
-        $this->session()->forget(self::REGISTRO_CORREO);
-
-        $usuario = $usuarios->buscarPorId($id);
-        if ($usuario === null) {
-            return $this->redirect('/login');
-        }
-        $auth->iniciarSesion($usuario, $request);
-        $this->session()->flash('exito', 'Tu cuenta quedó registrada. Aquí verás los talleres que te asignen.', true);
-
-        return $this->redirect($auth->inicio());
+        return $this->redirect('/');
     }
 
     public function logout(Request $request): Response
@@ -189,22 +79,17 @@ final class AuthController extends Controller
         return $this->redirect('/login');
     }
 
-    private function bienvenida(string $nombre): void
-    {
-        $this->session()->flash('exito', 'Hola, ' . $nombre . '. Iniciaste sesión.', true);
-    }
-
     /**
+     * Regresa al ingreso con el correo escrito; la contraseña nunca se conserva.
+     *
      * @param array<string, string> $errores
      */
-    private function volverConError(string $ruta, array $errores, ?Request $request = null): Response
+    private function volverConError(string $correo, array $errores): Response
     {
-        if ($request !== null) {
-            $this->session()->flashInput($request->allInput());
-        }
+        $this->session()->flashInput(['correo' => $correo]);
         $this->session()->flashErrors($errores);
 
-        return $this->redirect($ruta);
+        return $this->redirect('/login');
     }
 
     /**

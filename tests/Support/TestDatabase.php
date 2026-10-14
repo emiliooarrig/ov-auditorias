@@ -61,6 +61,14 @@ final class TestDatabase
     }
 
     /**
+     * Vuelve a instalar el esquema desde cero en la siguiente prueba (tras una que lo modificó).
+     */
+    public static function reinstalar(): void
+    {
+        self::$instalada = false;
+    }
+
+    /**
      * @param array<string, mixed> $config
      */
     private static function vaciar(array $config): void
@@ -72,7 +80,7 @@ final class TestDatabase
             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
         );
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
-        foreach (['accesos', 'bitacora_estados', 'asignaciones', 'actividades', 'usuarios'] as $tabla) {
+        foreach (['accesos', 'bitacora_estados', 'asignaciones', 'actividades', 'alumnos', 'usuarios'] as $tabla) {
             $pdo->exec("TRUNCATE TABLE {$tabla}");
         }
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
